@@ -1,0 +1,26 @@
+                            ██╗      ██████╗ ██╗   ██╗██████╗ ███████╗
+                            ██║     ██╔═══██╗██║   ██║██╔══██╗██╔════╝
+                            ██║ ██║ ██║   ██║██║   ██║██████╔╝█████╗
+                       ██   ██║     ██║▄▄ ██║██║   ██║██╔══██╗██╔══╝
+                       ╚█████╔╝     ╚██████╔╝╚██████╔╝██████╔╝███████╗
+                        ╚════╝       ╚══▀▀═╝  ╚═════╝ ╚═════╝ ╚══════╝
+
+==========================================================================================
+                              J - Q U B E   •   A P I   S E R V E R
+==========================================================================================
+        AI-Powered DevSecOps Platform for Automated Secure Code Analysis & Remediation
+==========================================================================================
+
+Application   : ${spring.application.name}
+Version       : ${application.version:1.0.0}
+Profile       : ${spring.profiles.active:default}
+Port          : ${server.port}
+Java          : ${java.version}
+Spring Boot   : ${spring-boot.version:Unknown}
+
+Features      : GitHub OAuth • Webhooks • REST API • JWT Security
+                PostgreSQL • Redis • WebSocket • OpenAPI
+
+Powered By    : J-QUBE DevSecOps Platform
+
+© 2026 J-QUBE. All Rights Reserved.
