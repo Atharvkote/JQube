@@ -1,0 +1,122 @@
+---
+title: Contributing
+description: How to contribute to JQube — code, documentation, and community guidelines.
+icon: Heart
+---
+
+
+# Contributing
+
+Thank you for your interest in contributing to JQube! This guide covers everything you need to get started.
+
+## Ways to Contribute
+
+| Type | Description |
+|---|---|
+| 🐛 **Bug Reports** | Found a bug? Open an issue with reproduction steps |
+| ✨ **Feature Requests** | Have an idea? Open a discussion or issue |
+| 💻 **Code** | Fix bugs, add features, improve performance |
+| 📖 **Documentation** | Fix typos, add examples, improve guides |
+| 🧪 **Testing** | Write tests, report edge cases |
+| 🌐 **Translations** | Help translate the documentation |
+
+## Development Setup
+
+<Steps>
+<Step>
+
+### Fork and Clone
+
+```bash title="Terminal"
+git clone https://github.com/YOUR_USERNAME/jqube.git
+cd jqube
+```
+
+</Step>
+<Step>
+
+### Install Dependencies
+
+```bash title="Terminal"
+# Backend
+cd backend && ./mvnw clean install -DskipTests
+
+# Frontend
+cd frontend && npm install
+```
+
+</Step>
+<Step>
+
+### Start Development Environment
+
+```bash title="Terminal"
+docker compose -f docker-compose.dev.yml up -d
+```
+
+</Step>
+<Step>
+
+### Create a Branch
+
+```bash title="Terminal"
+git checkout -b feature/your-feature-name
+```
+
+</Step>
+</Steps>
+
+## Code Standards
+
+### Java (Backend)
+
+- Follow [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html)
+- Use meaningful variable and method names
+- Write Javadoc for public methods
+- Minimum 80% test coverage for new code
+
+### TypeScript (Frontend)
+
+- Use strict TypeScript (no `any`)
+- Follow the existing project conventions
+- Use functional components with hooks
+- Write unit tests with Vitest
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add batch remediation endpoint
+fix: resolve JWT token refresh issue
+docs: update API reference for scan endpoint
+test: add unit tests for ScanService
+chore: update dependencies
+```
+
+## Pull Request Process
+
+1. **Create a feature branch** from `develop`
+2. **Write code** following the standards above
+3. **Write tests** for new functionality
+4. **Update documentation** if needed
+5. **Open a PR** against `develop`
+6. **Describe your changes** in the PR description
+7. **Wait for review** — we aim to review within 48 hours
+
+<Callout type="info">
+All PRs must pass CI checks (tests, lint, build) before merging. Maintainers may request changes during review.
+</Callout>
+
+## Code of Conduct
+
+We are committed to providing a welcoming, inclusive, and respectful environment for everyone. Please:
+
+- Be respectful and constructive in discussions
+- Welcome newcomers and help them get started
+- Focus on what is best for the community
+- Show empathy towards other community members
+
+## License
+
+JQube is licensed under the [MIT License](https://opensource.org/licenses/MIT). By contributing, you agree that your contributions will be licensed under the same license.

@@ -1,0 +1,67 @@
+---
+title: Repositories
+description: Connect and manage GitHub repositories in JQube for security scanning.
+icon: GitBranch
+---
+
+# Repositories
+
+Repositories are GitHub repositories connected to JQube for security scanning. They belong to a project and can be scanned individually or in batch.
+
+## Adding a Repository
+
+After authenticating with GitHub OAuth, JQube can access your repositories:
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/projects/1/repositories \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "githubRepoUrl": "https://github.com/your-org/your-repo",
+    "branch": "main"
+  }'
+```
+
+```json title="Response — 201 Created"
+{
+  "id": 1,
+  "fullName": "your-org/your-repo",
+  "defaultBranch": "main",
+  "language": "Java",
+  "private": false,
+  "lastScanAt": null,
+  "findingCount": 0
+}
+```
+
+## Listing User Repositories
+
+Fetch all repositories from the user's GitHub account:
+
+```bash title="cURL"
+curl http://localhost:8080/api/github/repositories \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+This calls the GitHub API on behalf of the user and returns their accessible repositories.
+
+## Repository Details
+
+| Field | Description |
+|---|---|
+| `fullName` | Owner/repo format (e.g., `jqube/backend`) |
+| `defaultBranch` | Branch to scan (default: `main`) |
+| `language` | Primary programming language |
+| `private` | Whether the repository is private |
+| `lastScanAt` | Timestamp of the most recent scan |
+| `findingCount` | Total open findings |
+
+## Supported Operations
+
+| Operation | Endpoint | Method |
+|---|---|---|
+| Add repository | `/api/projects/{id}/repositories` | POST |
+| List repositories | `/api/projects/{id}/repositories` | GET |
+| Get repository details | `/api/repositories/{id}` | GET |
+| Remove repository | `/api/repositories/{id}` | DELETE |
+| Trigger scan | `/api/repositories/{id}/scan` | POST |

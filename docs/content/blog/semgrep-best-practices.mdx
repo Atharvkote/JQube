@@ -1,0 +1,79 @@
+---
+title: Semgrep Best Practices
+description: Tips and best practices for getting the most out of Semgrep security scanning in JQube.
+author: JQube Team
+date: 2025-01-10
+tags: [semgrep, scanning, best-practices]
+---
+
+# Semgrep Best Practices
+
+Semgrep is the security engine behind JQube. Here are best practices to maximize your scanning effectiveness.
+
+## 1. Use Auto Config
+
+For most projects, Semgrep's `auto` configuration provides excellent coverage:
+
+```bash
+semgrep --config=auto
+```
+
+This automatically selects relevant rules based on your project's languages and frameworks.
+
+## 2. Add Custom Rules
+
+Supplement auto rules with organization-specific patterns:
+
+```yaml title=".semgrep.yml"
+rules:
+  - id: no-console-log-in-production
+    pattern: console.log(...)
+    message: "Remove console.log before production"
+    severity: WARNING
+    languages: [javascript, typescript]
+```
+
+## 3. Exclude Test Files
+
+Reduce noise by excluding test directories:
+
+```yaml
+exclude:
+  - "**/*test*"
+  - "**/*spec*"
+  - "**/fixtures/**"
+  - "**/mocks/**"
+```
+
+## 4. Prioritize by Severity
+
+Focus on CRITICAL and HIGH findings first. These represent real exploitation risks.
+
+## 5. Track Trends
+
+Use JQube's dashboard to monitor vulnerability trends over time. A decreasing trend means your security posture is improving.
+
+## 6. Integrate with CI/CD
+
+Run scans on every PR to catch vulnerabilities before they reach production:
+
+```yaml
+name: Security Scan
+on: [pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jqube/scan-action@v2
+        with:
+          severity-threshold: high
+```
+
+## 7. Review False Positives
+
+When you find a false positive, dismiss it with a reason in JQube. This helps track your team's security decisions.
+
+## Conclusion
+
+Effective security scanning isn't just about running tools — it's about integrating them into your workflow, acting on findings, and continuously improving.

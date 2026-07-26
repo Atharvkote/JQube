@@ -1,0 +1,128 @@
+---
+title: Database
+description: PostgreSQL database schema, configuration, and data management in JQube.
+icon: Database
+---
+
+
+# Database
+
+JQube uses **PostgreSQL 16** as its primary relational database for storing users, projects, repositories, scan results, findings, and remediations.
+
+## Schema Overview
+
+```
+┌──────────┐    ┌───────────┐    ┌──────────────┐
+│  users   │───▶│ projects  │───▶│ repositories │
+└──────────┘    └───────────┘    └──────┬───────┘
+                                       │
+                                ┌──────┴───────┐
+                                │   findings   │
+                                └──────┬───────┘
+                                       │
+                              ┌────────┴────────┐
+                              │ remediations    │
+                              └────────┬────────┘
+                                       │
+                              ┌────────┴────────┐
+                              │ pull_requests   │
+                              └─────────────────┘
+```
+
+## Entity Relationships
+
+| Entity | Relationships |
+|---|---|
+| **User** | Has many Projects |
+| **Project** | Has many Repositories, belongs to User |
+| **Repository** | Has many Findings, belongs to Project |
+| **Finding** | Has one Remediation, belongs to Repository |
+| **Remediation** | Belongs to Finding |
+| **PullRequest** | Belongs to Remediation |
+
+## Connection Configuration
+
+```yaml title="application.yml"
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:jqube}
+    username: ${DB_USERNAME:jqube_user}
+    password: ${DB_PASSWORD:password}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+```
+
+<Callout type="warning">
+Always use `ddl-auto: validate` in production. Schema changes should be managed exclusively through Flyway migrations.
+</Callout>
+
+## Performance Tuning
+
+### Indexes
+
+```sql title="V3__add_indexes.sql"
+-- Finding lookups by repository and severity
+CREATE INDEX idx_findings_repo_severity
+  ON findings(repository_id, severity);
+
+-- Finding lookups by status
+CREATE INDEX idx_findings_status
+  ON findings(status);
+
+-- Repository lookups by project
+CREATE INDEX idx_repositories_project
+  ON repositories(project_id);
+
+-- User lookup by GitHub ID
+CREATE INDEX idx_users_github_id
+  ON users(github_id);
+```
+
+### Connection Pool
+
+JQube uses HikariCP with optimized settings:
+
+| Setting | Value | Purpose |
+|---|---|---|
+| `maximum-pool-size` | 20 | Max concurrent connections |
+| `minimum-idle` | 5 | Minimum idle connections |
+| `idle-timeout` | 5 min | Close idle connections after |
+| `connection-timeout` | 20 sec | Max wait for connection |
+| `max-lifetime` | 20 min | Max connection age |
+
+## Backup & Recovery
+
+```bash title="Backup Script"
+#!/bin/bash
+# Create a compressed backup
+pg_dump -h localhost -U jqube_user -d jqube \
+  --format=custom \
+  --compress=9 \
+  --file=backup_$(date +%Y%m%d_%H%M%S).dump
+
+# Restore from backup
+pg_restore -h localhost -U jqube_user -d jqube \
+  --clean --if-exists \
+  backup_20240101_120000.dump
+```

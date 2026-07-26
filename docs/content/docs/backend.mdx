@@ -1,0 +1,203 @@
+---
+title: Backend
+description: JQube's Spring Boot backend architecture, REST API design, and service layer.
+icon: Server
+---
+
+
+# Backend Architecture
+
+The JQube backend is a Java 21 application built with Spring Boot 3, following a layered architecture pattern.
+
+## Technology Stack
+
+| Technology | Version | Purpose |
+|---|---|---|
+| **Java** | 21 (LTS) | Runtime |
+| **Spring Boot** | 3.2 | Application framework |
+| **Spring Security** | 6.2 | Authentication and authorization |
+| **Spring Data JPA** | 3.2 | Database access |
+| **PostgreSQL** | 16 | Relational database |
+| **Redis** | 7 | Caching and sessions |
+| **Flyway** | 10 | Database migrations |
+| **MapStruct** | 1.5 | Object mapping |
+| **Lombok** | 1.18 | Boilerplate reduction |
+
+## Project Structure
+
+```
+backend/
+├── src/main/java/com/jqube/
+│   ├── config/              # Spring configuration
+│   │   ├── SecurityConfig.java
+│   │   ├── CorsConfig.java
+│   │   ├── RedisConfig.java
+│   │   └── WebSocketConfig.java
+│   ├── controller/          # REST controllers
+│   │   ├── AuthController.java
+│   │   ├── ProjectController.java
+│   │   ├── RepositoryController.java
+│   │   ├── ScanController.java
+│   │   ├── FindingController.java
+│   │   ├── RemediationController.java
+│   │   └── PullRequestController.java
+│   ├── service/             # Business logic
+│   │   ├── AuthService.java
+│   │   ├── GitHubService.java
+│   │   ├── ScanService.java
+│   │   ├── SemgrepService.java
+│   │   ├── AiRemediationService.java
+│   │   └── PullRequestService.java
+│   ├── repository/          # JPA repositories
+│   ├── entity/              # Database entities
+│   ├── dto/                 # Data transfer objects
+│   ├── mapper/              # MapStruct mappers
+│   ├── security/            # JWT and security filters
+│   │   ├── JwtTokenProvider.java
+│   │   ├── JwtAuthenticationFilter.java
+│   │   └── UserDetailsServiceImpl.java
+│   ├── exception/           # Custom exceptions
+│   └── JqubeApplication.java
+├── src/main/resources/
+│   ├── application.yml
+│   ├── application-dev.yml
+│   └── db/migration/        # Flyway migrations
+└── pom.xml
+```
+
+## Security Configuration
+
+```java title="SecurityConfig.java"
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtFilter;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**", "/api/health").permitAll()
+                .requestMatchers("/api/**").authenticated()
+            )
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+}
+```
+
+## Service Layer Example
+
+```java title="ScanService.java"
+@Service
+@RequiredArgsConstructor
+public class ScanService {
+
+    private final SemgrepService semgrepService;
+    private final FindingRepository findingRepository;
+    private final GitHubService gitHubService;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    @Async
+    public CompletableFuture<Scan> executeScan(Long repositoryId, String branch) {
+        // 1. Clone repository
+        Path repoPath = gitHubService.cloneRepository(repositoryId, branch);
+
+        // 2. Run Semgrep analysis
+        List<SemgrepResult> results = semgrepService.analyze(repoPath);
+
+        // 3. Parse and store findings
+        List<Finding> findings = results.stream()
+            .map(this::mapToFinding)
+            .collect(Collectors.toList());
+
+        findingRepository.saveAll(findings);
+
+        // 4. Update scan status in Redis
+        redisTemplate.opsForValue().set(
+            "scan:" + repositoryId,
+            "COMPLETED",
+            Duration.ofHours(24)
+        );
+
+        return CompletableFuture.completedFuture(scan);
+    }
+}
+```
+
+<Callout type="info">
+The backend uses `@Async` for scan operations to prevent blocking the HTTP thread. Scan progress is pushed to the frontend via WebSocket.
+</Callout>
+
+## Database Migrations
+
+JQube uses Flyway for versioned database migrations:
+
+```sql title="V1__initial_schema.sql"
+CREATE TABLE users (
+    id          BIGSERIAL PRIMARY KEY,
+    github_id   BIGINT UNIQUE NOT NULL,
+    username    VARCHAR(100) NOT NULL,
+    email       VARCHAR(255),
+    avatar_url  VARCHAR(500),
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE projects (
+    id          BIGSERIAL PRIMARY KEY,
+    name        VARCHAR(200) NOT NULL,
+    description TEXT,
+    user_id     BIGINT REFERENCES users(id),
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE repositories (
+    id              BIGSERIAL PRIMARY KEY,
+    github_repo_id  BIGINT UNIQUE NOT NULL,
+    full_name       VARCHAR(300) NOT NULL,
+    default_branch  VARCHAR(100) DEFAULT 'main',
+    project_id      BIGINT REFERENCES projects(id),
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE findings (
+    id              BIGSERIAL PRIMARY KEY,
+    rule_id         VARCHAR(200) NOT NULL,
+    severity        VARCHAR(20) NOT NULL,
+    message         TEXT NOT NULL,
+    file_path       VARCHAR(500) NOT NULL,
+    start_line      INTEGER NOT NULL,
+    end_line        INTEGER NOT NULL,
+    code_snippet    TEXT,
+    cwe             VARCHAR(50),
+    repository_id   BIGINT REFERENCES repositories(id),
+    scan_id         BIGINT,
+    status          VARCHAR(20) DEFAULT 'OPEN',
+    created_at      TIMESTAMP DEFAULT NOW()
+);
+```
+
+## Error Handling
+
+```java title="GlobalExceptionHandler.java"
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(404).body(
+            new ErrorResponse(404, "NOT_FOUND", ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorized(UnauthorizedException ex) {
+        return ResponseEntity.status(401).body(
+            new ErrorResponse(401, "UNAUTHORIZED", ex.getMessage())
+        );
+    }
+}
+```

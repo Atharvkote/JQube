@@ -1,0 +1,183 @@
+---
+title: Installation
+description: Complete installation guide for JQube across different environments and platforms.
+icon: Download
+---
+
+
+# Installation
+
+JQube supports multiple installation methods depending on your environment and use case.
+
+## Installation Methods
+
+| Method | Best For | Difficulty |
+|---|---|---|
+| **Docker Compose** | Production & Development | Easy |
+| **Manual Setup** | Contributing & Customization | Moderate |
+| **GitHub Actions** | CI/CD Pipeline | Easy |
+
+## Docker Compose (Recommended)
+
+<Steps>
+<Step>
+
+### Prerequisites
+
+Ensure `Docker` and Docker Compose are installed:
+
+```bash title="Terminal"
+docker --version    # Docker 24+
+docker compose version  # Compose 2.20+
+```
+
+</Step>
+<Step>
+
+### Clone and Configure
+
+```bash title="Terminal"
+git clone https://github.com/jqube/jqube.git
+cd jqube
+cp .env.example .env
+```
+
+</Step>
+<Step>
+
+### Create GitHub OAuth App
+
+1. Go to **GitHub Settings** → **Developer Settings** → **OAuth Apps**
+2. Click **New OAuth App**
+3. Set the following values:
+
+| Field | Value |
+|---|---|
+| Application Name | `JQube` |
+| Homepage URL | `http://localhost:3000` |
+| Authorization Callback URL | `http://localhost:3000/auth/callback` |
+
+4. Copy the **Client ID** and **Client Secret** to your `.env` file
+
+</Step>
+<Step>
+
+### Launch Services
+
+```bash title="Terminal"
+# Start all services in detached mode
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Check status
+docker compose ps
+```
+
+</Step>
+</Steps>
+
+## Manual Setup
+
+For local development, you can run each service individually.
+
+### Backend (Spring Boot)
+
+```bash title="Terminal"
+cd backend
+
+# Build the project
+./mvnw clean package -DskipTests
+
+# Run the application
+./mvnw spring-boot:run
+```
+
+The backend starts on `http://localhost:8080`.
+
+### Frontend (React)
+
+```bash title="Terminal"
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The frontend starts on `http://localhost:3000`.
+
+### Database (PostgreSQL)
+
+```bash title="Terminal"
+# Start PostgreSQL with Docker
+docker run -d \
+  --name jqube-postgres \
+  -e POSTGRES_DB=jqube \
+  -e POSTGRES_USER=jqube_user \
+  -e POSTGRES_PASSWORD=your_secure_password \
+  -p 5432:5432 \
+  postgres:16-alpine
+```
+
+### Redis
+
+```bash title="Terminal"
+# Start Redis with Docker
+docker run -d \
+  --name jqube-redis \
+  -p 6379:6379 \
+  redis:7-alpine
+```
+
+### Semgrep
+
+```bash title="Terminal"
+# Install Semgrep
+pip install semgrep
+
+# Verify installation
+semgrep --version
+```
+
+<Callout type="warning">
+Semgrep must be installed on the machine running the JQube backend, or accessible via Docker. The backend calls Semgrep CLI directly to perform scans.
+</Callout>
+
+## Verifying the Installation
+
+After starting all services, verify everything is working:
+
+```bash title="Terminal"
+# Backend health check
+curl http://localhost:8080/api/health
+
+# Frontend
+open http://localhost:3000
+
+# Database connection
+docker exec jqube-postgres pg_isready -U jqube_user
+
+# Redis connection
+docker exec jqube-redis redis-cli ping
+```
+
+## System Requirements
+
+| Component | Minimum | Recommended |
+|---|---|---|
+| **CPU** | 2 cores | 4+ cores |
+| **RAM** | 4 GB | 8+ GB |
+| **Disk** | 10 GB | 20+ GB |
+| **OS** | Linux, macOS, Windows (WSL2) | Linux (Ubuntu 22.04) |
+
+## Troubleshooting
+
+If you encounter issues during installation, check:
+
+- [Troubleshooting Guide](/docs/troubleshooting) — Common installation issues
+- [Environment Variables](/docs/environment-variables) — Required configuration
+- [FAQ](/docs/faq) — Frequently asked questions

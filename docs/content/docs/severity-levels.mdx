@@ -1,0 +1,72 @@
+---
+title: Severity Levels
+description: Understanding CRITICAL, HIGH, MEDIUM, and LOW severity classifications in JQube.
+icon: Gauge
+---
+
+# Severity Levels
+
+JQube classifies vulnerabilities into four severity levels based on Semgrep's output and additional context analysis.
+
+## Classification
+
+| Level | Semgrep Mapping | Risk | Action Required |
+|---|---|---|---|
+| 🔴 **CRITICAL** | `ERROR` + Critical CWE | Immediate exploitation risk | Fix immediately |
+| 🟠 **HIGH** | `ERROR` | Serious vulnerability | Fix within 24 hours |
+| 🟡 **MEDIUM** | `WARNING` | Moderate risk | Fix within 1 week |
+| 🔵 **LOW** | `INFO` | Minimal risk | Fix when convenient |
+
+## CRITICAL
+
+Critical findings represent vulnerabilities that can be exploited immediately with high impact:
+
+- **SQL Injection** (CWE-89) — Direct database access
+- **Remote Code Execution** (CWE-94) — Arbitrary code execution
+- **Authentication Bypass** (CWE-287) — Unauthorized access
+- **Hardcoded Credentials** (CWE-798) — Exposed secrets in production
+
+## HIGH
+
+High severity findings are serious vulnerabilities that require prompt attention:
+
+- **Cross-Site Scripting (XSS)** (CWE-79) — Script injection
+- **Path Traversal** (CWE-22) — File system access
+- **Insecure Deserialization** (CWE-502) — Object manipulation
+- **SSRF** (CWE-918) — Server-side request forgery
+
+## MEDIUM
+
+Medium severity findings represent moderate risks:
+
+- **Missing Input Validation** (CWE-20) — Unchecked input
+- **Weak Cryptography** (CWE-327) — Deprecated algorithms
+- **Information Disclosure** (CWE-200) — Sensitive data exposure
+- **CSRF** (CWE-352) — Cross-site request forgery
+
+## LOW
+
+Low severity findings are informational or best practice recommendations:
+
+- **Missing Security Headers** — CSP, X-Frame-Options
+- **Verbose Error Messages** — Stack traces in production
+- **Deprecated Functions** — Using outdated APIs
+- **Code Style** — Security-relevant code patterns
+
+## SLA Recommendations
+
+| Severity | Response Time | Resolution Time |
+|---|---|---|
+| CRITICAL | Immediate | 24 hours |
+| HIGH | 4 hours | 3 days |
+| MEDIUM | 1 business day | 2 weeks |
+| LOW | 1 week | 1 month |
+
+## Dashboard Visualization
+
+The JQube dashboard displays severity distribution with:
+
+- **Donut chart** — Proportional breakdown by severity
+- **Trend line** — Historical severity trends over time
+- **Heatmap** — Findings by file and severity
+- **Top vulnerabilities** — Most common rule IDs

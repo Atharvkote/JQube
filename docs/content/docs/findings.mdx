@@ -1,0 +1,100 @@
+---
+title: Findings
+description: Understanding vulnerability findings, their structure, and management in JQube.
+icon: AlertTriangle
+---
+
+# Findings
+
+Findings represent security vulnerabilities detected by Semgrep during a scan. Each finding contains detailed information about the vulnerability, its location, and potential impact.
+
+## Finding Structure
+
+```json title="Finding Object"
+{
+  "id": 1,
+  "ruleId": "java.lang.security.audit.sql-injection",
+  "severity": "CRITICAL",
+  "message": "Possible SQL injection via string concatenation with user input",
+  "filePath": "src/main/java/com/example/UserService.java",
+  "startLine": 42,
+  "endLine": 42,
+  "codeSnippet": "String query = \"SELECT * FROM users WHERE id = \" + userId;",
+  "cwe": "CWE-89",
+  "owasp": "A03:2021",
+  "status": "OPEN",
+  "remediation": null,
+  "createdAt": "2024-01-15T10:30:45Z"
+}
+```
+
+## Finding Status
+
+| Status | Description |
+|---|---|
+| `OPEN` | Newly detected, not yet addressed |
+| `IN_PROGRESS` | AI remediation generated, under review |
+| `FIXED` | Pull request created and merged |
+| `DISMISSED` | Marked as false positive or accepted risk |
+| `REOPENED` | Previously fixed but detected again |
+
+## Listing Findings
+
+```bash title="cURL"
+curl http://localhost:8080/api/repositories/1/findings \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Filtering
+
+| Parameter | Type | Description |
+|---|---|---|
+| `severity` | `string` | Filter by severity level |
+| `status` | `string` | Filter by status |
+| `cwe` | `string` | Filter by CWE identifier |
+| `filePath` | `string` | Filter by file path |
+| `page` | `integer` | Page number (default: 0) |
+| `size` | `integer` | Page size (default: 20) |
+
+```bash title="Example — Critical findings only"
+curl "http://localhost:8080/api/repositories/1/findings?severity=CRITICAL&status=OPEN" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+## Dismissing Findings
+
+Mark a finding as a false positive or accepted risk:
+
+```bash title="cURL"
+curl -X PATCH http://localhost:8080/api/findings/1/dismiss \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "reason": "FALSE_POSITIVE",
+    "comment": "This input is already validated upstream"
+  }'
+```
+
+## Finding Statistics
+
+```bash title="cURL"
+curl http://localhost:8080/api/repositories/1/findings/stats \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+```json title="Response"
+{
+  "total": 47,
+  "bySeverity": {
+    "CRITICAL": 3,
+    "HIGH": 12,
+    "MEDIUM": 22,
+    "LOW": 10
+  },
+  "byStatus": {
+    "OPEN": 30,
+    "FIXED": 12,
+    "DISMISSED": 5
+  }
+}
+```

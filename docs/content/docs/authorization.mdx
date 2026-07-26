@@ -1,0 +1,87 @@
+---
+title: Authorization
+description: Role-based access control and permission management in JQube.
+icon: ShieldCheck
+---
+
+# Authorization
+
+JQube implements **Role-Based Access Control (RBAC)** to manage user permissions across the platform.
+
+## Roles
+
+| Role | Description | Permissions |
+|---|---|---|
+| **USER** | Default role for authenticated users | View projects, run scans, view findings |
+| **ADMIN** | Platform administrator | All USER permissions + manage users, system config |
+| **OWNER** | Project owner | All permissions within owned projects |
+| **MEMBER** | Project member | View and scan within assigned projects |
+
+## Permission Matrix
+
+| Action | USER | MEMBER | OWNER | ADMIN |
+|---|---|---|---|---|
+| Create Project | ✅ | ✅ | ✅ | ✅ |
+| View Own Projects | ✅ | ✅ | ✅ | ✅ |
+| View All Projects | ❌ | ❌ | ❌ | ✅ |
+| Add Repository | ❌ | ❌ | ✅ | ✅ |
+| Run Scan | ❌ | ✅ | ✅ | ✅ |
+| View Findings | ❌ | ✅ | ✅ | ✅ |
+| Generate Fix | ❌ | ✅ | ✅ | ✅ |
+| Create PR | ❌ | ❌ | ✅ | ✅ |
+| Delete Project | ❌ | ❌ | ✅ | ✅ |
+| Manage Users | ❌ | ❌ | ❌ | ✅ |
+
+## Implementation
+
+```java title="SecurityConfig.java"
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/auth/**").permitAll()
+            .requestMatchers("/api/health").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/api/projects/**").hasRole("OWNER")
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .requestMatchers("/api/**").authenticated()
+        )
+        .build();
+}
+```
+
+## Method-Level Security
+
+```java title="ProjectService.java"
+@PreAuthorize("@projectSecurity.isOwner(#projectId, authentication)")
+public void deleteProject(Long projectId) {
+    projectRepository.deleteById(projectId);
+}
+
+@PreAuthorize("@projectSecurity.isMember(#projectId, authentication)")
+public List<Finding> getFindings(Long projectId) {
+    return findingRepository.findByProjectId(projectId);
+}
+```
+
+## Custom Security Evaluator
+
+```java title="ProjectSecurity.java"
+@Component("projectSecurity")
+@RequiredArgsConstructor
+public class ProjectSecurity {
+
+    private final ProjectRepository projectRepository;
+
+    public boolean isOwner(Long projectId, Authentication auth) {
+        Long userId = extractUserId(auth);
+        return projectRepository.findById(projectId)
+            .map(p -> p.getUser().getId().equals(userId))
+            .orElse(false);
+    }
+
+    public boolean isMember(Long projectId, Authentication auth) {
+        Long userId = extractUserId(auth);
+        return projectRepository.isMember(projectId, userId);
+    }
+}
+```

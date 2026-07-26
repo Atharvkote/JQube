@@ -1,0 +1,238 @@
+---
+title: API Reference
+description: Complete REST API documentation for JQube with endpoints, parameters, and examples.
+icon: Code2
+---
+# API Reference
+
+The JQube REST API provides programmatic access to all platform features. All endpoints require JWT authentication unless noted otherwise.
+
+## Base URL
+
+```
+http://localhost:8080/api
+```
+
+Production: `https://api.jqube.dev/api`
+
+## Authentication
+
+Include the JWT token in the `Authorization` header:
+
+```bash title="Header"
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
+```
+
+## Endpoints Overview
+
+| Category | Endpoints |
+|---|---|
+| [Authentication](#authentication) | Login, Callback, Logout |
+| [Projects](#projects) | CRUD operations |
+| [Repositories](#repositories) | Add, List, Remove |
+| [Scans](#scans) | Trigger, Status, History |
+| [Findings](#findings) | List, Filter, Dismiss |
+| [Remediations](#remediations) | Generate, Edit, View |
+| [Pull Requests](#pull-requests) | Create, List, Status |
+
+---
+
+## Authentication
+
+### `POST /api/auth/github`
+
+Exchange a GitHub OAuth code for a JWT token.
+
+**Authentication:** None required
+
+**Request Body:**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `code` | `string` | Yes | GitHub OAuth authorization code |
+| `state` | `string` | Yes | CSRF state token |
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/auth/github \
+  -H "Content-Type: application/json" \
+  -d '{"code": "abc123", "state": "csrf_token"}'
+```
+
+```json title="Response — 200 OK"
+{
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "user": {
+    "id": 1,
+    "username": "developer",
+    "email": "dev@example.com",
+    "avatarUrl": "https://avatars.githubusercontent.com/u/12345"
+  }
+}
+```
+
+**Status Codes:**
+
+| Code | Description |
+|---|---|
+| `200` | Authentication successful |
+| `400` | Invalid code or state |
+| `401` | GitHub authentication failed |
+
+---
+
+## Projects
+
+### `GET /api/projects`
+
+List all projects for the authenticated user.
+
+```bash title="cURL"
+curl http://localhost:8080/api/projects \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```json title="Response — 200 OK"
+{
+  "projects": [
+    {
+      "id": 1,
+      "name": "Production Services",
+      "description": "Security scanning for production",
+      "repositoryCount": 5,
+      "totalFindings": 47,
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+### `POST /api/projects`
+
+Create a new project.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Project name (3-200 chars) |
+| `description` | `string` | No | Project description |
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/projects \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Project", "description": "Security audit"}'
+```
+
+### `DELETE /api/projects/{id}`
+
+Delete a project and all associated data.
+
+**Authorization:** Project owner only
+
+```bash title="cURL"
+curl -X DELETE http://localhost:8080/api/projects/1 \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## Scans
+
+### `POST /api/repositories/{id}/scan`
+
+Trigger a security scan on a repository.
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `branch` | `string` | No | Branch to scan (default: `main`) |
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/repositories/1/scan \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"branch": "main"}'
+```
+
+```json title="Response — 202 Accepted"
+{
+  "scanId": 42,
+  "status": "QUEUED",
+  "repositoryId": 1,
+  "branch": "main"
+}
+```
+
+### `GET /api/scans/{id}`
+
+Get scan status and results.
+
+```json title="Response — 200 OK"
+{
+  "id": 42,
+  "status": "COMPLETED",
+  "findingCount": 15,
+  "duration": 45,
+  "branch": "main",
+  "startedAt": "2024-01-15T10:30:00Z",
+  "completedAt": "2024-01-15T10:30:45Z"
+}
+```
+
+---
+
+## Remediations
+
+### `POST /api/findings/{id}/remediate`
+
+Generate an AI remediation for a finding.
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/findings/1/remediate \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+```json title="Response — 200 OK"
+{
+  "id": 1,
+  "findingId": 1,
+  "originalCode": "...",
+  "fixedCode": "...",
+  "explanation": "...",
+  "confidence": 0.95,
+  "model": "gpt-4"
+}
+```
+
+---
+
+## Error Responses
+
+All errors follow a consistent format:
+
+```json title="Error Response"
+{
+  "status": 404,
+  "error": "NOT_FOUND",
+  "message": "Project with ID 99 not found",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "path": "/api/projects/99"
+}
+```
+
+| Status | Error Code | Description |
+|---|---|---|
+| `400` | `BAD_REQUEST` | Invalid request body or parameters |
+| `401` | `UNAUTHORIZED` | Missing or invalid JWT token |
+| `403` | `FORBIDDEN` | Insufficient permissions |
+| `404` | `NOT_FOUND` | Resource does not exist |
+| `409` | `CONFLICT` | Resource already exists |
+| `429` | `RATE_LIMITED` | Too many requests |
+| `500` | `INTERNAL_ERROR` | Unexpected server error |
+
+## Rate Limits
+
+| Endpoint | Limit |
+|---|---|
+| Authentication | 10 req/min |
+| Scans | 5 req/min |
+| Remediations | 20 req/min |
+| General API | 100 req/min |

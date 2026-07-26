@@ -1,0 +1,75 @@
+---
+title: Projects
+description: Create and manage projects to organize your security scanning workflow.
+icon: FolderOpen
+---
+
+# Projects
+
+Projects in JQube are containers for organizing repositories and their scan results. Each project groups related repositories for a cohesive security overview.
+
+## Creating a Project
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Production Services",
+    "description": "Security scanning for all production microservices"
+  }'
+```
+
+```json title="Response — 201 Created"
+{
+  "id": 1,
+  "name": "Production Services",
+  "description": "Security scanning for all production microservices",
+  "repositoryCount": 0,
+  "totalFindings": 0,
+  "createdAt": "2024-01-15T10:30:00Z"
+}
+```
+
+## Project Dashboard
+
+Each project provides a dashboard with:
+
+- **Repository list** — All connected repositories with scan status
+- **Finding summary** — Total findings by severity
+- **Scan history** — Timeline of all scans
+- **Trend chart** — Vulnerability trend over time
+
+## Managing Projects
+
+### List All Projects
+
+```bash title="cURL"
+curl http://localhost:8080/api/projects \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### Update a Project
+
+```bash title="cURL"
+curl -X PUT http://localhost:8080/api/projects/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Project Name",
+    "description": "Updated description"
+  }'
+```
+
+### Delete a Project
+
+```bash title="cURL"
+curl -X DELETE http://localhost:8080/api/projects/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+| Status | Description |
+|---|---|
+| `204 No Content` | Project deleted successfully |
+| `403 Forbidden` | Not the project owner |
+| `404 Not Found` | Project does not exist |

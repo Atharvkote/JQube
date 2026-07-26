@@ -1,0 +1,140 @@
+---
+title: Troubleshooting
+description: Common issues and solutions when working with JQube.
+icon: Bug
+---
+
+
+# Troubleshooting
+
+This page covers common issues you might encounter when setting up or using JQube.
+
+## Installation Issues
+
+### Docker Compose fails to start
+
+**Symptom:** `docker compose up` exits with an error.
+
+**Solution:**
+```bash title="Terminal"
+# Check Docker is running
+docker info
+
+# Check port availability
+netstat -tlnp | grep -E '3000|8080|5432|6379'
+
+# Remove old containers and volumes
+docker compose down -v
+docker compose up -d
+```
+
+### Database connection refused
+
+**Symptom:** Backend logs show `Connection refused` to PostgreSQL.
+
+**Solution:**
+1. Ensure PostgreSQL is running: `docker compose ps`
+2. Check the `DB_HOST` matches the service name in Docker Compose
+3. Wait for PostgreSQL health check to pass before starting backend
+
+```bash title="Terminal"
+# Check PostgreSQL is ready
+docker compose exec postgres pg_isready -U jqube_user
+```
+
+### Redis connection timeout
+
+**Symptom:** Backend logs show Redis connection timeout.
+
+**Solution:**
+```bash title="Terminal"
+# Verify Redis is running
+docker compose exec redis redis-cli ping
+
+# Check Redis configuration
+docker compose logs redis
+```
+
+## Authentication Issues
+
+### GitHub OAuth callback fails
+
+**Symptom:** After GitHub authorization, the callback returns an error.
+
+**Solution:**
+1. Verify `GITHUB_REDIRECT_URI` matches exactly what's configured in your GitHub OAuth App
+2. Check the `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are correct
+3. Ensure the redirect URI protocol matches (http vs https)
+
+### JWT token expired
+
+**Symptom:** API returns `401 Unauthorized` with "Token expired".
+
+**Solution:**
+- Log in again to get a fresh token
+- Increase `JWT_EXPIRATION` in your environment variables
+
+## Scan Issues
+
+### Scan stuck in QUEUED status
+
+**Symptom:** Scan remains in `QUEUED` status and never starts.
+
+**Solution:**
+1. Check if the maximum concurrent scans limit is reached
+2. Verify Semgrep is installed: `docker compose exec backend semgrep --version`
+3. Check backend logs: `docker compose logs backend`
+
+### Scan fails with timeout
+
+**Symptom:** Large repositories exceed the scan timeout.
+
+**Solution:**
+```properties title=".env"
+# Increase scan timeout to 10 minutes
+SCAN_TIMEOUT=600
+```
+
+### Semgrep not found
+
+**Symptom:** `SemgrepNotFoundException` in backend logs.
+
+**Solution:**
+```bash title="Terminal"
+# Install Semgrep in the backend container
+docker compose exec backend pip3 install semgrep
+
+# Or rebuild the backend image
+docker compose build backend
+```
+
+## Performance Issues
+
+### Slow API responses
+
+**Solution:**
+1. Enable Redis caching (ensure Redis is connected)
+2. Check database connection pool settings
+3. Monitor PostgreSQL query performance
+
+### High memory usage
+
+**Solution:**
+```yaml title="docker-compose.yml"
+services:
+  backend:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    environment:
+      - JAVA_OPTS=-Xmx1g -Xms512m
+```
+
+## Getting Help
+
+If you're still stuck:
+
+1. Check the [FAQ](/docs/faq)
+2. Search [GitHub Issues](https://github.com/jqube/jqube/issues)
+3. Open a new issue with logs and environment details

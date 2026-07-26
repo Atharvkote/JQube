@@ -1,0 +1,58 @@
+---
+title: Diff Viewer
+description: Side-by-side code comparison for reviewing AI-generated security fixes.
+icon: GitCompare
+---
+
+# Diff Viewer
+
+The Diff Viewer provides a side-by-side comparison of original vulnerable code and the AI-generated secure fix. It uses Monaco's DiffEditor for a professional review experience.
+
+## Features
+
+- **Side-by-side view** — Original code on the left, fixed code on the right
+- **Inline diff** — Changed lines highlighted with green (additions) and red (removals)
+- **Syntax highlighting** — Language-aware coloring in both panels
+- **Line mapping** — Corresponding lines are aligned between panels
+- **Scroll sync** — Both panels scroll together
+- **Full file context** — See the fix in the context of the entire file
+
+## Viewing a Diff
+
+When you generate an AI remediation, the diff viewer shows:
+
+```diff title="Example Diff"
+- String query = "SELECT * FROM users WHERE id = " + userId;
+- Statement stmt = connection.createStatement();
+- ResultSet rs = stmt.executeQuery(query);
++ String query = "SELECT * FROM users WHERE id = ?";
++ PreparedStatement stmt = connection.prepareStatement(query);
++ stmt.setLong(1, userId);
++ ResultSet rs = stmt.executeQuery();
+```
+
+## API Response
+
+```json title="Diff Data"
+{
+  "finding": {
+    "filePath": "src/main/java/UserService.java",
+    "startLine": 42,
+    "endLine": 44
+  },
+  "original": "String query = \"SELECT * FROM users WHERE id = \" + userId;\nStatement stmt = connection.createStatement();\nResultSet rs = stmt.executeQuery(query);",
+  "fixed": "String query = \"SELECT * FROM users WHERE id = ?\";\nPreparedStatement stmt = connection.prepareStatement(query);\nstmt.setLong(1, userId);\nResultSet rs = stmt.executeQuery();",
+  "language": "java",
+  "linesChanged": 3,
+  "linesAdded": 1
+}
+```
+
+## Configuration
+
+| Option | Default | Description |
+|---|---|---|
+| `renderSideBySide` | `true` | Side-by-side or inline view |
+| `readOnly` | `true` | Prevent editing in diff view |
+| `ignoreTrimWhitespace` | `true` | Ignore whitespace changes |
+| `renderIndicators` | `true` | Show change indicators |

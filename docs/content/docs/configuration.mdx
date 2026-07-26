@@ -1,0 +1,97 @@
+---
+title: Configuration
+description: Configure JQube for your environment and requirements.
+icon: Settings
+---
+
+
+# Configuration
+
+JQube is configured through environment variables, YAML configuration files, and optional project-level settings.
+
+## Configuration Files
+
+| File | Location | Purpose |
+|---|---|---|
+| `.env` | Project root | Environment variables |
+| `application.yml` | `backend/src/main/resources/` | Spring Boot config |
+| `application-dev.yml` | Same as above | Development overrides |
+| `application-prod.yml` | Same as above | Production overrides |
+| `.jquberc.yml` | Repository root | CLI configuration |
+| `.semgrep.yml` | Repository root | Custom Semgrep rules |
+
+## Spring Profiles
+
+| Profile | Description |
+|---|---|
+| `dev` | Development with debug logging and H2 console |
+| `prod` | Production with optimized settings |
+| `test` | Testing with in-memory database |
+
+```yaml title="application.yml"
+spring:
+  application:
+    name: jqube
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+
+jqube:
+  scan:
+    timeout: ${SCAN_TIMEOUT:300}
+    max-concurrent: ${MAX_CONCURRENT_SCANS:5}
+    temp-dir: ${SCAN_TEMP_DIR:/tmp/jqube-scans}
+  ai:
+    provider: ${AI_PROVIDER:openai}
+    model: ${AI_MODEL:gpt-4}
+    max-tokens: ${AI_MAX_TOKENS:4096}
+    temperature: ${AI_TEMPERATURE:0.1}
+  github:
+    api-url: https://api.github.com
+    client-id: ${GITHUB_CLIENT_ID}
+    client-secret: ${GITHUB_CLIENT_SECRET}
+    redirect-uri: ${GITHUB_REDIRECT_URI}
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration: ${JWT_EXPIRATION:86400000}
+    cors:
+      allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+```
+
+<Callout type="info">
+Environment variables take precedence over YAML configuration. Use environment variables for sensitive values like secrets and API keys.
+</Callout>
+
+## Scan Configuration
+
+| Setting | Default | Description |
+|---|---|---|
+| `scan.timeout` | 300s | Maximum scan duration |
+| `scan.max-concurrent` | 5 | Maximum simultaneous scans |
+| `scan.temp-dir` | `/tmp/jqube-scans` | Temporary directory for cloned repos |
+
+## AI Configuration
+
+| Setting | Default | Description |
+|---|---|---|
+| `ai.provider` | `openai` | AI provider (openai, google, anthropic) |
+| `ai.model` | `gpt-4` | Model identifier |
+| `ai.max-tokens` | 4096 | Maximum response tokens |
+| `ai.temperature` | 0.1 | Lower = more deterministic |
+
+## CORS Configuration
+
+```yaml title="application-prod.yml"
+jqube:
+  security:
+    cors:
+      allowed-origins: https://app.jqube.dev
+      allowed-methods: GET,POST,PUT,DELETE,PATCH
+      allowed-headers: Authorization,Content-Type
+      max-age: 3600
+```

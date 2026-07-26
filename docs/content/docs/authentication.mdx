@@ -1,0 +1,137 @@
+---
+title: Authentication
+description: How JQube handles user authentication with GitHub OAuth and JWT tokens.
+icon: KeyRound
+---
+
+
+# Authentication
+
+JQube uses **GitHub OAuth 2.0** for user authentication and **JWT (JSON Web Tokens)** for API authorization.
+
+## Authentication Flow
+
+```
+┌────────┐     ┌─────────┐     ┌──────────┐     ┌─────────┐
+│  User  │────▶│ Frontend │────▶│  GitHub  │────▶│ Backend │
+│        │     │          │     │  OAuth   │     │         │
+└────────┘     └─────────┘     └──────────┘     └─────────┘
+    │               │                │                │
+    │  1. Click     │                │                │
+    │  "Sign In"    │                │                │
+    │──────────────▶│                │                │
+    │               │ 2. Redirect to │                │
+    │               │ GitHub /auth   │                │
+    │               │───────────────▶│                │
+    │               │                │                │
+    │  3. User      │                │                │
+    │  Approves     │                │                │
+    │──────────────────────────────▶│                │
+    │               │                │                │
+    │               │  4. Callback   │                │
+    │               │  with code     │                │
+    │               │◀───────────────│                │
+    │               │                │                │
+    │               │  5. Exchange   │                │
+    │               │  code for JWT  │                │
+    │               │───────────────────────────────▶│
+    │               │                │                │
+    │               │  6. Return JWT │                │
+    │               │◀───────────────────────────────│
+    │               │                │                │
+    │  7. Authenticated              │                │
+    │◀──────────────│                │                │
+```
+
+## GitHub OAuth Setup
+
+### 1. Create OAuth App
+
+Navigate to **GitHub Settings** → **Developer Settings** → **OAuth Apps** → **New OAuth App**.
+
+| Field | Development | Production |
+|---|---|---|
+| Application Name | `JQube Dev` | `JQube` |
+| Homepage URL | `http://localhost:3000` | `https://app.jqube.dev` |
+| Callback URL | `http://localhost:3000/auth/callback` | `https://app.jqube.dev/auth/callback` |
+
+### 2. Configure Environment
+
+```properties title=".env"
+GITHUB_CLIENT_ID=Ov23li1234567890abcd
+GITHUB_CLIENT_SECRET=your_github_client_secret_here
+GITHUB_REDIRECT_URI=http://localhost:3000/auth/callback
+```
+
+## JWT Implementation
+
+### Token Structure
+
+```json title="JWT Payload"
+{
+  "sub": "12345678",
+  "username": "developer",
+  "email": "dev@example.com",
+  "avatar_url": "https://avatars.githubusercontent.com/u/12345678",
+  "iat": 1700000000,
+  "exp": 1700086400,
+  "jti": "unique-token-id"
+}
+```
+
+### Token Provider
+
+```java title="JwtTokenProvider.java"
+@Component
+public class JwtTokenProvider {
+
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    @Value("${jwt.expiration}")
+    private long expirationMs;
+
+    public String generateToken(User user) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expirationMs);
+
+        return Jwts.builder()
+            .setSubject(String.valueOf(user.getGithubId()))
+            .claim("username", user.getUsername())
+            .claim("email", user.getEmail())
+            .setIssuedAt(now)
+            .setExpiration(expiry)
+            .setId(UUID.randomUUID().toString())
+            .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+            .compact();
+    }
+
+    private Key getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+}
+```
+
+<Callout type="warning">
+Never expose your JWT secret key. Use a minimum of 256 bits (32 bytes) for HS512. Store it as an environment variable, never in source code.
+</Callout>
+
+## Token Lifecycle
+
+| Event | Action |
+|---|---|
+| **Login** | JWT issued, stored in `localStorage` |
+| **API Request** | Token sent in `Authorization: Bearer` header |
+| **Token Expired** | Frontend redirects to login |
+| **Logout** | Token added to Redis blacklist |
+| **Token Compromised** | Revoke via blacklist, force re-login |
+
+## Security Best Practices
+
+1. **Short-lived tokens** — Default expiry is 24 hours
+2. **Redis blacklist** — Immediate token revocation on logout
+3. **HTTPS only** — Tokens never transmitted over HTTP
+4. **HttpOnly cookies** — Alternative to localStorage (configurable)
+5. **CSRF protection** — State parameter in OAuth flow
+6. **Rate limiting** — Login endpoint throttled to 10 req/min

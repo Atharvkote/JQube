@@ -1,0 +1,122 @@
+---
+title: SDK
+description: JQube SDK for TypeScript, Python, and Java for programmatic integration.
+icon: Package
+---
+
+# SDK
+
+JQube provides official SDKs for TypeScript, Python, and Java to integrate security scanning into your applications and CI/CD pipelines.
+
+## TypeScript SDK
+
+```bash title="Installation"
+npm install @jqube/sdk
+```
+
+```typescript title="Usage"
+import { JQubeClient } from '@jqube/sdk';
+
+const client = new JQubeClient({
+  apiUrl: 'https://api.jqube.dev',
+  token: process.env.JQUBE_API_TOKEN,
+});
+
+// Create a project
+const project = await client.projects.create({
+  name: 'My Project',
+  description: 'Security scanning',
+});
+
+// Add a repository
+const repo = await client.repositories.add(project.id, {
+  githubRepoUrl: 'https://github.com/org/repo',
+  branch: 'main',
+});
+
+// Trigger a scan
+const scan = await client.scans.create(repo.id, { branch: 'main' });
+
+// Wait for completion
+const result = await client.scans.waitForCompletion(scan.id);
+
+// Get findings
+const findings = await client.findings.list(repo.id, {
+  severity: 'CRITICAL',
+});
+
+console.log(`Found ${findings.length} critical vulnerabilities`);
+```
+
+## Python SDK
+
+```bash title="Installation"
+pip install jqube-sdk
+```
+
+```python title="Usage"
+from jqube import JQubeClient
+
+client = JQubeClient(
+    api_url="https://api.jqube.dev",
+    token=os.environ["JQUBE_API_TOKEN"]
+)
+
+# Scan and get findings
+scan = client.scans.create(repo_id=1, branch="main")
+scan.wait_for_completion()
+
+findings = client.findings.list(
+    repo_id=1,
+    severity="CRITICAL"
+)
+
+for finding in findings:
+    print(f"[{finding.severity}] {finding.message}")
+    print(f"  File: {finding.file_path}:{finding.start_line}")
+```
+
+## Java SDK
+
+```xml title="pom.xml"
+<dependency>
+    <groupId>dev.jqube</groupId>
+    <artifactId>jqube-sdk</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+
+```java title="Usage"
+JQubeClient client = JQubeClient.builder()
+    .apiUrl("https://api.jqube.dev")
+    .token(System.getenv("JQUBE_API_TOKEN"))
+    .build();
+
+// Trigger scan
+Scan scan = client.scans().create(repoId, "main");
+
+// Wait for completion
+scan.waitForCompletion(Duration.ofMinutes(5));
+
+// Get critical findings
+List<Finding> findings = client.findings()
+    .list(repoId, FindingFilter.severity(Severity.CRITICAL));
+
+findings.forEach(f ->
+    System.out.printf("[%s] %s at %s:%d%n",
+        f.getSeverity(), f.getMessage(),
+        f.getFilePath(), f.getStartLine()));
+```
+
+## SDK Features
+
+| Feature | TypeScript | Python | Java |
+|---|---|---|---|
+| Projects CRUD | ✅ | ✅ | ✅ |
+| Repository Management | ✅ | ✅ | ✅ |
+| Trigger Scans | ✅ | ✅ | ✅ |
+| List Findings | ✅ | ✅ | ✅ |
+| AI Remediation | ✅ | ✅ | ✅ |
+| Create PRs | ✅ | ✅ | ✅ |
+| WebSocket Events | ✅ | ❌ | ❌ |
+| Async Support | ✅ | ✅ | ✅ |

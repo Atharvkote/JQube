@@ -1,0 +1,79 @@
+---
+title: Changelog
+description: Release history and version changes for JQube.
+icon: History
+---
+
+# Changelog
+
+All notable changes to JQube are documented here.
+
+## v2.0.0 — 2024-12-15
+
+### 🚀 Major Release
+
+This release introduces AI-powered remediation, automated Pull Request creation, and a completely redesigned dashboard.
+
+### ✨ New Features
+
+- **AI Remediation Engine** — Generate secure code fixes using GPT-4, Gemini, or Claude
+- **Automated Pull Requests** — One-click PR creation with AI-generated fixes
+- **Monaco Editor** — Built-in code editor for reviewing and editing fixes
+- **Diff Viewer** — Side-by-side code comparison with syntax highlighting
+- **Batch Remediation** — Generate fixes for multiple findings at once
+- **Severity Dashboard** — Visual breakdown of findings by severity
+- **Redis Caching** — Improved performance with Redis-backed caching
+- **WebSocket Updates** — Real-time scan progress notifications
+
+### 🔧 Improvements
+
+- Upgraded to Java 21 LTS
+- Upgraded to Spring Boot 3.2
+- Upgraded to React 18 with concurrent features
+- Improved scan performance by 40%
+- Better error messages and validation
+- Enhanced API documentation
+
+### 🐛 Bug Fixes
+
+- Fixed OAuth callback failing with special characters in state
+- Fixed scan timeout not being respected for large repositories
+- Fixed finding duplication on re-scans
+- Fixed JWT refresh race condition
+
+### ⚠️ Breaking Changes
+
+- API endpoint prefix changed from `/v1/` to `/api/`
+- JWT token format updated (re-login required)
+- Database schema changes (run migrations)
+
+---
+
+## v1.5.0 — 2024-09-01
+
+### ✨ New Features
+
+- **Multi-language scanning** — Added support for 15 additional languages
+- **Custom Semgrep rules** — Support for `.semgrep.yml` in repositories
+- **Finding export** — Export findings as SARIF, CSV, or JSON
+- **GitHub Actions integration** — Scan on push and PR events
+
+### 🔧 Improvements
+
+- Reduced Docker image size by 35%
+- Improved scan accuracy with updated Semgrep rules
+- Better error handling for GitHub API rate limits
+
+---
+
+## v1.0.0 — 2024-06-01
+
+### 🎉 Initial Release
+
+- GitHub OAuth authentication
+- Semgrep security scanning (10 languages)
+- PostgreSQL data storage
+- Findings management with severity classification
+- Docker Compose deployment
+- REST API with JWT authorization
+- React dashboard with project management

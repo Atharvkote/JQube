@@ -1,0 +1,142 @@
+---
+title: Getting Started
+description: Set up JQube and run your first security scan in under 5 minutes.
+icon: Rocket
+---
+
+
+# Getting Started
+
+This guide walks you through setting up JQube from scratch. By the end, you'll have a running instance connected to your GitHub repositories and performing security scans.
+
+## Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+| Tool | Version | Purpose |
+|---|---|---|
+| **Docker** | 24+ | Container runtime |
+| **Docker Compose** | 2.20+ | Multi-container orchestration |
+| **Git** | 2.40+ | Version control |
+| **Node.js** | 18+ | Frontend build tools |
+| **Java** | 21+ | Backend runtime |
+| **GitHub Account** | — | OAuth and repository access |
+
+<Callout type="info">
+If you're using Docker for deployment, you only need Docker and Docker Compose. Java and Node.js are only required for local development.
+</Callout>
+
+## Quick Setup
+
+<Steps>
+<Step>
+
+### Clone the Repository
+
+```bash title="Terminal"
+git clone https://github.com/jqube/jqube.git
+cd jqube
+```
+
+</Step>
+<Step>
+
+### Configure Environment Variables
+
+Copy the example environment file and fill in your credentials:
+
+```bash title="Terminal"
+cp .env.example .env
+```
+
+Edit the `.env` file with your GitHub OAuth credentials and database configuration:
+
+```properties title=".env"
+# GitHub OAuth
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_REDIRECT_URI=http://localhost:3000/auth/callback
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=jqube
+DB_USERNAME=jqube_user
+DB_PASSWORD=your_secure_password
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# AI Provider
+AI_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key
+
+# JWT
+JWT_SECRET=your_jwt_secret_key_min_256_bits
+JWT_EXPIRATION=86400000
+```
+
+</Step>
+<Step>
+
+### Start with Docker Compose
+
+```bash title="Terminal"
+docker compose up -d
+```
+
+This starts all services:
+- **Frontend** on `http://localhost:3000`
+- **Backend** on `http://localhost:8080`
+- **PostgreSQL** on `localhost:5432`
+- **Redis** on `localhost:6379`
+
+</Step>
+<Step>
+
+### Verify Installation
+
+Open your browser and navigate to `http://localhost:3000`. You should see the JQube login page.
+
+```bash title="Terminal"
+# Check all services are running
+docker compose ps
+
+# Check backend health
+curl http://localhost:8080/api/health
+```
+
+Expected response:
+
+```json title="Response"
+{
+  "status": "UP",
+  "version": "2.0.0",
+  "database": "CONNECTED",
+  "redis": "CONNECTED",
+  "semgrep": "AVAILABLE"
+}
+```
+
+</Step>
+</Steps>
+
+## First Security Scan
+
+Once JQube is running, follow these steps to perform your first scan:
+
+1. **Sign in** with your GitHub account using OAuth
+2. **Create a project** and give it a name
+3. **Add repositories** from your GitHub account
+4. **Start a scan** — Semgrep will analyze your code
+5. **Review findings** organized by severity
+6. **Generate fixes** using AI remediation
+7. **Create a PR** with the automated fixes
+
+## Next Steps
+
+- [Installation Guide](/docs/installation) — Detailed setup instructions
+- [Quick Start](/docs/quick-start) — Run your first scan
+- [Architecture](/docs/architecture) — Understand how JQube works
+- [Configuration](/docs/configuration) — Customize your setup

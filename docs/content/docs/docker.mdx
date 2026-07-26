@@ -1,0 +1,113 @@
+---
+title: Docker
+description: Build and run JQube containers with Docker.
+icon: Container
+---
+
+# Docker
+
+JQube provides optimized Docker images for both the frontend and backend services.
+
+## Backend Dockerfile
+
+```dockerfile title="backend/Dockerfile"
+# Build stage
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Install Semgrep
+RUN apk add --no-cache python3 py3-pip git && \
+    pip3 install semgrep --break-system-packages
+
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD wget -qO- http://localhost:8080/api/health || exit 1
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+## Frontend Dockerfile
+
+```dockerfile title="frontend/Dockerfile"
+# Build stage
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Runtime stage
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+## Building Images
+
+```bash title="Terminal"
+# Build backend
+docker build -t jqube-backend:latest ./backend
+
+# Build frontend
+docker build -t jqube-frontend:latest ./frontend
+```
+
+## Running Containers
+
+```bash title="Terminal"
+# Create a network
+docker network create jqube-network
+
+# Run PostgreSQL
+docker run -d --name jqube-postgres \
+  --network jqube-network \
+  -e POSTGRES_DB=jqube \
+  -e POSTGRES_USER=jqube_user \
+  -e POSTGRES_PASSWORD=secure_password \
+  -v pgdata:/var/lib/postgresql/data \
+  postgres:16-alpine
+
+# Run Redis
+docker run -d --name jqube-redis \
+  --network jqube-network \
+  redis:7-alpine
+
+# Run Backend
+docker run -d --name jqube-backend \
+  --network jqube-network \
+  -p 8080:8080 \
+  -e DB_HOST=jqube-postgres \
+  -e REDIS_HOST=jqube-redis \
+  -e GITHUB_CLIENT_ID=your_client_id \
+  -e GITHUB_CLIENT_SECRET=your_secret \
+  jqube-backend:latest
+
+# Run Frontend
+docker run -d --name jqube-frontend \
+  --network jqube-network \
+  -p 3000:80 \
+  jqube-frontend:latest
+```
+
+## Image Sizes
+
+| Image | Size | Base |
+|---|---|---|
+| `jqube-backend` | ~350 MB | Eclipse Temurin 21 JRE |
+| `jqube-frontend` | ~25 MB | Nginx Alpine |
+| `postgres:16-alpine` | ~80 MB | Alpine Linux |
+| `redis:7-alpine` | ~12 MB | Alpine Linux |

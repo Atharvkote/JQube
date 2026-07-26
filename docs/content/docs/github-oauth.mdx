@@ -1,0 +1,164 @@
+---
+title: GitHub OAuth
+description: Detailed guide on GitHub OAuth 2.0 integration in JQube.
+icon: Github
+---
+
+
+# GitHub OAuth
+
+JQube uses **GitHub OAuth 2.0** to authenticate users and obtain repository access tokens. This page explains the complete OAuth flow, scopes, and token management.
+
+## OAuth Scopes
+
+| Scope | Purpose | Required |
+|---|---|---|
+| `read:user` | Read user profile information | Yes |
+| `user:email` | Access user email addresses | Yes |
+| `repo` | Full repository access (read & write) | Yes |
+| `write:discussion` | Create PR discussions | Optional |
+
+## Flow Details
+
+<Steps>
+<Step>
+
+### Initiate OAuth
+
+The frontend redirects the user to GitHub's authorization endpoint:
+
+```
+https://github.com/login/oauth/authorize
+  ?client_id=YOUR_CLIENT_ID
+  &redirect_uri=http://localhost:3000/auth/callback
+  &scope=read:user,user:email,repo
+  &state=random_csrf_token
+```
+
+The `state` parameter is a randomly generated string stored in the session to prevent CSRF attacks.
+
+</Step>
+<Step>
+
+### User Authorization
+
+GitHub displays an authorization page showing:
+- The application name (JQube)
+- Requested scopes and permissions
+- The user's GitHub account
+
+The user clicks **Authorize** to grant access.
+
+</Step>
+<Step>
+
+### Callback with Code
+
+GitHub redirects back with an authorization code:
+
+```
+http://localhost:3000/auth/callback?code=AUTH_CODE&state=random_csrf_token
+```
+
+The frontend validates the `state` parameter and sends the code to the backend.
+
+</Step>
+<Step>
+
+### Token Exchange
+
+The backend exchanges the authorization code for an access token:
+
+```java title="AuthService.java"
+public GitHubTokenResponse exchangeCode(String code) {
+    return webClient.post()
+        .uri("https://github.com/login/oauth/access_token")
+        .bodyValue(Map.of(
+            "client_id", clientId,
+            "client_secret", clientSecret,
+            "code", code,
+            "redirect_uri", redirectUri
+        ))
+        .header("Accept", "application/json")
+        .retrieve()
+        .bodyToMono(GitHubTokenResponse.class)
+        .block();
+}
+```
+
+</Step>
+<Step>
+
+### Fetch User Profile
+
+With the access token, JQube fetches the user's GitHub profile:
+
+```java title="GitHubService.java"
+public GitHubUser getUser(String accessToken) {
+    return webClient.get()
+        .uri("https://api.github.com/user")
+        .header("Authorization", "Bearer " + accessToken)
+        .retrieve()
+        .bodyToMono(GitHubUser.class)
+        .block();
+}
+```
+
+</Step>
+<Step>
+
+### Issue JWT
+
+The backend creates or updates the user record and issues a JWT:
+
+```java title="AuthService.java"
+public AuthResponse authenticate(String code) {
+    GitHubTokenResponse tokenResponse = exchangeCode(code);
+    GitHubUser githubUser = gitHubService.getUser(tokenResponse.getAccessToken());
+
+    User user = userRepository.findByGithubId(githubUser.getId())
+        .orElseGet(() -> createUser(githubUser));
+
+    // Encrypt and store GitHub token for repository access
+    user.setGithubToken(encrypt(tokenResponse.getAccessToken()));
+    userRepository.save(user);
+
+    String jwt = jwtTokenProvider.generateToken(user);
+    return new AuthResponse(jwt, user);
+}
+```
+
+</Step>
+</Steps>
+
+<Callout type="warning" title="Token Security">
+GitHub access tokens are encrypted using AES-256 before storage. They are only decrypted when making GitHub API calls on behalf of the user.
+</Callout>
+
+## Token Refresh
+
+GitHub OAuth tokens do not expire by default, but JQube checks token validity before each API call:
+
+```java title="GitHubService.java"
+public boolean isTokenValid(String accessToken) {
+    try {
+        webClient.get()
+            .uri("https://api.github.com/user")
+            .header("Authorization", "Bearer " + accessToken)
+            .retrieve()
+            .toBodilessEntity()
+            .block();
+        return true;
+    } catch (WebClientResponseException.Unauthorized e) {
+        return false;
+    }
+}
+```
+
+## Revoking Access
+
+Users can revoke JQube's access at any time:
+
+1. Go to **GitHub Settings** → **Applications** → **Authorized OAuth Apps**
+2. Find **JQube** and click **Revoke**
+3. JQube will detect the revoked token on the next API call and prompt re-authentication

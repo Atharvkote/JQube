@@ -1,0 +1,124 @@
+---
+title: CLI
+description: JQube command-line interface for running security scans from the terminal.
+icon: Terminal
+---
+
+# CLI
+
+The JQube CLI allows you to run security scans, view findings, and manage projects directly from your terminal.
+
+## Installation
+
+```bash title="Terminal"
+# Install via npm
+npm install -g @jqube/cli
+
+# Or use npx
+npx @jqube/cli scan
+```
+
+## Authentication
+
+```bash title="Terminal"
+# Login with GitHub
+jqube auth login
+
+# Check auth status
+jqube auth status
+
+# Logout
+jqube auth logout
+```
+
+## Commands
+
+### Scan
+
+```bash title="Terminal"
+# Scan current directory
+jqube scan
+
+# Scan a specific path
+jqube scan ./src
+
+# Scan with specific rules
+jqube scan --config=security-audit
+
+# Output results as JSON
+jqube scan --json > results.json
+```
+
+### Findings
+
+```bash title="Terminal"
+# List findings from last scan
+jqube findings list
+
+# Filter by severity
+jqube findings list --severity=critical
+
+# Show details for a specific finding
+jqube findings show 42
+
+# Export findings
+jqube findings export --format=sarif > findings.sarif
+```
+
+### Projects
+
+```bash title="Terminal"
+# List projects
+jqube projects list
+
+# Create a project
+jqube projects create "My Project"
+
+# Delete a project
+jqube projects delete 1
+```
+
+### Fix
+
+```bash title="Terminal"
+# Generate AI fix for a finding
+jqube fix 42
+
+# Generate fixes for all critical findings
+jqube fix --severity=critical
+
+# Apply fix directly
+jqube fix 42 --apply
+
+# Create PR with fix
+jqube fix 42 --pr
+```
+
+## Configuration
+
+Create a `.jquberc.yml` in your project root:
+
+```yaml title=".jquberc.yml"
+api_url: https://api.jqube.dev
+project_id: 1
+scan:
+  config: auto
+  exclude:
+    - node_modules/
+    - vendor/
+    - .git/
+  timeout: 300
+output:
+  format: table
+  color: true
+```
+
+## Exit Codes
+
+| Code | Description |
+|---|---|
+| `0` | Success, no findings |
+| `1` | Scan completed with findings |
+| `2` | Configuration error |
+| `3` | Authentication error |
+| `4` | Network error |

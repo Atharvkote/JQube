@@ -1,0 +1,91 @@
+---
+title: DevSecOps Workflow with JQube
+description: Building an automated DevSecOps pipeline with JQube, GitHub Actions, and Docker.
+author: JQube Team
+date: 2025-01-20
+tags: [devsecops, workflow, cicd, github-actions]
+---
+
+# DevSecOps Workflow with JQube
+
+DevSecOps means integrating security into every stage of the software development lifecycle. This post shows how to build an automated security pipeline with JQube.
+
+## The Pipeline
+
+```
+Code → Push → Scan → Review → Fix → PR → Merge → Deploy
+```
+
+Every commit triggers automated security analysis. Vulnerabilities are caught before they reach production.
+
+## Setup
+
+### 1. Connect Your Repository
+
+Sign in with GitHub OAuth and add your repositories to JQube.
+
+### 2. Configure GitHub Actions
+
+```yaml title=".github/workflows/security.yml"
+name: Security Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run JQube Security Scan
+        uses: jqube/scan-action@v2
+        with:
+          api-token: ${{ secrets.JQUBE_API_TOKEN }}
+          severity-threshold: high
+          fail-on-findings: true
+
+      - name: Upload Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: jqube-results.sarif
+```
+
+### 3. Set Quality Gates
+
+Configure your pipeline to fail on CRITICAL findings:
+
+- **CRITICAL** → Block merge
+- **HIGH** → Require review
+- **MEDIUM** → Warning
+- **LOW** → Informational
+
+### 4. Automate Remediation
+
+For critical findings, JQube can automatically generate fixes and create PRs:
+
+```yaml
+      - name: Auto-Remediate Critical
+        uses: jqube/remediate-action@v1
+        with:
+          api-token: ${{ secrets.JQUBE_API_TOKEN }}
+          severity: critical
+          auto-pr: true
+```
+
+## Results
+
+Teams using this workflow report:
+
+- **60% reduction** in time-to-fix for vulnerabilities
+- **90% fewer** security findings reaching production
+- **3x faster** security review cycles
+
+## Conclusion
+
+DevSecOps doesn't have to be complex. With JQube and GitHub Actions, you can build a security pipeline that runs automatically on every commit.
+
+Start with [Getting Started](/docs/getting-started) and have your pipeline running in under 30 minutes.

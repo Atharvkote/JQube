@@ -1,0 +1,125 @@
+---
+title: Redis
+description: Redis caching strategy, session management, and real-time features in JQube.
+icon: Cpu
+---
+
+# Redis
+
+JQube uses **Redis 7** for caching, session management, JWT blacklisting, and real-time scan status updates.
+
+## Use Cases
+
+| Use Case | Key Pattern | TTL |
+|---|---|---|
+| **Scan Status** | `scan:{repositoryId}` | 24 hours |
+| **JWT Blacklist** | `jwt:blacklist:{tokenId}` | Token expiry |
+| **User Session** | `session:{userId}` | 30 minutes |
+| **Rate Limiting** | `ratelimit:{ip}:{endpoint}` | 1 minute |
+| **GitHub Token Cache** | `github:token:{userId}` | 1 hour |
+| **Scan Results Cache** | `cache:findings:{scanId}` | 1 hour |
+
+## Configuration
+
+```yaml title="application.yml"
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 4
+          max-wait: 2000
+```
+
+## Redis Configuration Bean
+
+```java title="RedisConfig.java"
+@Configuration
+public class RedisConfig {
+
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        return template;
+    }
+}
+```
+
+## Caching Pattern
+
+```java title="ScanStatusService.java"
+@Service
+@RequiredArgsConstructor
+public class ScanStatusService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public void updateStatus(Long repoId, ScanStatus status) {
+        String key = "scan:" + repoId;
+        redisTemplate.opsForValue().set(key, status.name(), Duration.ofHours(24));
+    }
+
+    public Optional<ScanStatus> getStatus(Long repoId) {
+        String key = "scan:" + repoId;
+        String value = redisTemplate.opsForValue().get(key);
+        return Optional.ofNullable(value).map(ScanStatus::valueOf);
+    }
+
+    public void invalidate(Long repoId) {
+        redisTemplate.delete("scan:" + repoId);
+    }
+}
+```
+
+## JWT Blacklisting
+
+When a user logs out, their JWT is added to a Redis blacklist:
+
+```java title="JwtBlacklistService.java"
+@Service
+@RequiredArgsConstructor
+public class JwtBlacklistService {
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public void blacklist(String tokenId, long expiryMs) {
+        String key = "jwt:blacklist:" + tokenId;
+        redisTemplate.opsForValue().set(key, "revoked",
+            Duration.ofMillis(expiryMs));
+    }
+
+    public boolean isBlacklisted(String tokenId) {
+        return Boolean.TRUE.equals(
+            redisTemplate.hasKey("jwt:blacklist:" + tokenId));
+    }
+}
+```
+
+## Monitoring
+
+```bash title="Redis Health Check"
+# Check Redis connectivity
+redis-cli ping
+# Expected: PONG
+
+# Monitor real-time commands
+redis-cli monitor
+
+# Check memory usage
+redis-cli info memory
+
+# List all scan keys
+redis-cli keys "scan:*"
+```

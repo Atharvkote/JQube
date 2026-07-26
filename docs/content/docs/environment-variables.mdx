@@ -1,0 +1,92 @@
+---
+title: Environment Variables
+description: Complete reference of all environment variables used by JQube.
+icon: Variable
+---
+
+# Environment Variables
+
+All configuration can be managed through environment variables. This is the recommended approach for production deployments.
+
+## Required Variables
+
+| Variable | Description | Example |
+|---|---|---|
+| `GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | `Ov23li1234567890abcd` |
+| `GITHUB_CLIENT_SECRET` | GitHub OAuth App Client Secret | `secret_abc123...` |
+| `GITHUB_REDIRECT_URI` | OAuth callback URL | `http://localhost:3000/auth/callback` |
+| `DB_HOST` | PostgreSQL hostname | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `jqube` |
+| `DB_USERNAME` | Database username | `jqube_user` |
+| `DB_PASSWORD` | Database password | `secure_password` |
+| `JWT_SECRET` | JWT signing key (min 256 bits) | `your-256-bit-secret` |
+
+## Optional Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `SERVER_PORT` | `8080` | Backend server port |
+| `REDIS_HOST` | `localhost` | Redis hostname |
+| `REDIS_PORT` | `6379` | Redis port |
+| `REDIS_PASSWORD` | (empty) | Redis password |
+| `AI_PROVIDER` | `openai` | AI provider |
+| `OPENAI_API_KEY` | — | OpenAI API key |
+| `GOOGLE_AI_API_KEY` | — | Google AI API key |
+| `AI_MODEL` | `gpt-4` | AI model identifier |
+| `AI_MAX_TOKENS` | `4096` | Max AI response tokens |
+| `AI_TEMPERATURE` | `0.1` | AI randomness (0.0-1.0) |
+| `SCAN_TIMEOUT` | `300` | Max scan duration (seconds) |
+| `MAX_CONCURRENT_SCANS` | `5` | Parallel scan limit |
+| `JWT_EXPIRATION` | `86400000` | Token expiry (ms, default 24h) |
+| `CORS_ORIGINS` | `http://localhost:3000` | Allowed CORS origins |
+| `SPRING_PROFILES_ACTIVE` | `dev` | Spring profile |
+| `LOG_LEVEL` | `INFO` | Logging level |
+
+## Example .env File
+
+```properties title=".env"
+# =============================
+# JQube Environment Variables
+# =============================
+
+# GitHub OAuth
+GITHUB_CLIENT_ID=Ov23li1234567890abcd
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GITHUB_REDIRECT_URI=http://localhost:3000/auth/callback
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=jqube
+DB_USERNAME=jqube_user
+DB_PASSWORD=your_secure_database_password
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# AI Provider
+AI_PROVIDER=openai
+OPENAI_API_KEY=sk-your-openai-api-key
+AI_MODEL=gpt-4
+
+# Security
+JWT_SECRET=your-jwt-secret-minimum-256-bits-long-string-here
+JWT_EXPIRATION=86400000
+
+# Server
+SERVER_PORT=8080
+CORS_ORIGINS=http://localhost:3000
+SPRING_PROFILES_ACTIVE=dev
+```
+
+## Generating Secrets
+
+```bash title="Terminal"
+# Generate a JWT secret
+openssl rand -base64 64
+
+# Generate a secure database password
+openssl rand -base64 32
+```

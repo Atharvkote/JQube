@@ -1,0 +1,471 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+@source '../../../node_modules/fumadocs-ui/dist/**/*.js';
+
+/* ========================================
+   JQube Design System
+   GitHub Dark + JetBrains Inspired
+   ======================================== */
+
+/* Fonts */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+}
+
+/* ---- Light Mode ---- */
+@theme {
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  --color-fd-background: #ffffff;
+  --color-fd-foreground: #1c2128;
+  --color-fd-muted: #f6f8fa;
+  --color-fd-muted-foreground: #6e7681;
+  --color-fd-popover: #ffffff;
+  --color-fd-popover-foreground: #1c2128;
+  --color-fd-card: #f6f8fa;
+  --color-fd-card-foreground: #1c2128;
+  --color-fd-border: #d0d7de;
+  --color-fd-primary: #dc143c;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: #f0f3f6;
+  --color-fd-secondary-foreground: #1c2128;
+  --color-fd-accent: #f0f3f6;
+  --color-fd-accent-foreground: #1c2128;
+  --color-fd-ring: #dc143c;
+
+  --color-jq-bg: #ffffff;
+  --color-jq-nav: #f6f8fa;
+  --color-jq-sidebar: #ffffff;
+  --color-jq-card: #f6f8fa;
+  --color-jq-card-secondary: #eef1f5;
+  --color-jq-border: #d0d7de;
+  --color-jq-text-primary: #1c2128;
+  --color-jq-text-secondary: #57606a;
+  --color-jq-text-muted: #6e7681;
+  --color-jq-accent: #dc143c;
+  --color-jq-accent-hover: #ff4d6d;
+  --color-jq-success: #1a7f37;
+  --color-jq-warning: #9a6700;
+  --color-jq-info: #0969da;
+  --color-jq-danger: #cf222e;
+
+  --radius-lg: 12px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
+}
+
+/* ---- Dark Mode ---- */
+.dark {
+  --color-fd-background: #08090f;
+  --color-fd-foreground: #f3f4f6;
+  --color-fd-muted: #0d0e12;
+  --color-fd-muted-foreground: #9ca3af;
+  --color-fd-popover: #0f1115;
+  --color-fd-popover-foreground: #f3f4f6;
+  --color-fd-card: #0f1115;
+  --color-fd-card-foreground: #f3f4f6;
+  --color-fd-border: rgba(220, 20, 60, 0.15);
+  --color-fd-primary: #dc143c;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: #0d0e12;
+  --color-fd-secondary-foreground: #f3f4f6;
+  --color-fd-accent: #0d0e12;
+  --color-fd-accent-foreground: #f3f4f6;
+  --color-fd-ring: #dc143c;
+
+  --color-jq-bg: #08090f;
+  --color-jq-nav: #08090f;
+  --color-jq-sidebar: #08090f;
+  --color-jq-card: #0f1115;
+  --color-jq-card-secondary: #0d0e12;
+  --color-jq-border: rgba(220, 20, 60, 0.15);
+  --color-jq-text-primary: #f3f4f6;
+  --color-jq-text-secondary: #9ca3af;
+  --color-jq-text-muted: #6b7280;
+  --color-jq-accent: #dc143c;
+  --color-jq-accent-hover: #ff4d6d;
+  --color-jq-success: #10b981;
+  --color-jq-warning: #f59e0b;
+  --color-jq-info: #3b82f6;
+  --color-jq-danger: #ef4444;
+}
+
+/* ---- Layout ---- */
+:root {
+  --fd-layout-width: 1400px;
+  --fd-nav-height: 56px !important;
+}
+
+/* ---- Global Overrides ---- */
+html,
+body {
+  background-color: #08090f !important;
+  color-scheme: dark !important;
+}
+
+body {
+  font-feature-settings: 'rlig' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Navbar Overrides ---- */
+nav.fd-navbar {
+  backdrop-filter: blur(12px) saturate(180%);
+  display: none !important; /* Hide default navbar since we use custom Navbar */
+}
+
+/* ---- Sidebar Overrides ---- */
+.dark aside {
+  background: #08090f !important;
+  border-right: 1px solid rgba(220, 20, 60, 0.25) !important;
+}
+
+/* ---- Custom sidebar and TOC items to match screenshots ---- */
+.dark aside a {
+  border-left: 2px solid transparent;
+  font-size: 0.95rem !important; /* Increased font size */
+}
+
+/* Sidebar Active Item override */
+.dark aside a[data-active="true"],
+.dark aside a.bg-fd-primary\/10,
+.dark aside a.text-fd-primary {
+  background: rgba(220, 20, 60, 0.08) !important;
+  color: #ff4d6d !important;
+  font-weight: 600 !important;
+  border-left-color: #dc143c !important;
+  border-radius: 0 8px 8px 0 !important;
+}
+
+/* TOC active item styling */
+.dark .fd-toc-item[data-active="true"],
+.dark a.text-fd-primary.fd-toc-item {
+  color: #ff4d6d !important;
+  border-left: 2px solid #dc143c !important;
+  padding-left: 0.75rem !important;
+}
+
+/* Sidebar headers / folders / group titles styling */
+.dark aside button,
+.dark aside .text-fd-muted-foreground,
+.dark aside [class*="text-fd-muted-foreground"],
+.dark aside [class*="font-medium"],
+.dark aside .text-xs {
+  font-size: 0.9rem !important;
+}
+
+/* Fix sidebar header padding and border */
+.dark aside header > div:first-child,
+.dark .fd-sidebar-header > div:first-child {
+  display: none !important; /* hide default header title in sidebar header */
+}
+
+/* ---- Code Blocks ---- */
+figure[data-rehype-pretty-code-figure],
+figure.not-prose {
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--color-fd-border) !important;
+  background: var(--color-fd-card) !important;
+  overflow: hidden !important;
+  margin: 1.5rem 0 !important;
+}
+
+.dark figure[data-rehype-pretty-code-figure],
+.dark figure.not-prose {
+  background: #0d1117 !important;
+  border-color: #30363d !important;
+}
+
+/* Code block header / title bar */
+figure > div.bg-fd-secondary,
+figure > figcaption,
+figure > div:has(figcaption) {
+  background: var(--color-fd-secondary) !important;
+  border-bottom: 1px solid var(--color-fd-border) !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.dark figure > div.bg-fd-secondary,
+.dark figure > figcaption,
+.dark figure > div:has(figcaption) {
+  background: #161b22 !important;
+  border-color: #30363d !important;
+}
+
+/* Clean pre container */
+pre:has(code) {
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  margin: 0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.7 !important;
+}
+
+.dark pre:has(code) {
+  background: transparent !important;
+  border: none !important;
+}
+
+code {
+  font-family: var(--font-mono) !important;
+}
+
+/* Inline code */
+:not(pre) > code {
+  border-radius: 6px !important;
+  padding: 0.2em 0.45em !important;
+  font-size: 0.85em !important;
+  font-weight: 600 !important;
+  font-family: var(--font-mono) !important;
+  transition: all 0.2s ease !important;
+  background: rgba(220, 20, 60, 0.05) !important;
+  color: #dc143c !important;
+  border: 1px solid rgba(220, 20, 60, 0.15) !important;
+}
+
+.dark :not(pre) > code {
+  background: rgba(220, 20, 60, 0.08) !important;
+  color: #ff4d6d !important;
+  border: 1px solid rgba(220, 20, 60, 0.25) !important;
+}
+
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* ---- Selection ---- */
+::selection {
+  background: rgba(220, 20, 60, 0.3);
+  color: inherit;
+}
+
+/* ---- Prose Overrides ---- */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.prose a {
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.dark .prose a {
+  color: #f0f6fc;
+}
+
+.dark .prose a:hover {
+  color: #dc143c;
+}
+
+/* ---- Tables ---- */
+.dark .prose table {
+  border: 1px solid #30363d;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.dark .prose th {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  color: #f0f6fc;
+}
+
+.dark .prose td {
+  border-bottom: 1px solid #21262d;
+  padding: 0.75rem 1rem;
+  color: #c9d1d9;
+}
+
+.dark .prose tr:hover td {
+  background: rgba(22, 27, 34, 0.5);
+}
+
+/* ---- Callouts / Admonitions ---- */
+.fd-callout {
+  border-radius: var(--radius-lg) !important;
+  border-width: 1px !important;
+}
+
+/* ---- Card Hover Effects ---- */
+.jq-card {
+  transition: all 0.2s ease;
+  border-radius: var(--radius-lg);
+}
+
+.jq-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dark .jq-card:hover {
+  border-color: #dc143c;
+  box-shadow: 0 8px 25px rgba(220, 20, 60, 0.1);
+}
+
+/* ---- Gradient Text ---- */
+.gradient-text {
+  background: linear-gradient(135deg, #dc143c, #ff4d6d, #ff6b8a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- Keyframes ---- */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(220, 20, 60, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(220, 20, 60, 0.4); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease forwards;
+}
+
+/* ---- Focus States ---- */
+*:focus-visible {
+  outline: 2px solid #dc143c;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Smooth Transitions ---- */
+a, button {
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ---- Premium Cards & Pager styling (matches given reference) ---- */
+[data-card="true"],
+a.flex.flex-col.gap-2.rounded-lg.border.p-4 {
+  background: #0d1117 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 12px !important;
+  padding: 1.25rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-card="true"] {
+  display: block !important;
+}
+
+/* Hover State for cards and pagers */
+[data-card="true"]:hover,
+a.flex.flex-col.gap-2.rounded-lg.border.p-4:hover {
+  border-color: #dc143c !important;
+  background: rgba(220, 20, 60, 0.02) !important;
+  box-shadow: 0 10px 30px -10px rgba(220, 20, 60, 0.2), 0 1px 3px rgba(220, 20, 60, 0.05) !important;
+  transform: translateY(-4px) !important;
+}
+
+/* Icon box inside Cards */
+[data-card="true"] .not-prose.mb-2.w-fit {
+  background: rgba(220, 20, 60, 0.1) !important;
+  border: 1px solid rgba(220, 20, 60, 0.2) !important;
+  color: #ff4d6d !important;
+  border-radius: 8px !important;
+  padding: 0.5rem !important;
+}
+
+[data-card="true"] .not-prose.mb-2.w-fit svg {
+  color: #ff4d6d !important;
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+}
+
+/* Title text */
+[data-card="true"] h3.not-prose,
+a.flex.flex-col.gap-2.rounded-lg.border.p-4 div.font-medium p {
+  color: #ff4d6d !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: 0.35rem !important;
+  transition: color 0.2s ease !important;
+}
+
+/* Description text */
+[data-card="true"] p.text-fd-muted-foreground,
+a.flex.flex-col.gap-2.rounded-lg.border.p-4 p.text-fd-muted-foreground {
+  color: #9ca3af !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+  margin: 0 !important;
+}
+
+/* Pager-specific customizations */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4 svg {
+  color: #ff4d6d !important;
+  transition: transform 0.2s ease !important;
+}
+
+/* Force left alignment on ALL pagination cards (Next & Previous) */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4 {
+  text-align: left !important;
+  align-items: flex-start !important;
+}
+
+/* Force icon to left side of title for Next card */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4.text-end div.flex-row-reverse {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+}
+
+/* Add custom margin for icon to properly space it from text */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4.text-end div.flex-row-reverse svg {
+  margin-right: 0.375rem !important;
+  margin-left: 0 !important;
+}
+
+/* Pager hover icons sliding micro-animations */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4:hover svg {
+  color: #ff4d6d !important;
+}
+
+/* Previous button hover -> slide icon left */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4:not(.text-end):hover svg {
+  transform: translateX(-4px);
+}
+
+/* Next button hover -> slide icon right */
+a.flex.flex-col.gap-2.rounded-lg.border.p-4.text-end:hover svg {
+  transform: translateX(4px);
+}

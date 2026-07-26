@@ -1,0 +1,154 @@
+---
+title: Scanner
+description: How JQube's security scanner works — from repository cloning to finding generation.
+icon: Scan
+---
+
+
+# Scanner
+
+The JQube scanner is the core engine that performs security analysis on your code. It orchestrates repository cloning, Semgrep execution, result parsing, and finding storage.
+
+## Scan Lifecycle
+
+```
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│  QUEUED  │───▶│ CLONING  │───▶│ SCANNING │───▶│ PARSING  │───▶│COMPLETED │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+                                      │
+                                      ▼
+                                ┌──────────┐
+                                │  FAILED  │
+                                └──────────┘
+```
+
+## Triggering a Scan
+
+```bash title="cURL"
+curl -X POST http://localhost:8080/api/repositories/1/scan \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "branch": "main",
+    "depth": 1
+  }'
+```
+
+```json title="Response — 202 Accepted"
+{
+  "scanId": 42,
+  "status": "QUEUED",
+  "repositoryId": 1,
+  "branch": "main",
+  "startedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+## Under the Hood
+
+### 1. Repository Cloning
+
+```java title="GitHubService.java"
+public Path cloneRepository(Long repoId, String branch) {
+    Repository repo = repositoryRepository.findById(repoId)
+        .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
+
+    String token = decryptGitHubToken(repo.getProject().getUser());
+    Path tempDir = Files.createTempDirectory("jqube-scan-");
+
+    ProcessBuilder pb = new ProcessBuilder(
+        "git", "clone",
+        "--depth", "1",
+        "--branch", branch,
+        "https://x-access-token:" + token + "@github.com/" + repo.getFullName() + ".git",
+        tempDir.toString()
+    );
+
+    Process process = pb.start();
+    process.waitFor(120, TimeUnit.SECONDS);
+
+    return tempDir;
+}
+```
+
+### 2. Semgrep Execution
+
+```java title="SemgrepService.java"
+public List<SemgrepResult> analyze(Path repoPath) {
+    ProcessBuilder pb = new ProcessBuilder(
+        "semgrep",
+        "--config=auto",
+        "--json",
+        "--output=" + repoPath.resolve("results.json"),
+        repoPath.toString()
+    );
+
+    pb.redirectErrorStream(true);
+    Process process = pb.start();
+    process.waitFor(300, TimeUnit.SECONDS);
+
+    return parseResults(repoPath.resolve("results.json"));
+}
+```
+
+### 3. Result Parsing
+
+Semgrep outputs JSON with detailed finding information:
+
+```json title="Semgrep Output (simplified)"
+{
+  "results": [
+    {
+      "check_id": "java.lang.security.audit.sql-injection",
+      "path": "src/main/java/UserService.java",
+      "start": { "line": 42, "col": 5 },
+      "end": { "line": 42, "col": 78 },
+      "extra": {
+        "message": "Possible SQL injection via string concatenation",
+        "severity": "ERROR",
+        "metadata": {
+          "cwe": ["CWE-89"],
+          "owasp": ["A03:2021"]
+        }
+      }
+    }
+  ]
+}
+```
+
+## Scan Configuration
+
+| Option | Default | Description |
+|---|---|---|
+| `branch` | `main` | Branch to scan |
+| `depth` | `1` | Git clone depth |
+| `timeout` | `300s` | Maximum scan time |
+| `config` | `auto` | Semgrep rule configuration |
+| `maxFileSize` | `5MB` | Skip files larger than this |
+
+<Callout type="info">
+Scans run asynchronously. Use the WebSocket connection or poll `GET /api/scans/{id}` for real-time status updates.
+</Callout>
+
+## Scan History
+
+```bash title="cURL"
+curl http://localhost:8080/api/repositories/1/scans \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+```json title="Response"
+{
+  "scans": [
+    {
+      "id": 42,
+      "status": "COMPLETED",
+      "findingCount": 15,
+      "duration": 45,
+      "branch": "main",
+      "startedAt": "2024-01-15T10:30:00Z",
+      "completedAt": "2024-01-15T10:30:45Z"
+    }
+  ]
+}
+```

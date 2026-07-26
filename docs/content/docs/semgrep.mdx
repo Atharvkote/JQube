@@ -1,0 +1,126 @@
+---
+title: Semgrep
+description: How JQube integrates with Semgrep for static application security testing (SAST).
+icon: ShieldAlert
+---
+
+
+# Semgrep
+
+[Semgrep](https://semgrep.dev) is an open-source static analysis engine that JQube uses for vulnerability detection. It supports 25+ programming languages and comes with 2,000+ community and pro rules.
+
+## What is Semgrep?
+
+Semgrep (Semantic Grep) is a fast, lightweight SAST tool that:
+
+- **Pattern matching** — Finds code patterns using a syntax similar to the target language
+- **Cross-file analysis** — Tracks data flow across functions and files
+- **Multi-language** — Supports Java, Python, JavaScript, Go, Ruby, and more
+- **Low false positives** — Rules are written to be precise and actionable
+- **Fast** — Typically scans 100K lines of code in under 30 seconds
+
+## Supported Languages
+
+| Language | Extensions | Coverage |
+|---|---|---|
+| Java | `.java` | Full |
+| Python | `.py` | Full |
+| JavaScript | `.js`, `.jsx` | Full |
+| TypeScript | `.ts`, `.tsx` | Full |
+| Go | `.go` | Full |
+| Ruby | `.rb` | Full |
+| PHP | `.php` | Full |
+| C# | `.cs` | Full |
+| C | `.c`, `.h` | Full |
+| C++ | `.cpp`, `.hpp` | Full |
+| Kotlin | `.kt` | Full |
+| Rust | `.rs` | Full |
+| Swift | `.swift` | Partial |
+| Scala | `.scala` | Partial |
+| Terraform | `.tf` | Full |
+| Dockerfile | `Dockerfile` | Full |
+| YAML | `.yml`, `.yaml` | Full |
+
+## Rule Categories
+
+Semgrep rules in JQube cover:
+
+| Category | Description | Example Rules |
+|---|---|---|
+| **OWASP Top 10** | Most critical web security risks | SQL injection, XSS, CSRF |
+| **CWE** | Common Weakness Enumeration | Buffer overflow, Path traversal |
+| **Security Audit** | General security best practices | Hardcoded secrets, Weak crypto |
+| **Best Practices** | Code quality and patterns | Error handling, Input validation |
+| **Secrets** | Credential detection | API keys, Passwords, Tokens |
+
+## Configuration
+
+### Default Configuration
+
+By default, JQube uses Semgrep's `auto` configuration which includes:
+
+```bash title="Terminal"
+semgrep --config=auto --json /path/to/repo
+```
+
+### Custom Rules
+
+You can add custom Semgrep rules by creating a `.semgrep.yml` file in your repository:
+
+```yaml title=".semgrep.yml"
+rules:
+  - id: custom-sql-injection
+    pattern: |
+      String query = "SELECT * FROM " + $USER_INPUT;
+    message: "Potential SQL injection via string concatenation"
+    severity: ERROR
+    languages: [java]
+    metadata:
+      cwe: ["CWE-89"]
+      owasp: ["A03:2021"]
+```
+
+<Callout type="info">
+Custom rules are automatically picked up during scans. Place `.semgrep.yml` at the root of your repository.
+</Callout>
+
+## Performance
+
+| Metric | Typical Value |
+|---|---|
+| **Scan Speed** | ~10,000 lines/second |
+| **Memory Usage** | ~500MB for 100K LOC |
+| **False Positive Rate** | < 5% with auto config |
+| **Rule Count** | 2,000+ (auto config) |
+
+## Example Findings
+
+### SQL Injection (CWE-89)
+
+```java title="Vulnerable Code"
+// ❌ SQL injection via string concatenation
+String query = "SELECT * FROM users WHERE id = " + userId;
+Statement stmt = connection.createStatement();
+ResultSet rs = stmt.executeQuery(query);
+```
+
+```java title="Fixed Code"
+// ✅ Parameterized query prevents SQL injection
+String query = "SELECT * FROM users WHERE id = ?";
+PreparedStatement stmt = connection.prepareStatement(query);
+stmt.setLong(1, userId);
+ResultSet rs = stmt.executeQuery();
+```
+
+### Hardcoded Secret (CWE-798)
+
+```python title="Vulnerable Code"
+# ❌ Hardcoded API key
+API_KEY = "sk-1234567890abcdef"
+```
+
+```python title="Fixed Code"
+# ✅ Environment variable
+import os
+API_KEY = os.environ.get("API_KEY")
+```

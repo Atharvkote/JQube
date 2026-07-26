@@ -1,0 +1,123 @@
+---
+title: Quick Start
+description: Run your first security scan with JQube in under 3 minutes.
+icon: FastForward
+---
+
+
+# Quick Start
+
+This guide assumes you have JQube running. If not, follow the [Installation Guide](/docs/installation) first.
+
+## Your First Scan in 3 Minutes
+
+<Steps>
+<Step>
+
+### Sign In with GitHub
+
+Navigate to `http://localhost:3000` and click **Sign in with GitHub**. This initiates the OAuth 2.0 flow:
+
+1. You're redirected to GitHub's authorization page
+2. Grant JQube access to your repositories
+3. You're redirected back with an access token
+4. JQube creates your user profile and stores the token securely
+
+</Step>
+<Step>
+
+### Create a Project
+
+Click **New Project** in the dashboard and enter a project name. Projects are containers for organizing repositories and scan results.
+
+```json title="POST /api/projects"
+{
+  "name": "My Security Audit",
+  "description": "Security scanning for production repositories"
+}
+```
+
+</Step>
+<Step>
+
+### Add a Repository
+
+Select repositories from your GitHub account to add to the project. JQube fetches your repository list using the GitHub API.
+
+```json title="POST /api/projects/{projectId}/repositories"
+{
+  "githubRepoUrl": "https://github.com/your-org/your-repo",
+  "branch": "main"
+}
+```
+
+</Step>
+<Step>
+
+### Run a Scan
+
+Click **Scan** on any repository. Semgrep runs a comprehensive security analysis:
+
+```bash title="What happens under the hood"
+# JQube clones the repository
+git clone --depth 1 --branch main https://github.com/your-org/your-repo /tmp/scan
+
+# Runs Semgrep with security rules
+semgrep --config=auto --json --output=/tmp/results.json /tmp/scan
+
+# Parses results and stores findings
+```
+
+The scan typically takes 30-120 seconds depending on repository size.
+
+</Step>
+<Step>
+
+### Review Findings
+
+Once the scan completes, findings appear organized by severity:
+
+| Severity | Color | Description |
+|---|---|---|
+| **CRITICAL** | 🔴 Red | Immediate exploitation risk |
+| **HIGH** | 🟠 Orange | Serious vulnerability |
+| **MEDIUM** | 🟡 Yellow | Moderate risk |
+| **LOW** | 🔵 Blue | Informational or best practice |
+
+Each finding includes:
+- **Rule ID** — The Semgrep rule that triggered
+- **File path** — Where the vulnerability exists
+- **Line number** — Exact location in the file
+- **Message** — Description of the vulnerability
+- **CWE** — Common Weakness Enumeration reference
+
+</Step>
+<Step>
+
+### Generate AI Fix
+
+Click **Generate Fix** on any finding. The AI analyzes the vulnerability context and generates a secure patch:
+
+1. The vulnerable code snippet is sent to the AI model
+2. AI generates a secure replacement
+3. A diff view shows the changes
+4. You can edit the fix in the built-in Monaco editor
+
+</Step>
+<Step>
+
+### Create Pull Request
+
+Once you're satisfied with the fix, click **Create Pull Request**. JQube:
+
+1. Creates a new branch (`jqube/fix-{rule-id}-{timestamp}`)
+2. Commits the patched file
+3. Opens a Pull Request with a detailed description
+4. Links the finding to the PR for traceability
+
+</Step>
+</Steps>
+
+<Callout type="info" title="What's next?">
+Now that you've completed your first scan, explore the [Architecture](/docs/architecture) to understand how JQube works under the hood, or dive into the [API Reference](/docs/api-reference) to integrate programmatically.
+</Callout>

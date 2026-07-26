@@ -1,0 +1,124 @@
+---
+title: GitHub Actions
+description: CI/CD pipeline for automated security scanning and deployment with GitHub Actions.
+icon: Workflow
+---
+
+# GitHub Actions
+
+JQube provides GitHub Actions workflows for automated security scanning on every push and pull request.
+
+## Security Scan Workflow
+
+```yaml title=".github/workflows/security-scan.yml"
+name: JQube Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1' # Weekly Monday 6am UTC
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run JQube Scan
+        uses: jqube/scan-action@v2
+        with:
+          api-token: ${{ secrets.JQUBE_API_TOKEN }}
+          project-id: ${{ secrets.JQUBE_PROJECT_ID }}
+          severity-threshold: high
+          fail-on-findings: true
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: jqube-results.sarif
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: jqube/comment-action@v1
+        with:
+          api-token: ${{ secrets.JQUBE_API_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Deployment Workflow
+
+```yaml title=".github/workflows/deploy.yml"
+name: Deploy JQube
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+
+jobs:
+  build:
+    name: Build and Push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/frontend:latest
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /opt/jqube
+            docker compose pull
+            docker compose up -d
+```
+
+## Required Secrets
+
+| Secret | Description |
+|---|---|
+| `JQUBE_API_TOKEN` | JQube API authentication token |
+| `JQUBE_PROJECT_ID` | JQube project identifier |
+| `DEPLOY_HOST` | Production server hostname |
+| `DEPLOY_USER` | SSH username |
+| `DEPLOY_KEY` | SSH private key |

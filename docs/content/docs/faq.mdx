@@ -1,0 +1,82 @@
+---
+title: FAQ
+description: Frequently asked questions about JQube.
+icon: HelpCircle
+---
+
+# Frequently Asked Questions
+
+## General
+
+### What is JQube?
+
+JQube is an AI-powered DevSecOps platform that integrates with GitHub repositories, performs security scanning using Semgrep, detects vulnerabilities, generates AI-powered secure remediations, and creates Pull Requests automatically.
+
+### Is JQube free?
+
+JQube is open source and free to use. The core platform, including Semgrep scanning, AI remediation, and automated PR creation, is available at no cost. You need your own OpenAI API key for AI remediation features.
+
+### What languages does JQube support?
+
+JQube supports 25+ programming languages through Semgrep, including Java, Python, JavaScript, TypeScript, Go, Ruby, PHP, C#, C, C++, Rust, Kotlin, Swift, and more.
+
+### How accurate is the AI remediation?
+
+AI-generated fixes have a 94% accuracy rate and a 97% compilation success rate. We recommend reviewing all fixes before merging.
+
+## Setup
+
+### Do I need Docker?
+
+Docker is recommended but not required. You can run each service individually for development. See [Installation](/docs/installation) for details.
+
+### What are the minimum system requirements?
+
+- **CPU:** 2 cores (4+ recommended)
+- **RAM:** 4 GB (8+ recommended)
+- **Disk:** 10 GB (20+ recommended)
+
+### Can I use JQube with private repositories?
+
+Yes. JQube uses GitHub OAuth with the `repo` scope, which grants access to both public and private repositories.
+
+## Security
+
+### Where are my GitHub tokens stored?
+
+GitHub access tokens are encrypted with AES-256 before being stored in the PostgreSQL database. They are only decrypted when making API calls on behalf of the user.
+
+### Can JQube access my code?
+
+JQube temporarily clones your repository for scanning. The clone is deleted immediately after the scan completes. Your code is never stored permanently.
+
+### Is my data sent to external services?
+
+Only the vulnerable code snippets are sent to the AI provider (OpenAI/Google) for remediation generation. Full repositories are never sent. You can use a local AI model (Ollama) for completely air-gapped operation.
+
+## Scanning
+
+### How long does a scan take?
+
+Typical scan times:
+- Small repo (< 10K LOC): 10-30 seconds
+- Medium repo (10K-100K LOC): 30-120 seconds
+- Large repo (100K+ LOC): 2-5 minutes
+
+### Can I customize Semgrep rules?
+
+Yes. Add a `.semgrep.yml` file to your repository root with custom rules. See [Semgrep](/docs/semgrep) for details.
+
+### What happens if a scan fails?
+
+Failed scans are logged with error details. Common causes include timeout (large repos), network issues, or invalid repository URLs. See [Troubleshooting](/docs/troubleshooting).
+
+## Deployment
+
+### Can I deploy on-premises?
+
+Yes. JQube runs entirely on your infrastructure using Docker. No external services are required except the AI provider (which can be replaced with a local model).
+
+### Does JQube support Kubernetes?
+
+While we don't provide Kubernetes manifests yet, the Docker images work with any container orchestrator. Kubernetes support with Helm charts is on our [Roadmap](/docs/roadmap).

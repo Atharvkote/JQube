@@ -1,0 +1,64 @@
+---
+title: Editor
+description: JQube's built-in Monaco code editor for reviewing and editing security fixes.
+icon: Code2
+---
+
+# Editor
+
+JQube includes a built-in code editor powered by **Monaco Editor** (the same editor that powers VS Code). It provides a professional editing experience for reviewing and modifying AI-generated fixes.
+
+## Features
+
+| Feature | Description |
+|---|---|
+| **Syntax Highlighting** | Language-aware highlighting for 25+ languages |
+| **IntelliSense** | Autocomplete and code suggestions |
+| **Line Numbers** | Precise navigation to vulnerability locations |
+| **Minimap** | Overview of the entire file |
+| **Search & Replace** | Find and replace across the file |
+| **Multiple Cursors** | Edit multiple locations simultaneously |
+| **Code Folding** | Collapse code blocks for readability |
+| **Theme** | Dark theme matching JQube's design |
+
+## Editor Configuration
+
+```typescript title="Editor Options"
+{
+  theme: 'vs-dark',
+  fontSize: 14,
+  fontFamily: 'JetBrains Mono, monospace',
+  lineNumbers: 'on',
+  minimap: { enabled: true },
+  scrollBeyondLastLine: false,
+  automaticLayout: true,
+  tabSize: 4,
+  wordWrap: 'on',
+  renderLineHighlight: 'line',
+  cursorBlinking: 'smooth',
+  smoothScrolling: true,
+}
+```
+
+## Usage Flow
+
+1. Navigate to a **Finding** in the findings list
+2. Click **View Code** to open the file in the editor
+3. The vulnerability is highlighted with a red marker
+4. Click **Generate Fix** to see the AI suggestion
+5. Click **Edit Fix** to modify the generated code
+6. Click **Save** to update the remediation
+7. Click **Create PR** to commit the fix
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+S` | Save changes |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `Ctrl+F` | Find |
+| `Ctrl+H` | Find and Replace |
+| `Ctrl+/` | Toggle comment |
+| `Alt+↑/↓` | Move line up/down |
+| `Ctrl+D` | Select next occurrence |
