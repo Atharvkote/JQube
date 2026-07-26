@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JQube – GitHub OAuth Test Harness</title>
+    <style>
+        :root {
+            --bg: #0f1115;
+            --panel: #171a21;
+            --border: #2a2f3a;
+            --text: #e6e8eb;
+            --muted: #9aa3b2;
+            --accent: #4f8cff;
+            --ok: #35c46b;
+            --err: #ff5d5d;
+            --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 32px 16px 80px;
+        }
+        h1 { font-size: 20px; margin: 0 0 4px; }
+        h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 14px; }
+        .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+        .wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 20px;
+        }
+        .card.disabled { opacity: .45; pointer-events: none; }
+        label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+        input {
+            width: 100%;
+            background: #0d0f13;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 9px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: var(--mono);
+        }
+        input:focus { outline: none; border-color: var(--accent); }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { opacity: .9; }
+        button.secondary { background: #2a2f3a; }
+        button.danger { background: #3a1f22; color: var(--err); }
+        button:disabled { opacity: .35; cursor: not-allowed; }
+        .status-pill {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .status-pill.ok { background: rgba(53,196,107,.15); color: var(--ok); }
+        .status-pill.err { background: rgba(255,93,93,.15); color: var(--err); }
+        .status-pill.idle { background: rgba(154,163,178,.15); color: var(--muted); }
+        .hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+        .hint code { background: #0d0f13; padding: 1px 5px; border-radius: 4px; font-family: var(--mono); }
+        #log {
+            background: #0a0b0e;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-family: var(--mono);
+            font-size: 12px;
+            max-height: 420px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .log-entry { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); }
+        .log-entry:last-child { border-bottom: none; margin-bottom: 0; }
+        .log-meta { color: var(--muted); margin-bottom: 4px; }
+        .log-meta.ok { color: var(--ok); }
+        .log-meta.err { color: var(--err); }
+        .clear-log { float: right; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <div>
+        <h1>GitHub OAuth Test Harness</h1>
+        <div class="sub">Manual test client for /api/v1/auth and /api/v1/github. Nothing is sent anywhere except the base URL below.</div>
+    </div>
+
+    <!-- 0. Config -->
+    <div class="card">
+        <h2>0 · Server</h2>
+        <label for="baseUrl">API base URL</label>
+        <input id="baseUrl" value="http://localhost:8081" />
+        <div class="hint">Change the port if your <code>SERVER_PORT</code> differs. All requests below go to this base.</div>
+    </div>
+
+    <!-- 1. Login -->
+    <div class="card">
+        <h2>1 · Login <span id="loginStatus" class="status-pill idle">not logged in</span></h2>
+        <label for="email">Email</label>
+        <input id="email" placeholder="test@example.com" />
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="••••••••" />
+        <div class="row">
+            <button onclick="login()">Login</button>
+            <button class="secondary" onclick="showToken()">Show current token</button>
+        </div>
+        <div class="hint">User must already be registered &amp; verified (<code>/api/v1/auth/register</code> then <code>/verify</code>). The JWT is kept in memory only, never persisted.</div>
+    </div>
+
+    <!-- 2. Connect -->
+    <div id="githubCard" class="card disabled">
+        <h2>2 · Connect GitHub</h2>
+        <div class="row">
+            <button onclick="getAuthUrl()">Get authorization URL</button>
+            <button class="secondary" id="openAuthBtn" onclick="openAuthUrl()" disabled>Open in new tab</button>
+        </div>
+        <div class="hint">
+            Calls <code>GET /api/v1/github/connect</code>. Complete the flow in the new tab, authorize on GitHub,
+            then come back here and click <b>Check profile</b> below — GitHub will redirect the tab to your configured
+            <code>app.frontend-url</code>, this test page won't auto-detect that.
+        </div>
+    </div>
+
+    <!-- 3. Profile / disconnect -->
+    <div id="profileCard" class="card disabled">
+        <h2>3 · Profile</h2>
+        <div class="row">
+            <button onclick="getProfile()">Check profile</button>
+            <button class="danger" onclick="disconnect()">Disconnect</button>
+        </div>
+    </div>
+
+    <!-- 4. Manual callback tester -->
+    <div id="callbackCard" class="card disabled">
+        <h2>4 · Manual callback tester (edge cases)</h2>
+        <label for="manualState">state</label>
+        <input id="manualState" placeholder="paste / tamper a state token" />
+        <label for="manualCode">code</label>
+        <input id="manualCode" placeholder="paste / tamper a code" />
+        <div class="row">
+            <button class="secondary" onclick="openManualCallback()">Open /callback with these values</button>
+        </div>
+        <div class="hint">
+            Use this to test the failure paths: a tampered <code>state</code>, an expired one, a reused/garbage <code>code</code>,
+            or missing params entirely. It opens the URL directly so you can watch the redirect land on
+            <code>...?status=error</code> instead of erroring out.
+        </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+        <h2>Request log <button class="secondary clear-log" onclick="clearLog()">clear</button></h2>
+        <div id="log">No requests yet.</div>
+    </div>
+
+</div>
+
+<script>
+    let token = null;
+    let lastAuthUrl = null;
+
+    function base() {
+        return document.getElementById('baseUrl').value.replace(/\/$/, '');
+    }
+
+    function setStatus(id, ok, text) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.className = 'status-pill ' + (ok ? 'ok' : 'err');
+    }
+
+    function unlock(id) {
+        document.getElementById(id).classList.remove('disabled');
+    }
+
+    function log(title, ok, detail) {
+        const box = document.getElementById('log');
+        if (box.textContent === 'No requests yet.') box.textContent = '';
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const time = new Date().toLocaleTimeString();
+        entry.innerHTML =
+            '<div class="log-meta ' + (ok ? 'ok' : 'err') + '">[' + time + '] ' + title + '</div>' +
+            '<div>' + escapeHtml(detail) + '</div>';
+        box.prepend(entry);
+    }
+
+    function escapeHtml(str) {
+        const d = document.createElement('div');
+        d.textContent = typeof str === 'string' ? str : JSON.stringify(str, null, 2);
+        return d.innerHTML;
+    }
+
+    function clearLog() {
+        document.getElementById('log').textContent = 'No requests yet.';
+    }
+
+    async function login() {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        try {
+            const res = await fetch(base() + '/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (res.ok && data.data && data.data.token) {
+                token = data.data.token;
+                setStatus('loginStatus', true, 'logged in as ' + data.data.username);
+                unlock('githubCard');
+                unlock('profileCard');
+                unlock('callbackCard');
+                log('POST /auth/login → ' + res.status, true, data);
+            } else {
+                setStatus('loginStatus', false, 'login failed');
+                log('POST /auth/login → ' + res.status, false, data);
+            }
+        } catch (e) {
+            setStatus('loginStatus', false, 'request error');
+            log('POST /auth/login → network error', false, String(e));
+        }
+    }
+
+    function showToken() {
+        log('current JWT', !!token, token || '(none — login first)');
+    }
+
+    async function authedFetch(path, options = {}) {
+        options.headers = Object.assign({}, options.headers, {
+            'Authorization': 'Bearer ' + token
+        });
+        return fetch(base() + path, options);
+    }
+
+    async function getAuthUrl() {
+        try {
+            const res = await authedFetch('/api/v1/github/connect');
+            const data = await res.json();
+            if (res.ok && data.message && data.message.startsWith('http')) {
+                lastAuthUrl = data.message;
+                document.getElementById('openAuthBtn').disabled = false;
+                log('GET /github/connect → ' + res.status, true, data);
+            } else {
+                log('GET /github/connect → ' + res.status, false, data);
+            }
+        } catch (e) {
+            log('GET /github/connect → network error', false, String(e));
+        }
+    }
+
+    function openAuthUrl() {
+        if (lastAuthUrl) window.open(lastAuthUrl, '_blank');
+    }
+
+    async function getProfile() {
+        try {
+            const res = await authedFetch('/api/v1/github/profile');
+            const data = await res.json();
+            log('GET /github/profile → ' + res.status, res.ok, data);
+        } catch (e) {
+            log('GET /github/profile → network error', false, String(e));
+        }
+    }
+
+    async function disconnect() {
+        try {
+            const res = await authedFetch('/api/v1/github/disconnect', { method: 'DELETE' });
+            const data = await res.json();
+            log('DELETE /github/disconnect → ' + res.status, res.ok, data);
+        } catch (e) {
+            log('DELETE /github/disconnect → network error', false, String(e));
+        }
+    }
+
+    function openManualCallback() {
+        const state = encodeURIComponent(document.getElementById('manualState').value.trim());
+        const code = encodeURIComponent(document.getElementById('manualCode').value.trim());
+        const url = base() + '/api/v1/github/callback?state=' + state + '&code=' + code;
+        log('Opening manual callback', true, url);
+        window.open(url, '_blank');
+    }
+</script>
+</body>
+</html>
