@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -140,6 +141,7 @@ const MetricCard = React.memo(({ card, index, isLoading }) => {
 const Dashboard = () => {
   const navigate = useNavigate();
   const dashboardRef = useRef(null);
+  const exportBtnRef = useRef(null);
 
   // State Management
   const [timeRange, setTimeRange] = useState('7d');
@@ -147,6 +149,8 @@ const Dashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [dropdownAbove, setDropdownAbove] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState({});
   const [toastMessage, setToastMessage] = useState(null);
 
   // Search & Filtering State for Activity Table
@@ -187,12 +191,35 @@ const Dashboard = () => {
   // Close export menu on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (showExportMenu && dashboardRef.current && !dashboardRef.current.contains(e.target)) {
+      if (showExportMenu && exportBtnRef.current && !exportBtnRef.current.contains(e.target)) {
         setShowExportMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportMenu]);
+
+  // Smart dropdown positioning — compute exact viewport coords, flip above if needed
+  useEffect(() => {
+    if (showExportMenu && exportBtnRef.current) {
+      const rect = exportBtnRef.current.getBoundingClientRect();
+      const dropdownHeight = 240; // approximate height in px
+      const dropdownWidth = 224;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const above = spaceBelow < dropdownHeight;
+      setDropdownAbove(above);
+
+      // Clamp so it never goes off the right edge
+      const rightEdge = window.innerWidth - rect.right;
+      setDropdownStyle({
+        position: 'fixed',
+        zIndex: 99999,
+        width: dropdownWidth,
+        top: above ? rect.top - dropdownHeight - 8 : rect.bottom + 8,
+        // Align right edge of dropdown with right edge of button, clamped
+        right: Math.max(rightEdge, 8),
+      });
+    }
   }, [showExportMenu]);
 
   // Master Data Fetcher
@@ -441,12 +468,14 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Export Dropdown */}
-          <div className="relative z-50">
+          {/* Export Dropdown — button stays in flow; portal floats above all stacking contexts */}
+          <div className="relative" ref={exportBtnRef}>
             <button
-              onClick={() => setShowExportMenu(!showExportMenu)}
+              onClick={() => setShowExportMenu((prev) => !prev)}
               disabled={isExporting}
               className="h-[38px] px-4 bg-[#FF3B3B] hover:bg-[#FF3B3B]/85 text-white text-xs font-bold rounded-xl shadow-lg shadow-[#FF3B3B]/20 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#FF3B3B]/50 disabled:opacity-50"
+              aria-haspopup="true"
+              aria-expanded={showExportMenu}
             >
               {isExporting ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -455,33 +484,37 @@ const Dashboard = () => {
               )}
               <span>{isExporting ? 'Generating...' : 'Export'}</span>
             </button>
-
-            <AnimatePresence>
-              {showExportMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-58 bg-[#0F1117] border border-[#FF3B3B]/20 rounded-2xl shadow-2xl overflow-hidden z-50 p-1.5 space-y-0.5 min-w-[220px]"
-                >
-                  <div className="px-3 py-2 text-[10px] font-bold text-[#71717A] uppercase tracking-wider border-b border-[#FF3B3B]/15 mb-1">
-                    Select Export Format
-                  </div>
-                  {EXPORT_OPTIONS.map((exp) => (
-                    <button
-                      key={exp.format}
-                      onClick={() => handleExport(exp)}
-                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-[#A1A1AA] rounded-xl hover:bg-[#FF3B3B]/10 hover:text-white transition-colors text-left"
-                    >
-                      <exp.icon className="w-4 h-4 text-[#FF3B3B] shrink-0" />
-                      <span>{exp.label}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
+
+          {/* Portal-rendered dropdown — escapes all stacking contexts */}
+          {showExportMenu && createPortal(
+            <AnimatePresence>
+              <motion.div
+                key="export-menu"
+                initial={{ opacity: 0, scale: 0.95, y: dropdownAbove ? 6 : -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: dropdownAbove ? 6 : -6 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                style={dropdownStyle}
+                className="bg-[#0F1117] border border-[#FF3B3B]/20 rounded-2xl shadow-2xl p-1.5 space-y-0.5"
+              >
+                <div className="px-3 py-2 text-[10px] font-bold text-[#71717A] uppercase tracking-wider border-b border-[#FF3B3B]/15 mb-1">
+                  Select Export Format
+                </div>
+                {EXPORT_OPTIONS.map((exp) => (
+                  <button
+                    key={exp.format}
+                    onClick={() => handleExport(exp)}
+                    className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-[#A1A1AA] rounded-xl hover:bg-[#FF3B3B]/10 hover:text-white transition-colors text-left"
+                  >
+                    <exp.icon className="w-4 h-4 text-[#FF3B3B] shrink-0" />
+                    <span>{exp.label}</span>
+                  </button>
+                ))}
+              </motion.div>
+            </AnimatePresence>,
+            document.body
+          )}
         </div>
       </div>
 
