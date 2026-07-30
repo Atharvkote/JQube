@@ -1,10 +1,10 @@
 import React, { useContext, useState } from 'react';
 import { AppContext } from '../../context/AppContext';
-import { FileText, Download, FileSpreadsheet, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { FileText, FileSpreadsheet } from 'lucide-react';
 import Toast from '../../components/common/Toast';
 
 const Reports = () => {
-  const { repositories, vulnerabilities, stats } = useContext(AppContext);
+  const { repositories } = useContext(AppContext);
   const [selectedRepo, setSelectedRepo] = useState('All');
   const [includeSnippets, setIncludeSnippets] = useState(true);
   const [includeRemediations, setIncludeRemediations] = useState(true);
@@ -73,9 +73,9 @@ const Reports = () => {
       {/* Top Description */}
       <div>
         <h2 className="text-base font-bold text-white tracking-wide flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-500" /> Executive Security Assessment & Reporting
+          <FileText className="w-5 h-5 text-[#FF3B3B]" /> Executive Security Assessment & Reporting
         </h2>
-        <p className="text-xs text-slate-500 mt-0.5">
+        <p className="text-xs text-[#A1A1AA] mt-0.5 leading-[1.7]">
           Generate professional PDF audit reports and CSV vulnerability data exports including OWASP Top 10, CWE Top 25, compliance score, and risk assessments.
         </p>
       </div>
@@ -84,16 +84,16 @@ const Reports = () => {
         
         {/* Left Side: Configuration options */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="glass-panel p-6 rounded-2xl space-y-5">
-            <h3 className="text-sm font-bold text-white border-b border-slate-800 pb-3">Report Scope & Parameters</h3>
+          <div className="bg-[#151922] border border-[#FF3B3B]/15 p-6 rounded-xl space-y-5 shadow-xl">
+            <h3 className="text-sm font-bold text-white border-b border-[#FF3B3B]/15 pb-3">Report Scope & Parameters</h3>
             
             {/* Target selection */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-350">Select Target Repository</label>
+              <label className="text-xs font-bold text-[#A1A1AA]">Select Target Repository</label>
               <select
                 value={selectedRepo}
                 onChange={(e) => setSelectedRepo(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-350 focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                className="w-full px-3 py-2 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white focus:outline-none focus:border-[#FF3B3B] appearance-none cursor-pointer"
               >
                 <option value="All">All Connected Repositories Scope</option>
                 {repositories.map(repo => (
@@ -104,7 +104,7 @@ const Reports = () => {
 
             {/* Checkbox settings */}
             <div className="space-y-4 pt-2">
-              <label className="text-xs font-bold text-slate-350">Report Options</label>
+              <label className="text-xs font-bold text-[#A1A1AA]">Report Options</label>
               
               <div className="space-y-3">
                 <label className="flex items-start gap-3 cursor-pointer group">
@@ -112,11 +112,11 @@ const Reports = () => {
                     type="checkbox"
                     checked={includeSnippets}
                     onChange={(e) => setIncludeSnippets(e.target.checked)}
-                    className="mt-1 w-4 h-4 bg-slate-900 border border-slate-800 rounded text-blue-600 focus:ring-blue-500"
+                    className="mt-1 w-4 h-4 accent-[#FF3B3B] bg-[#0F1117] border border-[#FF3B3B]/15 rounded text-[#FF3B3B] focus:ring-[#FF3B3B]"
                   />
                   <div className="select-none">
-                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Include Vulnerable AST Code Snippets</span>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Appends exact file line references highlighting vulnerable statements.</p>
+                    <span className="text-xs font-semibold text-white">Include Vulnerable AST Code Snippets</span>
+                    <p className="text-[10px] text-[#71717A] mt-0.5">Appends exact file line references highlighting vulnerable statements.</p>
                   </div>
                 </label>
 
@@ -125,22 +125,22 @@ const Reports = () => {
                     type="checkbox"
                     checked={includeRemediations}
                     onChange={(e) => setIncludeRemediations(e.target.checked)}
-                    className="mt-1 w-4 h-4 bg-slate-900 border border-slate-800 rounded text-blue-600 focus:ring-blue-500"
+                    className="mt-1 w-4 h-4 accent-[#FF3B3B] bg-[#0F1117] border border-[#FF3B3B]/15 rounded text-[#FF3B3B] focus:ring-[#FF3B3B]"
                   />
                   <div className="select-none">
-                    <span className="text-xs font-semibold text-slate-200 group-hover:text-white">Include AI Remediation Patches</span>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Appends unified patches and secure code suggestions from the J-QUBE engine.</p>
+                    <span className="text-xs font-semibold text-white">Include AI Remediation Patches</span>
+                    <p className="text-[10px] text-[#71717A] mt-0.5">Appends unified patches and secure code suggestions from the J-QUBE engine.</p>
                   </div>
                 </label>
               </div>
             </div>
 
             {/* Download Buttons (PDF, CSV, Executive) */}
-            <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row gap-3">
+            <div className="pt-4 border-t border-[#FF3B3B]/15 flex flex-col sm:flex-row gap-3">
               <button
                 onClick={handleDownloadPdf}
                 disabled={downloading}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-[#FF3B3B] hover:bg-[#FF3B3B]/90 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-[#FF3B3B]/20 disabled:opacity-50"
               >
                 <FileText className="w-4 h-4" />
                 <span>{downloading ? 'Compiling PDF...' : 'Download Executive PDF'}</span>
@@ -149,9 +149,9 @@ const Reports = () => {
               <button
                 onClick={handleDownloadCsv}
                 disabled={downloading}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-750 border border-slate-700 hover:border-slate-600 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-[#0F1117] hover:bg-[#FF3B3B]/10 border border-[#FF3B3B]/15 text-[#A1A1AA] hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50"
               >
-                <FileSpreadsheet className="w-4 h-4 text-green-400" />
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
                 <span>{downloading ? 'Compiling CSV...' : 'Download CSV Table'}</span>
               </button>
             </div>
@@ -160,28 +160,28 @@ const Reports = () => {
 
         {/* Right Side: Executive Score & Summary */}
         <div className="space-y-6">
-          <div className="glass-panel p-6 rounded-2xl space-y-4">
-            <h3 className="text-xs font-bold text-white tracking-wide uppercase border-b border-slate-800 pb-3">Compliance & Risk Index</h3>
+          <div className="bg-[#151922] border border-[#FF3B3B]/15 p-6 rounded-xl space-y-4 shadow-xl">
+            <h3 className="text-xs font-bold text-white tracking-wide uppercase border-b border-[#FF3B3B]/15 pb-3">Compliance & Risk Index</h3>
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-center">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Compliance Score</span>
-                <p className="text-2xl font-black text-green-400 mt-1">92%</p>
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center">
+                <span className="text-[10px] text-[#71717A] uppercase font-bold">Compliance Score</span>
+                <p className="text-2xl font-black text-emerald-400 mt-1">92%</p>
               </div>
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-center">
-                <span className="text-[10px] text-slate-400 uppercase font-bold">Risk Score</span>
-                <p className="text-2xl font-black text-red-400 mt-1">18/100</p>
+              <div className="p-3 bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 rounded-xl text-center">
+                <span className="text-[10px] text-[#71717A] uppercase font-bold">Risk Score</span>
+                <p className="text-2xl font-black text-[#FF3B3B] mt-1">18/100</p>
               </div>
             </div>
 
             <div className="space-y-3 pt-2 text-xs">
-              <div className="flex justify-between items-center text-slate-400">
+              <div className="flex justify-between items-center text-[#A1A1AA]">
                 <span>OWASP Top 10 Status:</span>
                 <span className="text-amber-400 font-bold">2 Findings</span>
               </div>
-              <div className="flex justify-between items-center text-slate-400">
+              <div className="flex justify-between items-center text-[#A1A1AA]">
                 <span>CWE Top 25 Status:</span>
-                <span className="text-red-400 font-bold">1 Critical</span>
+                <span className="text-[#FF3B3B] font-bold">1 Critical</span>
               </div>
             </div>
           </div>

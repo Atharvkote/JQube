@@ -1,4 +1,5 @@
 import React from 'react';
+import logo from '../../assets/logo.png';
 
 export const Spinner = ({ size = 'medium', className = '' }) => {
   const sizeClasses = {
@@ -53,22 +54,30 @@ export const SkeletonTable = ({ rows = 5, cols = 5 }) => {
   );
 };
 
-const Loader = ({ fullPage = false, message = 'Loading configurations...' }) => {
+const Loader = ({ fullPage = false, message = 'Loading JQube Platform...' }) => {
   if (fullPage) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0F172A] text-slate-100">
-        <div className="relative flex items-center justify-center mb-4">
-          <div className="w-16 h-16 border-4 border-slate-800 rounded-full"></div>
-          <div className="absolute w-16 h-16 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950 text-slate-100">
+        <div className="relative flex flex-col items-center justify-center mb-4">
+          <img
+            src={logo}
+            alt="JQube Logo"
+            className="w-44 h-auto object-contain animate-pulse select-none drop-shadow-xl mb-4"
+          />
+          <div className="w-10 h-10 border-3 border-slate-800 border-t-blue-500 rounded-full animate-spin"></div>
         </div>
-        <p className="text-sm font-medium text-slate-400">{message}</p>
+        <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">{message}</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center justify-center p-8 space-y-3">
-      <Spinner size="medium" />
+      <img
+        src={logo}
+        alt="JQube Logo"
+        className="w-32 h-auto object-contain animate-pulse select-none drop-shadow-md"
+      />
       <p className="text-xs text-slate-400">{message}</p>
     </div>
   );

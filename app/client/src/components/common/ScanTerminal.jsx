@@ -10,8 +10,6 @@ import {
   ArrowDown,
   RefreshCw,
   CheckCircle2,
-  ShieldCheck,
-  AlertTriangle,
   Play
 } from 'lucide-react';
 
@@ -109,38 +107,38 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
   };
 
   const getLogStyle = (log) => {
-    if (log.includes('[SUCCESS]')) return 'text-green-400 font-bold';
-    if (log.includes('[WARN]')) return 'text-yellow-400 font-semibold';
-    if (log.includes('[ERROR]')) return 'text-red-400 font-bold';
-    return 'text-slate-300';
+    if (log.includes('[SUCCESS]')) return 'text-emerald-400 font-bold';
+    if (log.includes('[WARN]')) return 'text-amber-400 font-semibold';
+    if (log.includes('[ERROR]')) return 'text-[#FF3B3B] font-bold';
+    return 'text-[#A1A1AA]';
   };
 
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#09090B]/80 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className={`bg-[#0b0f19] border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
+          className={`bg-[#151922] border border-[#FF3B3B]/20 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 ${
             isFullscreen ? 'w-full h-full rounded-none' : 'w-full max-w-4xl h-[620px]'
           }`}
         >
           {/* Header Bar */}
-          <div className="px-5 py-3.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+          <div className="px-5 py-3.5 bg-[#0F1117] border-b border-[#FF3B3B]/15 flex items-center justify-between">
             {/* Left Traffic Light & Title */}
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <button onClick={onClose} className="w-3 h-3 rounded-full bg-red-500 hover:opacity-80" />
-                <button onClick={() => setIsFullscreen(!isFullscreen)} className="w-3 h-3 rounded-full bg-yellow-500 hover:opacity-80" />
-                <button className="w-3 h-3 rounded-full bg-green-500 hover:opacity-80" />
+                <button onClick={onClose} className="w-3 h-3 rounded-full bg-[#FF3B3B] hover:opacity-80" />
+                <button onClick={() => setIsFullscreen(!isFullscreen)} className="w-3 h-3 rounded-full bg-amber-500 hover:opacity-80" />
+                <button className="w-3 h-3 rounded-full bg-emerald-500 hover:opacity-80" />
               </div>
-              <div className="h-4 w-px bg-slate-800" />
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-200 font-mono">
-                <TerminalIcon className="w-4 h-4 text-blue-500" />
+              <div className="h-4 w-px bg-[#FF3B3B]/15" />
+              <div className="flex items-center gap-2 text-xs font-bold text-white font-mono">
+                <TerminalIcon className="w-4 h-4 text-[#FF3B3B]" />
                 <span>jqube-scan --repo {repoName}</span>
               </div>
             </div>
@@ -148,12 +146,12 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
             {/* Status Pill */}
             <div className="flex items-center gap-2">
               {isScanning && (
-                <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-bold rounded-full flex items-center gap-1.5 animate-pulse">
+                <span className="px-3 py-1 bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 text-[#FF3B3B] text-xs font-bold rounded-full flex items-center gap-1.5 animate-pulse">
                   <RefreshCw className="w-3 h-3 animate-spin" /> Scanning Repository...
                 </span>
               )}
               {isDone && (
-                <span className="px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold rounded-full flex items-center gap-1.5">
+                <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-full flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Scan Finished
                 </span>
               )}
@@ -164,15 +162,15 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
               <button
                 onClick={startScan}
                 disabled={isScanning}
-                className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 text-xs flex items-center gap-1 disabled:opacity-50"
+                className="p-1.5 text-[#A1A1AA] hover:text-white bg-[#0F1117] hover:bg-[#FF3B3B]/10 rounded-lg border border-[#FF3B3B]/15 text-xs flex items-center gap-1 disabled:opacity-50"
                 title="Restart Scan"
               >
-                <Play className="w-3.5 h-3.5 text-blue-400" />
+                <Play className="w-3.5 h-3.5 text-[#FF3B3B]" />
               </button>
 
               <button
                 onClick={handleClear}
-                className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 text-xs"
+                className="p-1.5 text-[#A1A1AA] hover:text-white bg-[#0F1117] hover:bg-[#FF3B3B]/10 rounded-lg border border-[#FF3B3B]/15 text-xs"
                 title="Clear Output"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -180,7 +178,7 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
 
               <button
                 onClick={handleDownloadLog}
-                className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 text-xs"
+                className="p-1.5 text-[#A1A1AA] hover:text-white bg-[#0F1117] hover:bg-[#FF3B3B]/10 rounded-lg border border-[#FF3B3B]/15 text-xs"
                 title="Download Scan Log"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -188,7 +186,7 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
 
               <button
                 onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 text-xs"
+                className="p-1.5 text-[#A1A1AA] hover:text-white bg-[#0F1117] hover:bg-[#FF3B3B]/10 rounded-lg border border-[#FF3B3B]/15 text-xs"
                 title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
               >
                 {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -196,7 +194,7 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
 
               <button
                 onClick={onClose}
-                className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 text-xs"
+                className="p-1.5 text-[#A1A1AA] hover:text-white bg-[#0F1117] hover:bg-[#FF3B3B]/10 rounded-lg border border-[#FF3B3B]/15 text-xs"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -204,15 +202,15 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
           </div>
 
           {/* Terminal Console View */}
-          <div className="flex-1 p-6 bg-[#050811] overflow-y-auto font-mono text-xs leading-relaxed space-y-2 selection:bg-blue-600 selection:text-white">
+          <div className="flex-1 p-6 bg-[#09090B] overflow-y-auto font-mono text-xs leading-relaxed space-y-2 selection:bg-[#FF3B3B] selection:text-white">
             {logs.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-slate-600">
+              <div className="flex items-center justify-center h-full text-[#71717A]">
                 <span>Waiting for log stream...</span>
               </div>
             ) : (
               logs.map((log, idx) => (
                 <div key={idx} className={`flex items-start gap-2 ${getLogStyle(log)}`}>
-                  <span className="text-slate-600 select-none text-[10px] pt-0.5">{(idx + 1).toString().padStart(2, '0')}</span>
+                  <span className="text-[#71717A] select-none text-[10px] pt-0.5">{(idx + 1).toString().padStart(2, '0')}</span>
                   <span className="break-all">{log}</span>
                 </div>
               ))
@@ -221,7 +219,7 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
           </div>
 
           {/* Terminal Footer */}
-          <div className="px-5 py-2.5 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+          <div className="px-5 py-2.5 bg-[#0F1117] border-t border-[#FF3B3B]/15 flex items-center justify-between text-[11px] text-[#71717A] font-mono">
             <div className="flex items-center gap-4">
               <span>Lines: {logs.length}</span>
               <span>Encoding: UTF-8</span>
@@ -231,7 +229,7 @@ const ScanTerminal = ({ isOpen, onClose, repoName = 'payment-gateway' }) => {
             <button
               onClick={() => setAutoScroll(!autoScroll)}
               className={`flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                autoScroll ? 'bg-blue-600/20 text-blue-400' : 'text-slate-500 hover:text-slate-300'
+                autoScroll ? 'bg-[#FF3B3B]/15 text-[#FF3B3B]' : 'text-[#71717A] hover:text-white'
               }`}
             >
               <ArrowDown className="w-3 h-3" /> Auto-Scroll {autoScroll ? 'ON' : 'OFF'}

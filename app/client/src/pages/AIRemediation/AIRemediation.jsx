@@ -5,16 +5,12 @@ import { generateRemediation, createPullRequestAPI } from '../../services/api';
 import DiffViewer from '../../components/common/DiffViewer';
 import {
   Bot,
-  Cpu,
   Sparkles,
   GitPullRequest,
   CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
   ShieldCheck,
   Code2,
   RefreshCw,
-  Zap,
   Sliders
 } from 'lucide-react';
 
@@ -139,24 +135,24 @@ const AIRemediation = () => {
     <div className="space-y-6">
       
       {/* Top Banner & AI Provider Switcher */}
-      <div className="p-6 bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900 border border-blue-500/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-6 bg-[#151922] border border-[#FF3B3B]/15 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
         <div>
           <h1 className="text-xl font-bold text-white tracking-wide flex items-center gap-2.5">
-            <Bot className="w-6 h-6 text-blue-500" /> AI Remediation Engine
+            <Bot className="w-6 h-6 text-[#FF3B3B]" /> AI Remediation Engine
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#A1A1AA] mt-1 leading-[1.7]">
             Automated AST-aware patch generation preserving original business logic with OWASP best practices.
           </p>
         </div>
 
         {/* AI Provider Config Selection */}
-        <div className="flex items-center gap-3 bg-slate-900/80 p-2 rounded-xl border border-slate-800">
-          <Sliders className="w-4 h-4 text-slate-400 ml-1" />
-          <span className="text-xs font-semibold text-slate-300">Provider:</span>
+        <div className="flex items-center gap-3 bg-[#0F1117] p-2 rounded-xl border border-[#FF3B3B]/15">
+          <Sliders className="w-4 h-4 text-[#71717A] ml-1" />
+          <span className="text-xs font-semibold text-[#A1A1AA]">Provider:</span>
           <select
             value={aiProvider}
             onChange={(e) => setAiProvider(e.target.value)}
-            className="bg-slate-950 border border-slate-700 text-xs text-blue-400 font-bold px-3 py-1.5 rounded-lg focus:outline-none"
+            className="bg-[#09090B] border border-[#FF3B3B]/20 text-xs text-[#FF3B3B] font-bold px-3 py-1.5 rounded-lg focus:outline-none"
           >
             <option value="openai">OpenAI (GPT-4o)</option>
             <option value="gemini">Google Gemini 1.5</option>
@@ -169,21 +165,21 @@ const AIRemediation = () => {
       <div className="grid lg:grid-cols-3 gap-6">
 
         {/* Left Column: Vulnerability Details */}
-        <div className="lg:col-span-1 p-6 bg-slate-900/60 border border-slate-850 rounded-2xl space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="lg:col-span-1 p-6 bg-[#151922] border border-[#FF3B3B]/15 rounded-xl space-y-5 shadow-xl">
+          <div className="flex items-center justify-between border-b border-[#FF3B3B]/15 pb-3">
             <h2 className="text-sm font-bold text-white tracking-wide">Target Vulnerability</h2>
-            <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded">
+            <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-[#FF3B3B]/10 text-[#FF3B3B] rounded">
               {selectedVuln?.id}
             </span>
           </div>
 
           {/* Vulnerability Dropdown */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1.5">Select Vulnerability</label>
+            <label className="block text-xs font-semibold text-[#A1A1AA] mb-1.5">Select Vulnerability</label>
             <select
               value={selectedVuln?.id || ''}
               onChange={(e) => handleSelectVuln(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-blue-500"
+              className="w-full px-3.5 py-2.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white focus:outline-none focus:border-[#FF3B3B]"
             >
               {vulnerabilities.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -195,25 +191,25 @@ const AIRemediation = () => {
 
           {selectedVuln && (
             <div className="space-y-3 pt-2 text-xs">
-              <div className="flex justify-between py-2 border-b border-slate-800/60">
-                <span className="text-slate-500 font-medium">Severity</span>
+              <div className="flex justify-between py-2 border-b border-[#FF3B3B]/10">
+                <span className="text-[#71717A] font-medium">Severity</span>
                 <span className={`font-bold px-2 py-0.5 rounded text-[10px] ${
-                  selectedVuln.severity === 'Critical' ? 'bg-red-500/10 text-red-500' : 'bg-orange-500/10 text-orange-400'
+                  selectedVuln.severity === 'Critical' ? 'bg-[#FF3B3B]/15 text-[#FF3B3B]' : 'bg-orange-500/10 text-orange-400'
                 }`}>
                   {selectedVuln.severity}
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-800/60">
-                <span className="text-slate-500 font-medium">Repository</span>
-                <span className="text-slate-200 font-mono">{selectedVuln.repository}</span>
+              <div className="flex justify-between py-2 border-b border-[#FF3B3B]/10">
+                <span className="text-[#71717A] font-medium">Repository</span>
+                <span className="text-white font-mono">{selectedVuln.repository}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-800/60">
-                <span className="text-slate-500 font-medium">File Path</span>
-                <span className="text-slate-200 font-mono">{selectedVuln.fileName}:{selectedVuln.lineNumber}</span>
+              <div className="flex justify-between py-2 border-b border-[#FF3B3B]/10">
+                <span className="text-[#71717A] font-medium">File Path</span>
+                <span className="text-white font-mono">{selectedVuln.fileName}:{selectedVuln.lineNumber}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-slate-800/60">
-                <span className="text-slate-500 font-medium">CWE Specification</span>
-                <span className="text-blue-400 font-medium">{selectedVuln.cwe}</span>
+              <div className="flex justify-between py-2 border-b border-[#FF3B3B]/10">
+                <span className="text-[#71717A] font-medium">CWE Specification</span>
+                <span className="text-[#FF3B3B] font-medium">{selectedVuln.cwe}</span>
               </div>
             </div>
           )}
@@ -222,7 +218,7 @@ const AIRemediation = () => {
           <button
             onClick={handleGenerateFix}
             disabled={generating}
-            className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3.5 bg-[#FF3B3B] hover:bg-[#FF3B3B]/90 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#FF3B3B]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {generating ? (
               <>
@@ -242,16 +238,16 @@ const AIRemediation = () => {
           {/* Code Viewer / Diff Viewer Box */}
           {remediationResult ? (
             <div className="space-y-4">
-              <div className="p-4 bg-slate-900/80 border border-green-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="p-4 bg-[#151922] border border-emerald-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
                 <div>
-                  <h3 className="text-sm font-bold text-green-400 flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-green-400" /> AI Remediation Patch Ready
+                  <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" /> AI Remediation Patch Ready
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">{remediationResult.summary}</p>
+                  <p className="text-xs text-[#A1A1AA] mt-1">{remediationResult.summary}</p>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/30 rounded-xl w-max">
-                  <ShieldCheck className="w-4 h-4 text-green-400" />
-                  <span className="text-xs font-bold text-green-400">Confidence: {remediationResult.confidence}%</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl w-max">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-400">Confidence: {remediationResult.confidence}%</span>
                 </div>
               </div>
 
@@ -264,14 +260,14 @@ const AIRemediation = () => {
               />
             </div>
           ) : (
-            <div className="p-6 bg-slate-900/60 border border-slate-850 rounded-2xl space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="text-xs font-bold text-red-400 flex items-center gap-2">
+            <div className="p-6 bg-[#151922] border border-[#FF3B3B]/15 rounded-xl space-y-3 shadow-xl">
+              <div className="flex items-center justify-between border-b border-[#FF3B3B]/15 pb-2">
+                <span className="text-xs font-bold text-[#FF3B3B] flex items-center gap-2">
                   <Code2 className="w-4 h-4" /> Original Vulnerable Code
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">{selectedVuln?.fileName || 'PaymentController.java'}</span>
+                <span className="text-[10px] text-[#71717A] font-mono">{selectedVuln?.fileName || 'PaymentController.java'}</span>
               </div>
-              <pre className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
+              <pre className="p-4 bg-[#09090B] border border-[#FF3B3B]/15 rounded-xl text-xs font-mono text-[#A1A1AA] overflow-x-auto leading-relaxed">
                 <code>{customCode}</code>
               </pre>
             </div>
@@ -279,8 +275,8 @@ const AIRemediation = () => {
 
           {/* Create PR Action Box */}
           {remediationResult && (
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-800/80">
-              <p className="text-xs text-slate-400">
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#FF3B3B]/15">
+              <p className="text-xs text-[#A1A1AA]">
                 Ready to deploy? Open an automated Pull Request to apply this patch directly to your repository branch.
               </p>
 
@@ -289,7 +285,7 @@ const AIRemediation = () => {
                   href={prCreated.pullRequestUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-green-500/20 transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
                 >
                   <GitPullRequest className="w-4 h-4" /> View PR ({prCreated.branch})
                 </a>
@@ -297,7 +293,7 @@ const AIRemediation = () => {
                 <button
                   onClick={handleCreatePullRequest}
                   disabled={creatingPR}
-                  className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2 disabled:opacity-50"
+                  className="px-5 py-2.5 bg-[#FF3B3B] hover:bg-[#FF3B3B]/90 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#FF3B3B]/20 transition-all flex items-center gap-2 disabled:opacity-50"
                 >
                   {creatingPR ? (
                     <>
@@ -322,5 +318,3 @@ const AIRemediation = () => {
 };
 
 export default AIRemediation;
-
-

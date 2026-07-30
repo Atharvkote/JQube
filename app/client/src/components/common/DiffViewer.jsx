@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer-continued';
+import ReactDiffViewer from 'react-diff-viewer-continued';
 import { motion } from 'framer-motion';
 import {
   Columns,
@@ -7,33 +7,32 @@ import {
   Copy,
   Download,
   Check,
-  Code2,
   FileCode
 } from 'lucide-react';
 
 const customDarkTheme = {
   variables: {
     dark: {
-      diffViewerBackground: '#090d16',
-      diffViewerColor: '#cbd5e1',
+      diffViewerBackground: '#09090B',
+      diffViewerColor: '#A1A1AA',
       addedBackground: '#064e3b33',
       addedColor: '#4ade80',
-      removedBackground: '#7f1d1d33',
-      removedColor: '#f87171',
+      removedBackground: '#FF3B3B22',
+      removedColor: '#FF3B3B',
       wordAddedBackground: '#065f46',
       wordRemovedBackground: '#991b1b',
       addedGutterBackground: '#064e3b4d',
-      removedGutterBackground: '#7f1d1d4d',
-      gutterBackground: '#0f172a',
-      gutterBackgroundNormal: '#0f172a',
-      gutterColor: '#64748b',
-      gutterColorPower: '#94a3b8',
-      lineNumberColor: '#475569',
-      highlightBackground: '#1e293b',
-      highlightGutterBackground: '#334155',
-      codeFoldGutterBackground: '#0f172a',
-      codeFoldBackground: '#0f172a',
-      emptyLineBackground: '#090d16',
+      removedGutterBackground: '#FF3B3B33',
+      gutterBackground: '#0F1117',
+      gutterBackgroundNormal: '#0F1117',
+      gutterColor: '#71717A',
+      gutterColorPower: '#A1A1AA',
+      lineNumberColor: '#71717A',
+      highlightBackground: '#151922',
+      highlightGutterBackground: '#151922',
+      codeFoldGutterBackground: '#0F1117',
+      codeFoldBackground: '#0F1117',
+      emptyLineBackground: '#09090B',
     }
   },
   styles: {
@@ -85,82 +84,89 @@ const DiffViewer = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl space-y-0"
+      className="bg-[#151922] border border-[#FF3B3B]/15 rounded-xl overflow-hidden shadow-2xl space-y-0"
     >
       {/* Control Bar Header */}
-      <div className="px-5 py-3.5 bg-slate-950/80 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-          <FileCode className="w-4 h-4 text-blue-500" />
+      <div className="px-5 py-3.5 bg-[#0F1117] border-b border-[#FF3B3B]/15 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#A1A1AA]">
+          <FileCode className="w-4 h-4 text-[#FF3B3B]" />
           <span className="font-mono text-white">{fileName}</span>
-          <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+          <span className="px-2 py-0.5 text-[10px] font-bold bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/20 rounded-full">
             AI Patch Preview
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Mode Switcher */}
-          <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1">
+          {/* Split / Unified View Toggle */}
+          <div className="flex items-center bg-[#09090B] border border-[#FF3B3B]/15 rounded-lg p-1">
             <button
               onClick={() => setSplitView(true)}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1 text-[11px] font-semibold rounded flex items-center gap-1 transition-all ${
                 splitView
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#FF3B3B]/15 text-[#FF3B3B] font-bold border border-[#FF3B3B]/30'
+                  : 'text-[#A1A1AA] hover:text-white'
               }`}
+              title="Split View Side-by-Side"
             >
-              <Columns className="w-3.5 h-3.5" /> Side-by-Side
+              <Columns className="w-3.5 h-3.5" />
+              <span>Split</span>
             </button>
             <button
               onClick={() => setSplitView(false)}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all ${
+              className={`px-2.5 py-1 text-[11px] font-semibold rounded flex items-center gap-1 transition-all ${
                 !splitView
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#FF3B3B]/15 text-[#FF3B3B] font-bold border border-[#FF3B3B]/30'
+                  : 'text-[#A1A1AA] hover:text-white'
               }`}
+              title="Unified View Stacked"
             >
-              <AlignJustify className="w-3.5 h-3.5" /> Unified
+              <AlignJustify className="w-3.5 h-3.5" />
+              <span>Unified</span>
             </button>
           </div>
 
-          {/* Copy Button */}
+          {/* Copy Patch Code */}
           <button
             onClick={handleCopy}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white text-xs font-semibold rounded-xl border border-slate-700/80 transition-all flex items-center gap-1.5"
-            title="Copy Fixed Code"
+            className="px-3 py-1.5 bg-[#09090B] hover:bg-[#FF3B3B]/10 text-[#A1A1AA] hover:text-white border border-[#FF3B3B]/15 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5"
+            title="Copy Fixed Code to Clipboard"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-green-400" /> Copied!
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-emerald-400">Copied</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5 text-slate-400" /> Copy Fix
+                <Copy className="w-3.5 h-3.5 text-[#FF3B3B]" />
+                <span>Copy Code</span>
               </>
             )}
           </button>
 
-          {/* Download Patch Button */}
+          {/* Download Patch File */}
           <button
             onClick={handleDownloadPatch}
-            className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 text-xs font-semibold rounded-xl border border-blue-500/30 transition-all flex items-center gap-1.5"
-            title="Download Git Patch File"
+            className="px-3 py-1.5 bg-[#FF3B3B] hover:bg-[#FF3B3B]/90 text-white rounded-lg text-xs font-bold transition-all shadow-md shadow-[#FF3B3B]/20 flex items-center gap-1.5"
+            title="Download .patch Unified Diff File"
           >
-            <Download className="w-3.5 h-3.5" /> Patch File
+            <Download className="w-3.5 h-3.5" />
+            <span>Download .patch</span>
           </button>
         </div>
       </div>
 
       {/* Diff Viewer Body */}
-      <div className="overflow-x-auto text-xs font-mono border-t border-slate-900">
+      <div className="overflow-x-auto text-xs font-mono">
         <ReactDiffViewer
           oldValue={oldCode}
           newValue={newCode}
           splitView={splitView}
           useDarkTheme={true}
-          compareMethod={DiffMethod.WORDS}
           customStyles={customDarkTheme.styles}
-          leftTitle="Original Vulnerable Code"
-          rightTitle="AI Corrected Secure Code"
+          styles={customDarkTheme.variables}
+          leftTitle="Vulnerable Implementation"
+          rightTitle="AI Remediated Patch"
         />
       </div>
     </motion.div>

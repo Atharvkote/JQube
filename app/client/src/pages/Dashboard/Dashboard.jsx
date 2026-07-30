@@ -1,278 +1,715 @@
-import React, { useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { AppContext } from '../../context/AppContext';
-import SeverityPieChart from '../../components/charts/SeverityPieChart';
-import WeeklyScanChart from '../../components/charts/WeeklyScanChart';
-import RepositoryBarChart from '../../components/charts/RepositoryBarChart';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldAlert,
-  FolderGit2,
-  Scan,
   AlertOctagon,
-  ArrowRight,
-  Bot,
-  GitPullRequest,
-  Webhook,
-  Clock,
+  FolderGit2,
+  CheckCircle2,
+  XCircle,
+  Activity,
   ShieldCheck,
+  RefreshCw,
+  Download,
+  Search,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FileSpreadsheet,
+  FileText,
+  TrendingUp,
+  TrendingDown,
   Zap,
-  CheckCircle2
+  BarChart2
 } from 'lucide-react';
 
-const Dashboard = () => {
-  const {
-    stats,
-    vulnerabilities,
-    scanHistory,
-    triggerScan,
-    repositories,
-    gitRepositories,
-    remediationHistory,
-    webhookLogs,
-    pullRequests
-  } = useContext(AppContext);
+import SeverityPieChart from '../../components/charts/SeverityPieChart';
+import RepositoryBarChart from '../../components/charts/RepositoryBarChart';
+import WeeklyScanChart from '../../components/charts/WeeklyScanChart';
 
-  // Filter open vulnerabilities
-  const openVulnerabilities = vulnerabilities.filter(v => v.status === 'Open');
-  const recentVulnerabilities = openVulnerabilities.slice(0, 4);
-  const recentRemediations = remediationHistory.slice(0, 4);
+import {
+  fetchDashboardSummary,
+  fetchSeverityData,
+  fetchRepositoryMetrics,
+  fetchWeeklyScans,
+  fetchRecentScans,
+  exportDashboardReport
+} from '../../services/api';
 
-  const integrationCards = [
-    { name: 'Repositories Connected', value: gitRepositories.length, icon: FolderGit2, color: 'text-blue-500 bg-blue-500/10', link: '/git-integration' },
-    { name: 'AI Fixes Generated', value: remediationHistory.length, icon: Bot, color: 'text-indigo-500 bg-indigo-500/10', link: '/remediation-history' },
-    { name: 'Pull Requests Created', value: pullRequests.length, icon: GitPullRequest, color: 'text-purple-500 bg-purple-500/10', link: '/pull-requests' },
-    { name: 'Webhook Events', value: webhookLogs.length, icon: Webhook, color: 'text-emerald-500 bg-emerald-500/10', link: '/webhook-logs' },
-  ];
+import { generateDashboardPDF } from '../../utils/pdfExporter';
 
-  const statCards = [
-    { name: 'Critical Issues', value: stats.critical, icon: AlertOctagon, color: 'text-red-500 bg-red-500/10', critical: true },
-    { name: 'High Issues', value: stats.high, icon: ShieldAlert, color: 'text-orange-500 bg-orange-500/10' },
-    { name: 'Medium Issues', value: stats.medium, icon: ShieldAlert, color: 'text-amber-500 bg-amber-500/10' },
-    { name: 'Low Issues', value: stats.low, icon: ShieldAlert, color: 'text-blue-400 bg-blue-400/10' }
-  ];
+const TIME_RANGE_OPTIONS = [
+  { label: 'Today', value: 'today' },
+  { label: 'Last 7 Days', value: '7d' },
+  { label: 'Last 30 Days', value: '30d' },
+  { label: 'Last 90 Days', value: '90d' },
+  { label: 'Custom Range', value: 'custom' }
+];
+
+const EXPORT_OPTIONS = [
+  { label: 'Export PDF Report', format: 'pdf', icon: FileText },
+  { label: 'Export CSV Report', format: 'csv', icon: FileSpreadsheet },
+  { label: 'Export Excel Sheet', format: 'xlsx', icon: FileSpreadsheet },
+  { label: 'Vulnerability Summary', format: 'summary', icon: ShieldAlert },
+  { label: 'Weekly Scan Log', format: 'scan-log', icon: Activity }
+];
+
+// --- Count-Up Hook ---
+function useCountUp(target, duration = 1200, enabled = true) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    if (!enabled || typeof target !== 'number') {
+      setValue(target);
+      return;
+    }
+    const start = Date.now();
+    const animate = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [target, duration, enabled]);
+  return value;
+}
+
+// --- Animated Metric Card ---
+const MetricCard = React.memo(({ card, index, isLoading }) => {
+  const numericValue = typeof card.value === 'number' ? card.value : parseInt(card.value, 10);
+  const isNumeric = !isNaN(numericValue);
+  const displayValue = useCountUp(isNumeric ? numericValue : 0, 1200, !isLoading && isNumeric);
+
+  if (isLoading) {
+    return (
+      <div className="h-[120px] p-5 bg-[#151922] border border-[#FF3B3B]/15 rounded-2xl animate-pulse flex flex-col justify-between">
+        <div className="flex items-center justify-between">
+          <div className="h-3 w-24 bg-[#0F1117] rounded-lg" />
+          <div className="w-9 h-9 bg-[#0F1117] rounded-xl" />
+        </div>
+        <div className="h-8 w-20 bg-[#0F1117] rounded-lg" />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      
-      {/* Top Welcome Banner */}
-      <div className="p-6 bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900 border border-blue-500/15 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
-            Secure Code Hub <ShieldCheck className="w-5 h-5 text-blue-500" />
-          </h2>
-          <p className="text-xs text-slate-400 mt-1 max-w-xl">
-            Continuous vulnerability scanning and automated AI-powered remediation is operational. Click quick scan on any repository to run security checks.
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.04 }}
+      whileHover={{ y: -4, boxShadow: '0 0 28px rgba(255,59,59,0.18)' }}
+      className="group relative h-[120px] p-5 bg-[#151922] border border-[#FF3B3B]/15 hover:border-[#FF3B3B]/40 rounded-2xl shadow-lg transition-all duration-300 flex flex-col justify-between overflow-hidden cursor-default"
+      aria-label={card.name}
+    >
+      {/* subtle background glow */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FF3B3B]/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-2xl" />
+
+      {/* Top Row: Label + Icon */}
+      <div className="flex items-center justify-between gap-2 relative z-10">
+        <span className="text-xs font-semibold text-[#A1A1AA] truncate leading-tight">{card.name}</span>
+        <div className={`p-2 rounded-xl border shrink-0 ${card.iconBg}`}>
+          <card.icon className="w-4 h-4" />
+        </div>
+      </div>
+
+      {/* Bottom Row: Value + Trend */}
+      <div className="flex items-end justify-between gap-2 relative z-10">
+        <span className="text-3xl font-extrabold text-white tracking-tight leading-none">
+          {isNumeric ? displayValue : card.value}
+        </span>
+        <span
+          className={`inline-flex items-center gap-0.5 text-xs font-bold mb-0.5 ${
+            card.isPositive ? 'text-emerald-400' : 'text-[#FF3B3B]'
+          }`}
+        >
+          {card.isPositive ? (
+            <TrendingUp className="w-3 h-3" />
+          ) : (
+            <TrendingDown className="w-3 h-3" />
+          )}
+          {card.trend}
+        </span>
+      </div>
+    </motion.div>
+  );
+});
+
+// ---- Main Dashboard Component ----
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const dashboardRef = useRef(null);
+
+  // State Management
+  const [timeRange, setTimeRange] = useState('7d');
+  const [lastUpdated, setLastUpdated] = useState(() => new Date().toLocaleTimeString());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  // Search & Filtering State for Activity Table
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Data Loading & Error States
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  // API Datasets
+  const [summaryData, setSummaryData] = useState(null);
+  const [severityData, setSeverityData] = useState([]);
+  const [repositoryData, setRepositoryData] = useState([]);
+  const [weeklyScanData, setWeeklyScanData] = useState([]);
+  const [recentScans, setRecentScans] = useState([]);
+
+  // Debounce search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // Toast Timer
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  // Close export menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showExportMenu && dashboardRef.current && !dashboardRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showExportMenu]);
+
+  // Master Data Fetcher
+  const loadDashboardData = useCallback(async () => {
+    setIsRefreshing(true);
+    setIsError(false);
+    try {
+      const [summaryRes, severityRes, repoRes, weeklyRes, scansRes] = await Promise.all([
+        fetchDashboardSummary(timeRange),
+        fetchSeverityData(timeRange),
+        fetchRepositoryMetrics(timeRange),
+        fetchWeeklyScans(timeRange),
+        fetchRecentScans(timeRange)
+      ]);
+
+      setSummaryData(summaryRes);
+      setSeverityData(severityRes);
+      setRepositoryData(repoRes);
+      setWeeklyScanData(weeklyRes);
+      setRecentScans(scansRes || []);
+      setLastUpdated(new Date().toLocaleTimeString());
+    } catch (err) {
+      console.error('Dashboard fetch error:', err);
+      setIsError(true);
+      setToastMessage({
+        type: 'error',
+        title: 'Data Fetch Failed',
+        message: 'Could not refresh dashboard data. Please retry.'
+      });
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [timeRange]);
+
+  // Initial load & re-fetch on timeRange change
+  useEffect(() => {
+    setIsLoading(true);
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  // Export Handler
+  const handleExport = useCallback(async (option) => {
+    setShowExportMenu(false);
+    setIsExporting(true);
+    try {
+      if (option.format === 'pdf') {
+        await generateDashboardPDF(dashboardRef.current, { timeRange });
+      } else {
+        await exportDashboardReport(option.format, { timeRange });
+      }
+      setToastMessage({
+        type: 'success',
+        title: 'Export Successful',
+        message: `${option.label} has been downloaded.`
+      });
+    } catch {
+      setToastMessage({
+        type: 'error',
+        title: 'Export Failed',
+        message: 'Something went wrong during export. Please try again.'
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  }, [timeRange]);
+
+  // Filtered Scans for Activity Table
+  const filteredScans = useMemo(() => {
+    return recentScans.filter((scan) => {
+      const matchesSearch =
+        !debouncedSearch ||
+        scan.repository?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        scan.id?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        scan.cveId?.toLowerCase().includes(debouncedSearch.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || scan.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [recentScans, debouncedSearch, statusFilter]);
+
+  // Pagination slicing
+  const totalPages = Math.ceil(filteredScans.length / itemsPerPage) || 1;
+  const paginatedScans = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredScans.slice(start, start + itemsPerPage);
+  }, [filteredScans, currentPage]);
+
+  // Summary Metrics Configuration
+  const metricCards = useMemo(() => {
+    if (!summaryData) return [];
+    return [
+      {
+        id: 'total',
+        name: 'Total Vulnerabilities',
+        value: summaryData.totalVulnerabilities,
+        trend: summaryData.trends?.total || '+12.4%',
+        isPositive: false,
+        icon: ShieldAlert,
+        iconBg: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+      },
+      {
+        id: 'critical',
+        name: 'Critical Issues',
+        value: summaryData.critical,
+        trend: summaryData.trends?.critical || '-15.0%',
+        isPositive: true,
+        icon: AlertOctagon,
+        iconBg: 'bg-red-500/10 text-red-400 border-red-500/20'
+      },
+      {
+        id: 'high',
+        name: 'High Severity',
+        value: summaryData.high,
+        trend: summaryData.trends?.high || '+4.2%',
+        isPositive: false,
+        icon: ShieldAlert,
+        iconBg: 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+      },
+      {
+        id: 'repos',
+        name: 'Connected Repos',
+        value: summaryData.connectedRepositories,
+        trend: 'Active',
+        isPositive: true,
+        icon: FolderGit2,
+        iconBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+      },
+      {
+        id: 'success',
+        name: 'Successful Scans',
+        value: summaryData.successfulScans,
+        trend: '96.8%',
+        isPositive: true,
+        icon: CheckCircle2,
+        iconBg: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+      },
+      {
+        id: 'failed',
+        name: 'Failed Scans',
+        value: summaryData.failedScans,
+        trend: '3.2%',
+        isPositive: false,
+        icon: XCircle,
+        iconBg: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+      },
+      {
+        id: 'risk',
+        name: 'Avg Risk Score',
+        value: `${summaryData.avgRiskScore}/100`,
+        trend: 'Medium',
+        isPositive: true,
+        icon: Activity,
+        iconBg: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+      },
+      {
+        id: 'health',
+        name: 'Security Health',
+        value: `${summaryData.securityHealth}%`,
+        trend: summaryData.trends?.health || '+2.1%',
+        isPositive: true,
+        icon: ShieldCheck,
+        iconBg: 'bg-green-500/10 text-green-400 border-green-500/20'
+      }
+    ];
+  }, [summaryData]);
+
+  return (
+    <div ref={dashboardRef} className="space-y-6 relative">
+
+      {/* Toast Notification Alert */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className={`fixed top-20 right-6 z-50 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-center gap-3 min-w-[280px] ${
+              toastMessage.type === 'error'
+                ? 'bg-[#151922] border-[#FF3B3B]/40 text-white'
+                : 'bg-[#151922] border-emerald-500/40 text-white'
+            }`}
+          >
+            <CheckCircle2 className={`w-5 h-5 shrink-0 ${toastMessage.type === 'error' ? 'text-[#FF3B3B]' : 'text-emerald-400'}`} />
+            <div>
+              <p className="text-xs font-bold">{toastMessage.title}</p>
+              <p className="text-[11px] text-[#A1A1AA] mt-0.5">{toastMessage.message}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ════════════════════════════════════════════
+          1. DASHBOARD HEADER
+          ════════════════════════════════════════════ */}
+      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5 px-6 py-5 bg-[#151922] border border-[#FF3B3B]/15 rounded-2xl shadow-xl">
+
+        {/* LEFT: Title block */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-none">
+              Enterprise Security Dashboard
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold text-[#FF3B3B] bg-[#FF3B3B]/10 border border-[#FF3B3B]/25 rounded-full uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B3B] animate-pulse" />
+              Live Feed
+            </span>
+          </div>
+          <p className="text-sm text-[#A1A1AA] leading-relaxed max-w-xl">
+            Continuous automated vulnerability scanning, threat intelligence &amp; SAST analytics.
           </p>
+          <div className="flex items-center gap-1.5 text-xs text-[#71717A]">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Last Updated: <strong className="text-[#A1A1AA] font-semibold">{lastUpdated}</strong></span>
+          </div>
         </div>
-        <div className="flex gap-2">
-          {repositories.slice(0, 2).map((repo) => (
+
+        {/* RIGHT: Toolbar Controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+
+          {/* Refresh Button */}
+          <button
+            onClick={loadDashboardData}
+            disabled={isRefreshing}
+            className="h-[38px] px-3 bg-[#0F1117] hover:bg-[#FF3B3B]/10 border border-[#FF3B3B]/15 text-[#A1A1AA] hover:text-white rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-[#FF3B3B]/40 disabled:opacity-50 flex items-center gap-2"
+            title="Refresh Dashboard Data"
+            aria-label="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#FF3B3B]' : ''}`} />
+            <span className="text-xs font-semibold hidden sm:block">Refresh</span>
+          </button>
+
+          {/* Time Range Selector */}
+          <div className="flex items-center bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl p-1 gap-0.5">
+            {TIME_RANGE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => setTimeRange(option.value)}
+                className={`h-[30px] px-2.5 sm:px-3 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
+                  timeRange === option.value
+                    ? 'bg-[#FF3B3B] text-white shadow-md'
+                    : 'text-[#A1A1AA] hover:text-white hover:bg-[#FF3B3B]/10'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Export Dropdown */}
+          <div className="relative z-50">
             <button
-              key={repo.id}
-              onClick={() => triggerScan(repo.id)}
-              disabled={repo.status === 'Scanning'}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-750 border border-slate-700/80 hover:border-blue-500/30 rounded-xl text-xs font-semibold text-slate-200 hover:text-white transition-all flex items-center gap-1.5 disabled:opacity-50"
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={isExporting}
+              className="h-[38px] px-4 bg-[#FF3B3B] hover:bg-[#FF3B3B]/85 text-white text-xs font-bold rounded-xl shadow-lg shadow-[#FF3B3B]/20 transition-all flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#FF3B3B]/50 disabled:opacity-50"
             >
-              <Zap className="w-3.5 h-3.5 text-blue-500" />
-              <span>Scan {repo.name}</span>
+              {isExporting ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>{isExporting ? 'Generating...' : 'Export'}</span>
             </button>
-          ))}
+
+            <AnimatePresence>
+              {showExportMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 w-58 bg-[#0F1117] border border-[#FF3B3B]/20 rounded-2xl shadow-2xl overflow-hidden z-50 p-1.5 space-y-0.5 min-w-[220px]"
+                >
+                  <div className="px-3 py-2 text-[10px] font-bold text-[#71717A] uppercase tracking-wider border-b border-[#FF3B3B]/15 mb-1">
+                    Select Export Format
+                  </div>
+                  {EXPORT_OPTIONS.map((exp) => (
+                    <button
+                      key={exp.format}
+                      onClick={() => handleExport(exp)}
+                      className="flex items-center gap-2.5 w-full px-3 py-2.5 text-xs font-semibold text-[#A1A1AA] rounded-xl hover:bg-[#FF3B3B]/10 hover:text-white transition-colors text-left"
+                    >
+                      <exp.icon className="w-4 h-4 text-[#FF3B3B] shrink-0" />
+                      <span>{exp.label}</span>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-      {/* Integration Metrics (Requested 4 Cards) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {integrationCards.map((card, idx) => (
-          <Link
-            key={idx}
-            to={card.link}
-            className="p-5 bg-slate-900/60 border border-slate-850 rounded-2xl space-y-3 hover:border-blue-500/30 transition-all group"
-          >
-            <div className="flex items-center justify-between">
-              <div className={`p-2.5 rounded-xl ${card.color}`}>
-                <card.icon className="w-5 h-5" />
-              </div>
-              <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-blue-400 transition-colors" />
-            </div>
-            <div>
-              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                {card.name}
-              </p>
-              <p className="text-2xl font-extrabold text-white mt-1">
-                {card.value}
-              </p>
-            </div>
-          </Link>
-        ))}
+      {/* ════════════════════════════════════════════
+          2. SUMMARY METRIC CARDS — 4-col desktop, 2-col tablet, 1-col mobile
+          ════════════════════════════════════════════ */}
+      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {isLoading
+          ? Array.from({ length: 8 }).map((_, idx) => (
+              <MetricCard key={idx} card={{ name: '', value: 0, trend: '', isPositive: true, icon: BarChart2, iconBg: '' }} index={idx} isLoading />
+            ))
+          : metricCards.map((card, idx) => (
+              <MetricCard key={card.id} card={card} index={idx} isLoading={false} />
+            ))
+        }
       </div>
 
-      {/* Vulnerability Severity Counters */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {statCards.map((stat, idx) => (
-          <div
-            key={idx}
-            className="p-4 bg-slate-900/40 border border-slate-850/80 rounded-2xl space-y-2"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-semibold">{stat.name}</span>
-              <div className={`p-1.5 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-xl font-bold text-white">{stat.value}</p>
-          </div>
-        ))}
+      {/* ════════════════════════════════════════════
+          3. CHARTS ROW — 3-column, equal height
+          ════════════════════════════════════════════ */}
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <SeverityPieChart
+          severityData={severityData}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={loadDashboardData}
+          title="Vulnerability Severity"
+          description={`Distribution for ${timeRange} range`}
+        />
+
+        <RepositoryBarChart
+          repositoryData={repositoryData}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={loadDashboardData}
+          title="Repository Comparison"
+          description="Total vs Resolved findings per repository"
+        />
+
+        <WeeklyScanChart
+          weeklyScanData={weeklyScanData}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={loadDashboardData}
+          title="Scan Volume Trends"
+          description="Automated security pipeline executions"
+        />
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        
-        {/* Severity Pie Chart */}
-        <div className="lg:col-span-1 p-6 bg-slate-900/60 border border-slate-850 rounded-2xl flex flex-col justify-between">
+      {/* ════════════════════════════════════════════
+          4. RECENT SECURITY ACTIVITY TABLE
+          ════════════════════════════════════════════ */}
+      <div className="relative z-10 p-6 bg-[#151922] border border-[#FF3B3B]/15 rounded-2xl shadow-xl space-y-5">
+
+        {/* Table Toolbar */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h3 className="text-sm font-bold text-white tracking-wide">Vulnerability Severity</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Distribution of unresolved issues</p>
+            <h2 className="text-base font-bold text-white tracking-wide">
+              Recent Security Scans &amp; Events
+            </h2>
+            <p className="text-xs text-[#A1A1AA] mt-0.5">
+              Live audit trail of code scans, CVE findings, and pipeline executions
+            </p>
           </div>
-          <div className="my-4">
-            <SeverityPieChart data={stats} />
-          </div>
-        </div>
 
-        {/* Weekly Scan Trend */}
-        <div className="lg:col-span-1 p-6 bg-slate-900/60 border border-slate-850 rounded-2xl flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-white tracking-wide">Scan Frequency</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Total commits scanned this week</p>
-          </div>
-          <div className="my-4">
-            <WeeklyScanChart />
-          </div>
-        </div>
-
-        {/* Repository Bar Chart */}
-        <div className="lg:col-span-1 p-6 bg-slate-900/60 border border-slate-850 rounded-2xl flex flex-col justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-white tracking-wide">Repository Comparison</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">Vulnerabilities vs Resolved patches</p>
-          </div>
-          <div className="my-4">
-            <RepositoryBarChart />
-          </div>
-        </div>
-
-      </div>
-
-      {/* Tables Row: Recent Vulnerabilities & Recent AI Remediations */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        
-        {/* Recent Open Vulnerabilities */}
-        <div className="p-6 bg-slate-900/60 border border-slate-850 rounded-2xl">
-          <div className="flex justify-between items-center mb-5">
-            <div>
-              <h3 className="text-sm font-bold text-white tracking-wide">Recent Vulnerabilities</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Latest high priority issues awaiting patch</p>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Global Search Bar */}
+            <div className="relative w-full md:w-64">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#71717A]" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search Repo, CVE, Scan ID..."
+                className="w-full pl-9 pr-4 py-2 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white placeholder-[#71717A] focus:outline-none focus:border-[#FF3B3B] focus:ring-2 focus:ring-[#FF3B3B]/20 transition-all"
+                aria-label="Search scans"
+              />
             </div>
-            <Link
-              to="/vulnerabilities"
-              className="text-xs text-blue-500 hover:text-blue-400 font-semibold flex items-center gap-1 group"
-            >
-              <span>View All</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-500 font-semibold uppercase tracking-wider">
-                  <th className="pb-3 pr-2">Severity</th>
-                  <th className="pb-3 px-2">Details</th>
-                  <th className="pb-3 px-2">Repository</th>
-                  <th className="pb-3 pl-2 text-right">Actions</th>
+            {/* Status Filter Tabs */}
+            <div className="flex items-center bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl p-1 gap-0.5">
+              {['All', 'Completed', 'Scanning', 'Failed'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                    statusFilter === status
+                      ? 'bg-[#FF3B3B]/15 text-[#FF3B3B] border border-[#FF3B3B]/30'
+                      : 'text-[#A1A1AA] hover:text-white hover:bg-[#FF3B3B]/8'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Table */}
+        <div className="overflow-x-auto custom-scrollbar rounded-xl">
+          <table className="w-full text-left text-xs border-collapse min-w-[640px]">
+            <thead>
+              <tr className="text-[#71717A] font-semibold uppercase tracking-wider border-b border-[#FF3B3B]/15">
+                <th className="pb-3 pr-4 pl-1">Scan ID</th>
+                <th className="pb-3 px-4">Repository</th>
+                <th className="pb-3 px-4">Status</th>
+                <th className="pb-3 px-4">Severity</th>
+                <th className="pb-3 px-4">CVE / CWE</th>
+                <th className="pb-3 px-4">Timestamp</th>
+                <th className="pb-3 pl-4 pr-1 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#FF3B3B]/8">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="py-3.5 pr-4 pl-1"><div className="h-3 w-16 bg-[#0F1117] rounded" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3 w-28 bg-[#0F1117] rounded" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3 w-20 bg-[#0F1117] rounded" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3 w-16 bg-[#0F1117] rounded" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3 w-24 bg-[#0F1117] rounded" /></td>
+                    <td className="py-3.5 px-4"><div className="h-3 w-20 bg-[#0F1117] rounded" /></td>
+                    <td className="py-3.5 pl-4 pr-1 text-right"><div className="h-3 w-12 bg-[#0F1117] rounded ml-auto" /></td>
+                  </tr>
+                ))
+              ) : paginatedScans.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-[#71717A]">
+                      <Search className="w-8 h-8 opacity-40" />
+                      <p className="text-sm font-medium">No scan records match your filter criteria.</p>
+                      <p className="text-xs opacity-70">Try adjusting your search or status filter.</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {recentVulnerabilities.map((vuln) => (
-                  <tr key={vuln.id} className="hover:bg-slate-800/10">
-                    <td className="py-3.5 pr-2">
-                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${
-                        vuln.severity === 'Critical' ? 'bg-red-500/10 text-red-500' :
-                        vuln.severity === 'High' ? 'bg-orange-500/10 text-orange-400' :
-                        vuln.severity === 'Medium' ? 'bg-amber-500/10 text-amber-400' :
-                        'bg-blue-500/10 text-blue-400'
-                      }`}>
-                        {vuln.severity}
+              ) : (
+                paginatedScans.map((scan) => (
+                  <tr key={scan.id} className="hover:bg-[#FF3B3B]/5 transition-colors group">
+                    <td className="py-3.5 pr-4 pl-1 font-mono font-semibold text-[#A1A1AA] group-hover:text-white transition-colors">
+                      {scan.id}
+                    </td>
+                    <td className="py-3.5 px-4 font-semibold text-white">
+                      {scan.repository}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
+                          scan.status === 'Completed'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : scan.status === 'Scanning'
+                            ? 'bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/20 animate-pulse'
+                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                        {scan.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-2 font-medium text-slate-200">
-                      <div className="truncate max-w-[150px]">{vuln.cwe.split(' ')[0]}</div>
-                      <div className="text-[10px] text-slate-500 truncate max-w-[150px]">
-                        {vuln.fileName}:{vuln.lineNumber}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-2 text-slate-400 truncate max-w-[100px]">{vuln.repository}</td>
-                    <td className="py-3.5 pl-2 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          to={`/ai-remediation/${vuln.id}`}
-                          className="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 font-semibold text-[11px] rounded border border-blue-500/30 flex items-center gap-1"
-                        >
-                          <Bot className="w-3 h-3" /> Fix
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Recent AI Remediations (Requested Section) */}
-        <div className="p-6 bg-slate-900/60 border border-slate-850 rounded-2xl">
-          <div className="flex justify-between items-center mb-5">
-            <div>
-              <h3 className="text-sm font-bold text-white tracking-wide">Recent Remediations</h3>
-              <p className="text-[11px] text-slate-500 mt-0.5">Automated AI patches applied</p>
-            </div>
-            <Link
-              to="/remediation-history"
-              className="text-xs text-blue-500 hover:text-blue-400 font-semibold flex items-center gap-1 group"
-            >
-              <span>View History</span>
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 text-slate-500 font-semibold uppercase tracking-wider">
-                  <th className="pb-3 pr-2">Project</th>
-                  <th className="pb-3 px-2">Language</th>
-                  <th className="pb-3 px-2">Summary</th>
-                  <th className="pb-3 pl-2 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {recentRemediations.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-800/10">
-                    <td className="py-3.5 pr-2 font-medium text-white">{item.projectId}</td>
-                    <td className="py-3.5 px-2 font-mono text-slate-400">{item.language}</td>
-                    <td className="py-3.5 px-2 text-slate-300 truncate max-w-[160px]">{item.summary}</td>
-                    <td className="py-3.5 pl-2 text-right">
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500/10 text-green-400 rounded border border-green-500/20">
-                        {item.status}
+                    <td className="py-3.5 px-4">
+                      <span
+                        className={`px-2 py-0.5 text-[10px] font-bold rounded-lg ${
+                          scan.severity === 'Critical'
+                            ? 'bg-[#FF3B3B]/15 text-[#FF3B3B]'
+                            : scan.severity === 'High'
+                            ? 'bg-orange-500/10 text-orange-400'
+                            : scan.severity === 'Medium'
+                            ? 'bg-amber-500/10 text-amber-400'
+                            : 'bg-blue-500/10 text-blue-400'
+                        }`}
+                      >
+                        {scan.severity}
                       </span>
                     </td>
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-[#A1A1AA]">
+                      {scan.cveId || 'N/A'}
+                    </td>
+                    <td className="py-3.5 px-4 text-[#71717A] text-[11px] whitespace-nowrap">
+                      {scan.timestamp}
+                    </td>
+                    <td className="py-3.5 pl-4 pr-1 text-right">
+                      <button
+                        onClick={() => navigate('/scan-history')}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#FF3B3B] hover:text-white hover:underline transition-colors focus:outline-none focus:ring-1 focus:ring-[#FF3B3B] rounded"
+                      >
+                        <span>Details</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-      </div>
+        {/* Pagination Footer */}
+        {filteredScans.length > 0 && (
+          <div className="flex items-center justify-between pt-4 border-t border-[#FF3B3B]/10 text-xs text-[#A1A1AA]">
+            <span>
+              Showing <strong className="text-white">{((currentPage - 1) * itemsPerPage) + 1}</strong> to{' '}
+              <strong className="text-white">{Math.min(currentPage * itemsPerPage, filteredScans.length)}</strong> of{' '}
+              <strong className="text-white">{filteredScans.length}</strong> events
+            </span>
 
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-xl bg-[#0F1117] hover:bg-[#FF3B3B]/10 text-white disabled:opacity-40 transition-colors border border-[#FF3B3B]/15"
+                aria-label="Previous Page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-semibold text-white px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-xl bg-[#0F1117] hover:bg-[#FF3B3B]/10 text-white disabled:opacity-40 transition-colors border border-[#FF3B3B]/15"
+                aria-label="Next Page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

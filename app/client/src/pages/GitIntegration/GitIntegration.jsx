@@ -6,13 +6,11 @@ import {
   Key,
   ShieldCheck,
   CheckCircle2,
-  XCircle,
   Plus,
   Trash2,
   ExternalLink,
   GitBranch,
   RefreshCw,
-  Zap,
   Lock
 } from 'lucide-react';
 
@@ -70,9 +68,9 @@ const GitIntegration = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-wide flex items-center gap-2.5">
-            <FolderGit2 className="w-7 h-7 text-blue-500" /> Git Integration
+            <FolderGit2 className="w-7 h-7 text-[#FF3B3B]" /> Git Integration
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#A1A1AA] mt-1 leading-[1.7]">
             Connect your GitHub and GitLab repositories with encrypted PAT tokens for automated AST scans and PR creation.
           </p>
         </div>
@@ -81,9 +79,9 @@ const GitIntegration = () => {
       {/* Notification Toast */}
       {message.text && (
         <div className={`p-4 rounded-xl text-xs font-semibold border flex items-center justify-between ${
-          message.type === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' :
-          message.type === 'error' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-          'bg-blue-500/10 border-blue-500/30 text-blue-400'
+          message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+          message.type === 'error' ? 'bg-[#FF3B3B]/10 border-[#FF3B3B]/30 text-[#FF3B3B]' :
+          'bg-[#FF3B3B]/10 border-[#FF3B3B]/30 text-[#FF3B3B]'
         }`}>
           <span>{message.text}</span>
           <button onClick={() => setMessage({ text: '', type: '' })} className="hover:opacity-80">✕</button>
@@ -94,9 +92,9 @@ const GitIntegration = () => {
       <div className="grid lg:grid-cols-3 gap-6">
 
         {/* Left Form: Connect Repository */}
-        <div className="lg:col-span-1 p-6 bg-slate-900/60 border border-slate-850 rounded-2xl space-y-5">
-          <div className="flex items-center gap-2 text-white font-bold text-base border-b border-slate-800 pb-3">
-            <Plus className="w-5 h-5 text-blue-500" />
+        <div className="lg:col-span-1 p-6 bg-[#151922] border border-[#FF3B3B]/15 rounded-xl space-y-5 shadow-xl">
+          <div className="flex items-center gap-2 text-white font-bold text-base border-b border-[#FF3B3B]/15 pb-3">
+            <Plus className="w-5 h-5 text-[#FF3B3B]" />
             <span>Connect Repository</span>
           </div>
 
@@ -104,15 +102,15 @@ const GitIntegration = () => {
             
             {/* Provider Selector */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5">Git Provider</label>
+              <label className="block text-xs font-semibold text-[#A1A1AA] mb-1.5">Git Provider</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setProvider('github')}
                   className={`py-2 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all ${
                     provider === 'github'
-                      ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                      ? 'bg-[#FF3B3B]/15 border-[#FF3B3B] text-[#FF3B3B]'
+                      : 'bg-[#0F1117] border-[#FF3B3B]/15 text-[#A1A1AA] hover:text-white'
                   }`}
                 >
                   <FolderGit2 className="w-4 h-4" /> GitHub
@@ -123,7 +121,7 @@ const GitIntegration = () => {
                   className={`py-2 px-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all ${
                     provider === 'gitlab'
                       ? 'bg-orange-600/20 border-orange-500 text-orange-400'
-                      : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
+                      : 'bg-[#0F1117] border-[#FF3B3B]/15 text-[#A1A1AA] hover:text-white'
                   }`}
                 >
                   <GitBranch className="w-4 h-4" /> GitLab
@@ -133,46 +131,46 @@ const GitIntegration = () => {
 
             {/* Owner & Repo */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Repository Owner / Organization</label>
+              <label className="block text-xs font-semibold text-[#A1A1AA] mb-1">Repository Owner / Organization</label>
               <input
                 type="text"
                 placeholder="e.g. atharvkote"
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                className="w-full px-3.5 py-2.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white placeholder-[#71717A] focus:outline-none focus:border-[#FF3B3B] focus:ring-2 focus:ring-[#FF3B3B]/20"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Repository Name</label>
+              <label className="block text-xs font-semibold text-[#A1A1AA] mb-1">Repository Name</label>
               <input
                 type="text"
                 placeholder="e.g. payment-gateway"
                 value={repo}
                 onChange={(e) => setRepo(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                className="w-full px-3.5 py-2.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white placeholder-[#71717A] focus:outline-none focus:border-[#FF3B3B] focus:ring-2 focus:ring-[#FF3B3B]/20"
                 required
               />
             </div>
 
             {/* Branch */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Default Branch</label>
+              <label className="block text-xs font-semibold text-[#A1A1AA] mb-1">Default Branch</label>
               <input
                 type="text"
                 placeholder="main"
                 value={branch}
                 onChange={(e) => setBranch(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500"
+                className="w-full px-3.5 py-2.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white placeholder-[#71717A] focus:outline-none focus:border-[#FF3B3B] focus:ring-2 focus:ring-[#FF3B3B]/20"
               />
             </div>
 
             {/* PAT Token */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1 flex items-center justify-between">
+              <label className="block text-xs font-semibold text-[#A1A1AA] mb-1 flex items-center justify-between">
                 <span>Personal Access Token</span>
-                <span className="text-[10px] text-green-400 flex items-center gap-1">
+                <span className="text-[10px] text-emerald-400 flex items-center gap-1">
                   <Lock className="w-3 h-3" /> AES-256 Encrypted
                 </span>
               </label>
@@ -181,7 +179,7 @@ const GitIntegration = () => {
                 placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                 value={personalAccessToken}
                 onChange={(e) => setPersonalAccessToken(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 font-mono"
+                className="w-full px-3.5 py-2.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl text-xs text-white placeholder-[#71717A] focus:outline-none focus:border-[#FF3B3B] focus:ring-2 focus:ring-[#FF3B3B]/20 font-mono"
                 required
               />
             </div>
@@ -189,7 +187,7 @@ const GitIntegration = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 bg-[#FF3B3B] hover:bg-[#FF3B3B]/90 text-white font-bold text-xs rounded-xl shadow-lg shadow-[#FF3B3B]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <>
@@ -205,11 +203,11 @@ const GitIntegration = () => {
         </div>
 
         {/* Right Table: Connected Repositories */}
-        <div className="lg:col-span-2 p-6 bg-slate-900/60 border border-slate-850 rounded-2xl flex flex-col justify-between">
+        <div className="lg:col-span-2 p-6 bg-[#151922] border border-[#FF3B3B]/15 rounded-xl flex flex-col justify-between shadow-xl">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-[#FF3B3B]/15 pb-3 mb-4">
               <h2 className="text-base font-bold text-white tracking-wide">Connected Repositories</h2>
-              <span className="px-2.5 py-0.5 text-xs font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-full">
+              <span className="px-2.5 py-0.5 text-xs font-bold bg-[#FF3B3B]/10 text-[#FF3B3B] border border-[#FF3B3B]/20 rounded-full">
                 {gitRepositories.length} Active
               </span>
             </div>
@@ -217,7 +215,7 @@ const GitIntegration = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-slate-500 font-semibold uppercase tracking-wider">
+                  <tr className="border-b border-[#FF3B3B]/15 text-[#71717A] font-semibold uppercase tracking-wider">
                     <th className="pb-3 pr-2">Repository</th>
                     <th className="pb-3 px-2">Provider</th>
                     <th className="pb-3 px-2">Branch</th>
@@ -225,29 +223,29 @@ const GitIntegration = () => {
                     <th className="pb-3 pl-2 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#FF3B3B]/10">
                   {gitRepositories.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-800/20 transition-colors">
+                    <tr key={item.id} className="hover:bg-[#FF3B3B]/5 transition-colors">
                       <td className="py-4 pr-2 font-medium text-white">
                         <div className="flex items-center gap-2">
-                          <FolderGit2 className="w-4 h-4 text-blue-400" />
+                          <FolderGit2 className="w-4 h-4 text-[#FF3B3B]" />
                           <span>{item.owner}/{item.repo}</span>
                         </div>
                       </td>
                       <td className="py-4 px-2">
                         <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
-                          item.provider === 'github' ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'
+                          item.provider === 'github' ? 'bg-[#FF3B3B]/10 text-[#FF3B3B]' : 'bg-orange-500/10 text-orange-400'
                         }`}>
                           {item.provider}
                         </span>
                       </td>
-                      <td className="py-4 px-2 font-mono text-slate-300">
+                      <td className="py-4 px-2 font-mono text-[#A1A1AA]">
                         <span className="flex items-center gap-1 text-[11px]">
-                          <GitBranch className="w-3 h-3 text-slate-500" /> {item.branch}
+                          <GitBranch className="w-3 h-3 text-[#71717A]" /> {item.branch}
                         </span>
                       </td>
                       <td className="py-4 px-2">
-                        <span className="px-2 py-0.5 text-[10px] font-bold bg-green-500/10 text-green-400 border border-green-500/20 rounded-full flex items-center gap-1 w-max">
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1 w-max">
                           <CheckCircle2 className="w-3 h-3" /> {item.webhookStatus || 'Active'}
                         </span>
                       </td>
@@ -257,14 +255,14 @@ const GitIntegration = () => {
                             href={`https://${item.provider}.com/${item.owner}/${item.repo}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-1.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition-colors"
+                            className="p-1.5 text-[#A1A1AA] hover:text-white bg-[#0F1117] hover:bg-[#FF3B3B]/10 rounded-lg border border-[#FF3B3B]/15 transition-colors"
                             title="Open Repository"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                           <button
                             onClick={() => handleDisconnect(item.id)}
-                            className="p-1.5 text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/30 transition-colors"
+                            className="p-1.5 text-[#FF3B3B] hover:text-[#FF3B3B] bg-[#FF3B3B]/10 hover:bg-[#FF3B3B]/20 rounded-lg border border-[#FF3B3B]/30 transition-colors"
                             title="Disconnect Repository"
                           >
                             <Trash2 className="w-3.5 h-3.5" />

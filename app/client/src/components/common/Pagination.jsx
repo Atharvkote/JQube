@@ -4,15 +4,15 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-slate-800/60 pt-4 mt-4">
-      <div className="text-xs text-slate-500 font-medium">
+    <div className="flex items-center justify-between border-t border-[#FF3B3B]/15 pt-4 mt-4 text-xs text-[#A1A1AA]">
+      <div className="font-semibold text-white">
         Page {currentPage} of {totalPages}
       </div>
       <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
           disabled={currentPage === 1}
-          className="px-3.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-3.5 py-1.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl font-semibold text-[#A1A1AA] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Previous
         </button>
@@ -21,10 +21,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             key={i}
             onClick={() => onPageChange(i + 1)}
-            className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
+            className={`w-8 h-8 rounded-xl font-bold flex items-center justify-center transition-all ${
               currentPage === i + 1
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                ? 'bg-[#FF3B3B] text-white shadow-md shadow-[#FF3B3B]/20'
+                : 'bg-[#0F1117] border border-[#FF3B3B]/15 text-[#A1A1AA] hover:text-white'
             }`}
           >
             {i + 1}
@@ -34,7 +34,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
         <button
           onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="px-3.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-3.5 py-1.5 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl font-semibold text-[#A1A1AA] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Next
         </button>

@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
-  Code2,
   Copy,
   Download,
   Check,
   Eye,
   FileCode,
-  CheckCircle2,
-  FolderGit2,
   Terminal,
   Layers
 } from 'lucide-react';
@@ -136,29 +132,29 @@ const CICDGenerator = () => {
   };
 
   return (
-    <div className="bg-slate-900/60 border border-slate-850 rounded-2xl p-6 space-y-5">
+    <div className="bg-[#151922] border border-[#FF3B3B]/15 rounded-xl p-6 space-y-5 shadow-xl">
       
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#FF3B3B]/15 pb-4">
         <div>
           <h3 className="text-base font-bold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-500" /> CI/CD Automation Workflow Generator
+            <Layers className="w-5 h-5 text-[#FF3B3B]" /> CI/CD Automation Workflow Generator
           </h3>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#A1A1AA] mt-1 leading-[1.7]">
             Automatically generate ready-to-use pipeline configurations for GitHub, GitLab, Pre-Commit, and Docker.
           </p>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex items-center bg-[#0F1117] p-1 rounded-xl border border-[#FF3B3B]/15">
           {Object.keys(cicdTemplates).map((key) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
                 activeTab === key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#FF3B3B] text-white shadow-md shadow-[#FF3B3B]/20'
+                  : 'text-[#A1A1AA] hover:text-white'
               }`}
             >
               {key}
@@ -168,47 +164,47 @@ const CICDGenerator = () => {
       </div>
 
       {/* Info Banner for Active Tab */}
-      <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+      <div className="p-4 bg-[#0F1117] border border-[#FF3B3B]/15 rounded-xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <FileCode className="w-5 h-5 text-blue-400" />
+          <FileCode className="w-5 h-5 text-[#FF3B3B]" />
           <div>
             <h4 className="text-xs font-bold text-white">{currentTemplate.title}</h4>
-            <p className="text-[11px] text-slate-400">{currentTemplate.description}</p>
+            <p className="text-[11px] text-[#A1A1AA]">{currentTemplate.description}</p>
           </div>
         </div>
-        <span className="font-mono text-xs text-blue-400 font-bold bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
+        <span className="font-mono text-xs text-[#FF3B3B] font-bold bg-[#FF3B3B]/10 px-2.5 py-1 rounded-lg border border-[#FF3B3B]/20">
           {currentTemplate.fileName}
         </span>
       </div>
 
       {/* Code Viewer Container */}
-      <div className="bg-[#090d16] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+      <div className="bg-[#09090B] border border-[#FF3B3B]/15 rounded-xl overflow-hidden shadow-2xl">
         
         {/* Viewer Actions Header */}
-        <div className="px-4 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-          <span className="text-[11px] font-mono text-slate-400 flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-slate-500" /> {currentTemplate.fileName}
+        <div className="px-4 py-2.5 bg-[#0F1117] border-b border-[#FF3B3B]/15 flex items-center justify-between">
+          <span className="text-[11px] font-mono text-[#A1A1AA] flex items-center gap-2">
+            <Terminal className="w-3.5 h-3.5 text-[#71717A]" /> {currentTemplate.fileName}
           </span>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsPreview(!isPreview)}
-              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium rounded-lg border border-slate-800 flex items-center gap-1"
+              className="px-2.5 py-1 bg-[#0F1117] hover:bg-[#FF3B3B]/10 text-[#A1A1AA] hover:text-white text-xs font-medium rounded-lg border border-[#FF3B3B]/15 flex items-center gap-1 transition-colors"
             >
-              <Eye className="w-3.5 h-3.5 text-blue-400" /> {isPreview ? 'Formatted' : 'Raw'}
+              <Eye className="w-3.5 h-3.5 text-[#FF3B3B]" /> {isPreview ? 'Formatted' : 'Raw'}
             </button>
 
             <button
               onClick={handleCopy}
-              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium rounded-lg border border-slate-800 flex items-center gap-1"
+              className="px-2.5 py-1 bg-[#0F1117] hover:bg-[#FF3B3B]/10 text-[#A1A1AA] hover:text-white text-xs font-medium rounded-lg border border-[#FF3B3B]/15 flex items-center gap-1 transition-colors"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#71717A]" />}
               <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
 
             <button
               onClick={handleDownload}
-              className="px-2.5 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-medium rounded-lg border border-blue-500/30 flex items-center gap-1"
+              className="px-3 py-1 bg-[#FF3B3B] hover:bg-[#FF3B3B]/90 text-white text-xs font-bold rounded-lg transition-all shadow-md shadow-[#FF3B3B]/20 flex items-center gap-1"
             >
               <Download className="w-3.5 h-3.5" /> Download File
             </button>
@@ -216,7 +212,7 @@ const CICDGenerator = () => {
         </div>
 
         {/* Code Content */}
-        <pre className="p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
+        <pre className="p-4 text-xs font-mono text-[#A1A1AA] overflow-x-auto leading-relaxed">
           <code>{currentTemplate.content}</code>
         </pre>
       </div>

@@ -1,51 +1,79 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --color-primary-red: #FF3B3B;
+    --color-dark-bg: #09090B;
+    --color-sidebar: #0F1117;
+    --color-card: #151922;
+    --color-border: rgba(255, 59, 59, 0.15);
+    --color-text-primary: #FFFFFF;
+    --color-text-secondary: #A1A1AA;
+    --color-text-muted: #71717A;
+    --color-hover-bg: rgba(255, 59, 59, 0.08);
+    --color-active-bg: rgba(255, 59, 59, 0.12);
+  }
+
   body {
-    background-color: #0F172A;
-    color: #F8FAFC;
+    background-color: #09090B;
+    color: #FFFFFF;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.7;
     overflow-x: hidden;
   }
 
-  /* Custom scrollbar */
+  /* Custom scrollbar matching JQube dark theme */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0F172A;
+    background: #09090B;
   }
   ::-webkit-scrollbar-thumb {
-    background: #334155;
+    background: #151922;
+    border: 1px solid rgba(255, 59, 59, 0.15);
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #475569;
+    background: rgba(255, 59, 59, 0.3);
   }
 }
 
-/* Glassmorphism Utilities */
+/* JQube Glass & Card Utilities */
+.jqube-card {
+  background-color: #151922;
+  border: 1px solid rgba(255, 59, 59, 0.15);
+  border-radius: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.jqube-card:hover {
+  border-color: rgba(255, 59, 59, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(255, 59, 59, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
+}
+
 .glass-panel {
-  background: rgba(30, 41, 59, 0.45);
+  background: rgba(21, 25, 34, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 59, 59, 0.15);
 }
 
 .glass-panel-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .glass-panel-hover:hover {
-  background: rgba(30, 41, 59, 0.65);
-  border-color: rgba(37, 99, 235, 0.35);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  background: rgba(21, 25, 34, 0.9);
+  border-color: rgba(255, 59, 59, 0.35);
+  box-shadow: 0 10px 25px -5px rgba(255, 59, 59, 0.1);
   transform: translateY(-2px);
 }
 
-/* Animated gradient background */
+/* Animated gradient background with JQube red tint */
 .animated-bg {
-  background: linear-gradient(-45deg, #1E293B, #0F172A, #111827, #1E1B4B);
+  background: linear-gradient(-45deg, #09090B, #0F1117, #151922, #1f0b0b);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
 }

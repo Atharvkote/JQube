@@ -14,30 +14,30 @@ const Notifications = () => {
   const getIcon = (type) => {
     switch (type) {
       case 'critical':
-        return <AlertCircle className="w-5 h-5 text-red-500" />;
+        return <AlertCircle className="w-5 h-5 text-[#FF3B3B]" />;
       case 'scan':
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+        return <CheckCircle2 className="w-5 h-5 text-emerald-400" />;
       case 'pr':
-        return <GitPullRequest className="w-5 h-5 text-blue-400" />;
+        return <GitPullRequest className="w-5 h-5 text-[#FF3B3B]" />;
       case 'warning':
-        return <ShieldAlert className="w-5 h-5 text-amber-500" />;
+        return <ShieldAlert className="w-5 h-5 text-amber-400" />;
       default:
-        return <Info className="w-5 h-5 text-slate-400" />;
+        return <Info className="w-5 h-5 text-[#71717A]" />;
     }
   };
 
   const getBg = (type) => {
     switch (type) {
       case 'critical':
-        return 'bg-red-500/10 border-red-500/15';
+        return 'bg-[#FF3B3B]/10 border-[#FF3B3B]/20';
       case 'scan':
-        return 'bg-green-500/10 border-green-500/15';
+        return 'bg-emerald-500/10 border-emerald-500/20';
       case 'pr':
-        return 'bg-blue-500/10 border-blue-500/15';
+        return 'bg-[#FF3B3B]/10 border-[#FF3B3B]/20';
       case 'warning':
-        return 'bg-amber-500/10 border-amber-500/15';
+        return 'bg-amber-500/10 border-amber-500/20';
       default:
-        return 'bg-slate-900 border-slate-800';
+        return 'bg-[#151922] border-[#FF3B3B]/15';
     }
   };
 
@@ -48,21 +48,21 @@ const Notifications = () => {
       <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-white tracking-wide">Threat &amp; Activity Log</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Real-time alerts for code analysis results and automated patching actions.</p>
+          <p className="text-xs text-[#A1A1AA] mt-0.5 leading-[1.7]">Real-time alerts for code analysis results and automated patching actions.</p>
         </div>
 
         {notifications.length > 0 && (
           <div className="flex gap-2">
             <button
               onClick={markAllNotificationsAsRead}
-              className="px-3.5 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700/80 hover:bg-slate-800 rounded-xl text-xs font-semibold text-slate-350 hover:text-white transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 bg-[#0F1117] border border-[#FF3B3B]/15 hover:bg-[#FF3B3B]/10 rounded-xl text-xs font-semibold text-[#A1A1AA] hover:text-white transition-all flex items-center gap-1.5"
             >
-              <CheckCheck className="w-4 h-4 text-blue-500" />
+              <CheckCheck className="w-4 h-4 text-[#FF3B3B]" />
               <span>Mark all read</span>
             </button>
             <button
               onClick={clearNotifications}
-              className="px-3.5 py-2 bg-red-950/20 border border-red-900/30 hover:border-red-500/30 hover:bg-red-900/10 rounded-xl text-xs font-semibold text-red-400 hover:text-red-300 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 hover:bg-[#FF3B3B]/20 rounded-xl text-xs font-semibold text-[#FF3B3B] transition-all flex items-center gap-1.5"
             >
               <Trash2 className="w-4 h-4" />
               <span>Clear logs</span>
@@ -83,13 +83,13 @@ const Notifications = () => {
           notifications.map((notif) => (
             <div
               key={notif.id}
-              className={`p-5 rounded-2xl border flex items-start justify-between gap-4 transition-all ${getBg(notif.type)} ${
+              className={`p-5 rounded-xl border flex items-start justify-between gap-4 transition-all ${getBg(notif.type)} ${
                 notif.read ? 'opacity-65' : 'shadow-lg shadow-black/25'
               }`}
             >
               <div className="flex gap-3.5">
                 {/* Icon wrapper */}
-                <div className="p-2.5 bg-slate-950/40 border border-slate-800/80 rounded-xl shrink-0">
+                <div className="p-2.5 bg-[#09090B] border border-[#FF3B3B]/15 rounded-xl shrink-0">
                   {getIcon(notif.type)}
                 </div>
                 
@@ -98,13 +98,13 @@ const Notifications = () => {
                   <div className="flex items-center gap-2">
                     <h4 className="text-sm font-bold text-white tracking-wide">{notif.title}</h4>
                     {!notif.read && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#FF3B3B] shrink-0" />
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                  <p className="text-xs text-[#A1A1AA] leading-[1.7] font-medium">
                     {notif.message}
                   </p>
-                  <p className="text-[10px] text-slate-500 font-semibold pt-1">
+                  <p className="text-[10px] text-[#71717A] font-semibold pt-1">
                     {notif.time}
                   </p>
                 </div>
@@ -114,7 +114,7 @@ const Notifications = () => {
               {!notif.read && (
                 <button
                   onClick={() => markNotificationAsRead(notif.id)}
-                  className="px-2.5 py-1 bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-[10.5px] font-semibold text-blue-400 hover:text-blue-300 rounded-lg shrink-0 transition-colors"
+                  className="px-2.5 py-1 bg-[#0F1117] hover:bg-[#FF3B3B]/10 border border-[#FF3B3B]/15 text-[10.5px] font-semibold text-[#FF3B3B] rounded-lg shrink-0 transition-colors"
                 >
                   Mark read
                 </button>
