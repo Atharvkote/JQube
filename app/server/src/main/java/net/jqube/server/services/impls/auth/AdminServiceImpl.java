@@ -4,13 +4,13 @@ package net.jqube.server.services.impls.auth;
 import net.jqube.server.dtos.requests.AssignRoleRequestDTO;
 import net.jqube.server.dtos.auth.RoleDTO;
 import net.jqube.server.dtos.auth.UserResponseDTO;
-import net.jqube.server.enums.RoleName;
+import net.jqube.server.enums.SystemRoles;
 
 // Models
-import net.jqube.server.exceptions.DuplicateRoleException;
-import net.jqube.server.exceptions.InvalidRoleAssignmentException;
-import net.jqube.server.exceptions.RoleNotFoundException;
-import net.jqube.server.exceptions.UserNotFoundException;
+import net.jqube.server.exceptions.auth.DuplicateRoleException;
+import net.jqube.server.exceptions.auth.InvalidRoleAssignmentException;
+import net.jqube.server.exceptions.auth.RoleNotFoundException;
+import net.jqube.server.exceptions.shared.UserNotFoundException;
 
 // Models
 import net.jqube.server.models.Role;
@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 // Utils
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,14 +45,14 @@ public class AdminServiceImpl implements AdminService {
                 .collect(Collectors.toList());
     }
 
-    public UserResponseDTO getUserById(Long id) {
+    public UserResponseDTO getUserById(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Admin6 not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
         return convertToUserResponseDTO(user);
     }
 
     @Transactional
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException("User not found");
         }
@@ -59,14 +60,14 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Transactional
-    public UserResponseDTO assignRoles(Long userId, AssignRoleRequestDTO assignRoleRequestDTO) {
+    public UserResponseDTO assignRoles(UUID userId, AssignRoleRequestDTO assignRoleRequestDTO) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         Set<Role> roles = assignRoleRequestDTO.getRoles().stream()
                 .map(roleName -> {
                     try {
-                        return roleRepository.findByName(RoleName.valueOf(roleName))
+                        return roleRepository.findByName(SystemRoles.valueOf(roleName))
                                 .orElseThrow(() -> new RoleNotFoundException(roleName + " not found"));
                     } catch (IllegalArgumentException e) {
                         throw new InvalidRoleAssignmentException(roleName + " is not a valid role");
@@ -82,11 +83,14 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public Role createRole(RoleDTO roleDTO) {
         try {
-            RoleName roleName = RoleName.valueOf(roleDTO.getName());
-            if (roleRepository.existsByName(roleName)) {
+            SystemRoles systemRoles = SystemRoles.valueOf(roleDTO.getName());
+            if (roleRepository.existsByName(systemRoles)) {
                 throw new DuplicateRoleException("Role " + roleDTO.getName() + " already exists");
             }
-            Role role = new Role(roleName, roleDTO.getDescription());
+            Role role = Role.builder()
+                    .name(systemRoles)
+                    .description(roleDTO.getDescription())
+                    .build();
             return roleRepository.save(role);
         } catch (IllegalArgumentException e) {
             throw new InvalidRoleAssignmentException(roleDTO.getName() + " is not a valid role name");

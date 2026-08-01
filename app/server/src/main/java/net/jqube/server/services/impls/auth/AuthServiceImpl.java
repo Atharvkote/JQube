@@ -7,15 +7,15 @@ import net.jqube.server.dtos.auth.RegisterDTO;
 import net.jqube.server.dtos.auth.VerifyUserDTO;
 
 // Enums
-import net.jqube.server.enums.RoleName;
+import net.jqube.server.enums.SystemRoles;
 
 // Exceptions
-import net.jqube.server.exceptions.InvalidVerificationCodeException;
-import net.jqube.server.exceptions.RoleNotFoundException;
-import net.jqube.server.exceptions.TokenExpiredException;
-import net.jqube.server.exceptions.UserAlreadyExistsException;
-import net.jqube.server.exceptions.UserNotFoundException;
-import net.jqube.server.exceptions.UserNotVerifiedException;
+import net.jqube.server.exceptions.auth.InvalidVerificationCodeException;
+import net.jqube.server.exceptions.auth.RoleNotFoundException;
+import net.jqube.server.exceptions.auth.TokenExpiredException;
+import net.jqube.server.exceptions.auth.UserAlreadyExistsException;
+import net.jqube.server.exceptions.shared.UserNotFoundException;
+import net.jqube.server.exceptions.auth.UserNotVerifiedException;
 import jakarta.mail.MessagingException;
 
 // Models
@@ -90,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         user.setVerificationCode(generateVerificationCode());
         user.setVerificationExpiresOn(LocalDateTime.now().plusMinutes(15));
 
-        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+        Role userRole = roleRepository.findByName(SystemRoles.ROLE_USER)
                 .orElseThrow(() -> new RoleNotFoundException("ROLE_USER not found"));
         Set<Role> roles = new HashSet<>();
         roles.add(userRole);

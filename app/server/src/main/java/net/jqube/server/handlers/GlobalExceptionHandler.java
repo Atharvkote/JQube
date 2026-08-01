@@ -1,12 +1,13 @@
 package net.jqube.server.handlers;
 
 // Exceptions
-import net.jqube.server.exceptions.*;
 import io.jsonwebtoken.ExpiredJwtException; // Added this import
 import io.jsonwebtoken.MalformedJwtException; // Added this import
 import io.jsonwebtoken.security.SignatureException; // Added this import
 
 // Error Response Model
+import net.jqube.server.exceptions.auth.*;
+import net.jqube.server.exceptions.shared.UserNotFoundException;
 import net.jqube.server.responses.ErrorResponse;
 
 // Deps

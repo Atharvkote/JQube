@@ -5,10 +5,11 @@ import lombok.Data;
 
 // Utils
 import java.util.Set;
+import java.util.UUID; // Import UUID
 
 @Data
 public class UserResponseDTO {
-    private Long id;
+    private UUID id; // Changed from Long to UUID
     private String username;
     private String email;
     private Set<String> roles;

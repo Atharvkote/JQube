@@ -8,8 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 // Utils
 import java.util.Optional;
+import java.util.UUID; // Import UUID
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, UUID> { // Changed Long to UUID
     Optional<User> findByEmail(String email);
     Optional<User> findByUsername(String username);
 }

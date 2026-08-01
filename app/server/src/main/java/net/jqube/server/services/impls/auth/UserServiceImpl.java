@@ -4,7 +4,7 @@ package net.jqube.server.services.impls.auth;
 import net.jqube.server.dtos.auth.UserProfileDTO;
 
 // Exception
-import net.jqube.server.exceptions.UserNotFoundException;
+import net.jqube.server.exceptions.shared.UserNotFoundException;
 
 // Models
 import net.jqube.server.models.User;

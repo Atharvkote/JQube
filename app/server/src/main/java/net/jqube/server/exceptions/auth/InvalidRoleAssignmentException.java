@@ -1,4 +1,4 @@
-package net.jqube.server.exceptions;
+package net.jqube.server.exceptions.auth;
 
 // Deps
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package net.jqube.server.services.github;
+package net.jqube.server.services.impls.github.helper;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -6,11 +6,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import net.jqube.server.configs.properties.JWTProperties;
-import net.jqube.server.exceptions.GithubAuthenticationException;
+import net.jqube.server.exceptions.auth.GithubAuthenticationException;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID; // Import UUID
 
 // Signed, short-lived "state" tokens for the GitHub OAuth flow.
 // Prevents the CSRF/account-hijack hole that exists when the raw
@@ -29,9 +30,9 @@ public class GithubStateService {
         this.jwtProperties = jwtProperties;
     }
 
-    public String generate(Long userId) {
+    public String generate(UUID userId) { // Changed to UUID
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
+                .setSubject(userId.toString()) // Changed to use toString()
                 .claim(PURPOSE_CLAIM, PURPOSE_VALUE)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + STATE_TTL_MILLIS))
@@ -39,7 +40,7 @@ public class GithubStateService {
                 .compact();
     }
 
-    public Long validateAndExtractUserId(String state) {
+    public UUID validateAndExtractUserId(String state) { // Changed to return UUID
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(signKey())
@@ -50,7 +51,7 @@ public class GithubStateService {
             if (!PURPOSE_VALUE.equals(claims.get(PURPOSE_CLAIM, String.class))) {
                 throw new GithubAuthenticationException("Invalid GitHub OAuth state token.");
             }
-            return Long.valueOf(claims.getSubject());
+            return UUID.fromString(claims.getSubject()); // Changed to parse UUID
         } catch (GithubAuthenticationException ex) {
             throw ex;
         } catch (Exception ex) {

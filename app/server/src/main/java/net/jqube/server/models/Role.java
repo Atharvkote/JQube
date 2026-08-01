@@ -1,43 +1,41 @@
 package net.jqube.server.models;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import net.jqube.server.enums.RoleName;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.*;
+import net.jqube.server.enums.SystemRoles;
+import net.jqube.server.models.base.Auditable;
 
-// Utils
-import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
-@Table(name = "roles")
-public class Role {
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id", callSuper = false)
+@Table(
+        name = "roles",
+        indexes = {
+                @Index(name = "idx_roles_name", columnList = "name")
+        }
+)
+public class Role extends Auditable {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Enumerated(EnumType.STRING)
-    @Column(unique = true, nullable = false)
-    private RoleName name;
+    @Column(nullable = false, unique = true, length = 50)
+    private SystemRoles name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String description;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    public Role(RoleName name, String description) {
-        this.name = name;
-        this.description = description;
-    }
+    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @Builder.Default
+    private Set<User> users = new HashSet<>();
 }

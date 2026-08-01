@@ -3,8 +3,8 @@ package net.jqube.server.services.impls.github;
 import lombok.extern.slf4j.Slf4j;
 import net.jqube.server.configs.properties.GithubProperties;
 import net.jqube.server.constants.GithubConstants;
-import net.jqube.server.exceptions.GithubAuthenticationException;
-import net.jqube.server.exceptions.UserNotFoundException;
+import net.jqube.server.exceptions.auth.GithubAuthenticationException;
+import net.jqube.server.exceptions.shared.UserNotFoundException;
 import net.jqube.server.models.GithubAccount;
 import net.jqube.server.models.User;
 import net.jqube.server.repositories.GitHubAccountRepository;
@@ -12,7 +12,7 @@ import net.jqube.server.repositories.UserRepository;
 import net.jqube.server.responses.dataDTOs.GithubProfileResponse;
 import net.jqube.server.responses.dataDTOs.GithubTokenResponse;
 import net.jqube.server.responses.dataDTOs.GithubUserResponse;
-import net.jqube.server.services.github.GithubStateService;
+import net.jqube.server.services.impls.github.helper.GithubStateService;
 import net.jqube.server.services.github.GithubService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -21,6 +21,7 @@ import org.springframework.web.client.RestClient;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.UUID; // Import UUID
 
 @Slf4j
 @Service
@@ -47,7 +48,7 @@ public class GithubServiceImpl implements GithubService {
     }
 
     @Override
-    public String generateAuthorizationUrl(Long userId) {
+    public String generateAuthorizationUrl(UUID userId) { // Changed to UUID
         String state = stateService.generate(userId);
 
         return GithubConstants.AUTHORIZE_URL
@@ -61,7 +62,7 @@ public class GithubServiceImpl implements GithubService {
     @Override
     public void connect(String state, String code) {
 
-        Long userId = stateService.validateAndExtractUserId(state);
+        UUID userId = stateService.validateAndExtractUserId(state); // Changed to UUID
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
@@ -102,8 +103,8 @@ public class GithubServiceImpl implements GithubService {
         account.setFollowers(githubUser.getFollowers());
         account.setFollowing(githubUser.getFollowing());
         account.setPublicRepos(githubUser.getPublicRepos());
-        account.setAccessToken(token.getAccessToken());
-        account.setRefreshToken(token.getRefreshToken());
+        account.setEncryptedAccessToken(token.getAccessToken()); // Fixed
+        account.setEncryptedRefreshToken(token.getRefreshToken()); // Fixed
         account.setTokenType(token.getTokenType());
         account.setScope(token.getScope());
 
@@ -143,7 +144,7 @@ public class GithubServiceImpl implements GithubService {
     }
 
     @Override
-    public GithubProfileResponse getGithubProfile(Long userId) {
+    public GithubProfileResponse getGithubProfile(UUID userId) { // Changed to UUID
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
@@ -166,12 +167,12 @@ public class GithubServiceImpl implements GithubService {
                 .publicRepos(account.getPublicRepos())
                 .followers(account.getFollowers())
                 .following(account.getFollowing())
-                .connectedAt(account.getConnectedAt())
+                .connectedAt(account.getCreatedAt()) // Fixed: Using getCreatedAt() as there is no getConnectedAt()
                 .build();
     }
 
     @Override
-    public void disconnect(Long userId) {
+    public void disconnect(UUID userId) { // Changed to UUID
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));

@@ -1,4 +1,4 @@
-package net.jqube.server.exceptions;
+package net.jqube.server.exceptions.auth;
 
 public class InvalidVerificationCodeException extends RuntimeException {
     public InvalidVerificationCodeException(String message) {

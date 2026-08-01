@@ -1,4 +1,4 @@
-package net.jqube.server.exceptions;
+package net.jqube.server.exceptions.auth;
 
 public class TokenExpiredException extends RuntimeException {
     public TokenExpiredException(String message) {
