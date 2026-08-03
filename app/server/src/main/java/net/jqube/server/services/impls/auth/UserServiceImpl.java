@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     public UserProfileDTO getCurrentUserProfile() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return convertToUserProfileDTO(user);
     }

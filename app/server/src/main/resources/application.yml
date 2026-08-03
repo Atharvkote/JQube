@@ -52,6 +52,8 @@ security:
   jwt:
     secret-key: ${JWT_SECRET_KEY}
     expiration-time: 86400000
+  encryption:
+    key: ${AES_ENCRYPTION_KEY}
 
 springdoc:
   api-docs:

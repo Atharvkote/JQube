@@ -55,6 +55,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/health").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/github/callback").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/github/disconnect").hasAnyRole("ADMIN", "USER")
                         // Role-based access for other endpoints
                                             .requestMatchers(HttpMethod.GET).hasAnyRole("ADMIN", "USER", "VIEWER")
                         .requestMatchers(HttpMethod.POST).hasAnyRole("ADMIN", "USER")

@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.SignatureException; // Added this import
 
 // Error Response Model
 import net.jqube.server.exceptions.auth.*;
+import net.jqube.server.exceptions.shared.EncryptionException;
 import net.jqube.server.exceptions.shared.UserNotFoundException;
 import net.jqube.server.responses.ErrorResponse;
 
@@ -39,6 +40,19 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(
                         ex.getMessage(),
                         HttpStatus.BAD_REQUEST.value()
+                ));
+    }
+
+    @ExceptionHandler(EncryptionException.class)
+    public ResponseEntity<ErrorResponse> handleEncryptionException(
+            EncryptionException ex) {
+
+        log.error("Encryption error: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(
+                        "Internal encryption error.",
+                        HttpStatus.INTERNAL_SERVER_ERROR.value()
                 ));
     }
 

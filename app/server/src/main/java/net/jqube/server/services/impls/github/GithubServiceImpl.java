@@ -14,8 +14,10 @@ import net.jqube.server.responses.dataDTOs.GithubTokenResponse;
 import net.jqube.server.responses.dataDTOs.GithubUserResponse;
 import net.jqube.server.services.impls.github.helper.GithubStateService;
 import net.jqube.server.services.github.GithubService;
+import net.jqube.server.services.security.EncryptionService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.net.URLEncoder;
@@ -27,172 +29,181 @@ import java.util.UUID; // Import UUID
 @Service
 public class GithubServiceImpl implements GithubService {
 
-    private final RestClient restClient;
-    private final GithubProperties githubOAuthProperties;
-    private final UserRepository userRepository;
-    private final GitHubAccountRepository githubAccountRepository;
-    private final GithubStateService stateService;
+        private final RestClient restClient;
+        private final GithubProperties githubOAuthProperties;
+        private final UserRepository userRepository;
+        private final GitHubAccountRepository githubAccountRepository;
+        private final GithubStateService stateService;
+        private final EncryptionService encryptionService;
 
-    GithubServiceImpl(
-            RestClient restClient,
-            GithubProperties githubOAuthProperties,
-            UserRepository userRepository,
-            GitHubAccountRepository githubAccountRepository,
-            GithubStateService stateService
-    ) {
-        this.githubAccountRepository = githubAccountRepository;
-        this.userRepository = userRepository;
-        this.githubOAuthProperties = githubOAuthProperties;
-        this.restClient = restClient;
-        this.stateService = stateService;
-    }
-
-    @Override
-    public String generateAuthorizationUrl(UUID userId) { // Changed to UUID
-        String state = stateService.generate(userId);
-
-        return GithubConstants.AUTHORIZE_URL
-                + "?client_id=" + githubOAuthProperties.getClientId()
-                + "&redirect_uri=" + encode(githubOAuthProperties.getRedirectUri())
-                + "&scope=" + encode(GithubConstants.SCOPE)
-                + "&state=" + encode(state)
-                + "&allow_signup=false";
-    }
-
-    @Override
-    public void connect(String state, String code) {
-
-        UUID userId = stateService.validateAndExtractUserId(state); // Changed to UUID
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
-
-        GithubTokenResponse token = exchangeCodeForToken(code);
-
-        if (token == null || token.getAccessToken() == null) {
-            String reason = token != null ? token.getErrorDescription() : "Unknown error";
-            log.warn("GitHub token exchange failed for user {}: {}", userId, reason);
-            throw new GithubAuthenticationException("Failed to connect GitHub account: " + reason);
+        GithubServiceImpl(
+                RestClient restClient,
+                GithubProperties githubOAuthProperties,
+                UserRepository userRepository,
+                GitHubAccountRepository githubAccountRepository,
+                GithubStateService stateService, EncryptionService encryptionService) {
+                this.githubAccountRepository = githubAccountRepository;
+                this.userRepository = userRepository;
+                this.githubOAuthProperties = githubOAuthProperties;
+                this.restClient = restClient;
+                this.stateService = stateService;
+            this.encryptionService = encryptionService;
         }
 
-        GithubUserResponse githubUser = fetchGithubUser(token.getAccessToken());
+        @Override
+        public String generateAuthorizationUrl(UUID userId) { // Changed to UUID
+                String state = stateService.generate(userId);
 
-        // Prevent one GitHub account being linked to two different users
-        githubAccountRepository.findByGithubId(githubUser.getId())
-                .filter(existing -> !existing.getUser().getId().equals(userId))
-                .ifPresent(existing -> {
-                    throw new GithubAuthenticationException(
-                            "This GitHub account is already linked to another user.");
-                });
+                return GithubConstants.AUTHORIZE_URL
+                                + "?client_id=" + githubOAuthProperties.getClientId()
+                                + "&redirect_uri=" + encode(githubOAuthProperties.getRedirectUri())
+                                + "&scope=" + encode(GithubConstants.SCOPE)
+                                + "&state=" + encode(state)
+                                + "&allow_signup=false";
+        }
 
-        GithubAccount account = githubAccountRepository
-                .findByUser(user)
-                .orElseGet(GithubAccount::new);
+        @Override
+        @Transactional
+        public void connect(String state, String code) {
+                UUID userId = stateService.validateAndExtractUserId(state); // Changed to UUID
+                // log.info("User ID extracted from state: {}", userId);
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new UserNotFoundException("User not found."));
 
-        account.setUser(user);
-        account.setGithubId(githubUser.getId());
-        account.setUsername(githubUser.getLogin());
-        account.setName(githubUser.getName());
-        account.setEmail(githubUser.getEmail());
-        account.setAvatarUrl(githubUser.getAvatarUrl());
-        account.setProfileUrl(githubUser.getProfileUrl());
-        account.setBio(githubUser.getBio());
-        account.setCompany(githubUser.getCompany());
-        account.setBlog(githubUser.getBlog());
-        account.setLocation(githubUser.getLocation());
-        account.setFollowers(githubUser.getFollowers());
-        account.setFollowing(githubUser.getFollowing());
-        account.setPublicRepos(githubUser.getPublicRepos());
-        account.setEncryptedAccessToken(token.getAccessToken()); // Fixed
-        account.setEncryptedRefreshToken(token.getRefreshToken()); // Fixed
-        account.setTokenType(token.getTokenType());
-        account.setScope(token.getScope());
+                GithubTokenResponse token = exchangeCodeForToken(code);
 
-        Instant now = Instant.now();
-        account.setAccessTokenExpiresAt(
-                token.getExpiresIn() != null ? now.plusSeconds(token.getExpiresIn()) : null);
-        account.setRefreshTokenExpiresAt(
-                token.getRefreshTokenExpiresIn() != null
-                        ? now.plusSeconds(token.getRefreshTokenExpiresIn())
-                        : null);
+                if (token == null || token.getAccessToken() == null) {
+                        String reason = token != null ? token.getErrorDescription() : "Unknown error";
+                        log.warn("GitHub token exchange failed for user {}: {}", userId, reason);
+                        throw new GithubAuthenticationException("Failed to connect GitHub account: " + reason);
+                }
 
-        githubAccountRepository.save(account);
-    }
+                GithubUserResponse githubUser = fetchGithubUser(token.getAccessToken());
 
-    private GithubTokenResponse exchangeCodeForToken(String code) {
-        return restClient.post()
-                .uri(GithubConstants.ACCESS_TOKEN_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(new TokenRequest(
-                        githubOAuthProperties.getClientId(),
-                        githubOAuthProperties.getClientSecret(),
-                        code,
-                        githubOAuthProperties.getRedirectUri()
-                ))
-                .retrieve()
-                .body(GithubTokenResponse.class);
-    }
+                // Prevent one GitHub account being linked to two different users
+                githubAccountRepository.findByGithubId(githubUser.getId())
+                                .filter(existing -> !existing.getUser().getId().equals(userId))
+                                .ifPresent(existing -> {
+                                        throw new GithubAuthenticationException(
+                                                        "This GitHub account is already linked to another user.");
+                                });
 
-    private GithubUserResponse fetchGithubUser(String accessToken) {
-        return restClient.get()
-                .uri(GithubConstants.USER_ENDPOINT)
-                .header(GithubConstants.AUTHORIZATION, GithubConstants.BEARER + accessToken)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .body(GithubUserResponse.class);
-    }
+                GithubAccount account = githubAccountRepository
+                                .findByUser(user)
+                                .orElseGet(GithubAccount::new);
 
-    @Override
-    public GithubProfileResponse getGithubProfile(UUID userId) { // Changed to UUID
+                account.setUser(user);
+                account.setGithubId(githubUser.getId());
+                account.setUsername(githubUser.getLogin());
+                account.setName(githubUser.getName());
+                account.setEmail(githubUser.getEmail());
+                account.setAvatarUrl(githubUser.getAvatarUrl());
+                account.setProfileUrl(githubUser.getProfileUrl());
+                account.setBio(githubUser.getBio());
+                account.setCompany(githubUser.getCompany());
+                account.setBlog(githubUser.getBlog());
+                account.setLocation(githubUser.getLocation());
+                account.setFollowers(githubUser.getFollowers());
+                account.setFollowing(githubUser.getFollowing());
+                account.setPublicRepos(githubUser.getPublicRepos());
+                account.setEncryptedAccessToken(
+                        encryptionService.encrypt(token.getAccessToken())
+                ); // AES-256 GCM Encryption
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
+                account.setEncryptedRefreshToken(
+                        encryptionService.encrypt(token.getRefreshToken())
+                ); // AES-256 GCM Encryption
 
-        GithubAccount account = githubAccountRepository
-                .findByUser(user)
-                .orElseThrow(() -> new GithubAuthenticationException(
-                        "No GitHub account connected for this user."));
+                account.setTokenType(token.getTokenType());
+                account.setScope(token.getScope());
 
-        return GithubProfileResponse.builder()
-                .username(account.getUsername())
-                .name(account.getName())
-                .email(account.getEmail())
-                .avatarUrl(account.getAvatarUrl())
-                .profileUrl(account.getProfileUrl())
-                .bio(account.getBio())
-                .company(account.getCompany())
-                .blog(account.getBlog())
-                .location(account.getLocation())
-                .publicRepos(account.getPublicRepos())
-                .followers(account.getFollowers())
-                .following(account.getFollowing())
-                .connectedAt(account.getCreatedAt()) // Fixed: Using getCreatedAt() as there is no getConnectedAt()
-                .build();
-    }
+                Instant now = Instant.now();
+                account.setAccessTokenExpiresAt(
+                                token.getExpiresIn() != null ? now.plusSeconds(token.getExpiresIn()) : null);
+                account.setRefreshTokenExpiresAt(
+                                token.getRefreshTokenExpiresIn() != null
+                                                ? now.plusSeconds(token.getRefreshTokenExpiresIn())
+                                                : null);
 
-    @Override
-    public void disconnect(UUID userId) { // Changed to UUID
+                log.info("Github account Created : {}code :{}state : {}", account, code, state);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found."));
+                githubAccountRepository.save(account);
+        }
 
-        GithubAccount account = githubAccountRepository
-                .findByUser(user)
-                .orElseThrow(() -> new GithubAuthenticationException(
-                        "No GitHub account connected for this user."));
+        private GithubTokenResponse exchangeCodeForToken(String code) {
+                return restClient.post()
+                                .uri(GithubConstants.ACCESS_TOKEN_URL)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .body(new TokenRequest(
+                                                githubOAuthProperties.getClientId(),
+                                                githubOAuthProperties.getClientSecret(),
+                                                code,
+                                                githubOAuthProperties.getRedirectUri()))
+                                .retrieve()
+                                .body(GithubTokenResponse.class);
+        }
 
-        githubAccountRepository.delete(account);
-    }
+        private GithubUserResponse fetchGithubUser(String accessToken) {
+                return restClient.get()
+                                .uri(GithubConstants.USER_ENDPOINT)
+                                .header(GithubConstants.AUTHORIZATION, GithubConstants.BEARER + accessToken)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .body(GithubUserResponse.class);
+        }
 
-    private String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
+        @Override
+        public GithubProfileResponse getGithubProfile(UUID userId) { // Changed to UUID
 
-    private record TokenRequest(
-            String client_id,
-            String client_secret,
-            String code,
-            String redirect_uri
-    ) {}
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new UserNotFoundException("User not found."));
+
+                GithubAccount account = githubAccountRepository
+                                .findByUser(user)
+                                .orElseThrow(() -> new GithubAuthenticationException(
+                                                "No GitHub account connected for this user."));
+
+                return GithubProfileResponse.builder()
+                                .username(account.getUsername())
+                                .name(account.getName())
+                                .email(account.getEmail())
+                                .avatarUrl(account.getAvatarUrl())
+                                .profileUrl(account.getProfileUrl())
+                                .bio(account.getBio())
+                                .company(account.getCompany())
+                                .blog(account.getBlog())
+                                .location(account.getLocation())
+                                .publicRepos(account.getPublicRepos())
+                                .followers(account.getFollowers())
+                                .following(account.getFollowing())
+                                .connectedAt(account.getCreatedAt()) // Fixed: Using getCreatedAt() as there is no
+                                                                     // getConnectedAt()
+                                .build();
+        }
+
+        @Override
+        public void disconnect(UUID userId) { // Changed to UUID
+
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new UserNotFoundException("User not found."));
+
+                GithubAccount account = githubAccountRepository
+                                .findByUser(user)
+                                .orElseThrow(() -> new GithubAuthenticationException(
+                                                "No GitHub account connected for this user."));
+
+                githubAccountRepository.delete(account);
+        }
+
+        private String encode(String value) {
+                return URLEncoder.encode(value, StandardCharsets.UTF_8);
+        }
+
+        private record TokenRequest(
+                        String client_id,
+                        String client_secret,
+                        String code,
+                        String redirect_uri) {
+        }
 }
