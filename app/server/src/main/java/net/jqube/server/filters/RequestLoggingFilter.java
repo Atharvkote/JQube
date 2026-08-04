@@ -24,7 +24,7 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     @Override
-    protected void doFilterInternal(
+    public void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)

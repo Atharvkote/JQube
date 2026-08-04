@@ -38,6 +38,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 // Utils
 import java.util.List;
+import java.util.UUID; // Import UUID
 
 
 @RestController
@@ -79,8 +80,8 @@ public class AdminController {
     })
     @GetMapping("/users/{id}")
     public ResponseEntity<Response<UserResponseDTO>> getUserById(
-            @Parameter(description = "Numeric user ID", example = "1")
-            @PathVariable Long id) {
+            @Parameter(description = "User ID", example = "a1b2c3d4-e5f6-7890-1234-567890abcdef") // Updated example
+            @PathVariable UUID id) { // Changed type to UUID
         UserResponseDTO user = adminService.getUserById(id);
         return ResponseEntity.ok(
                 Response.<UserResponseDTO>builder()
@@ -100,8 +101,8 @@ public class AdminController {
     })
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Response<Void>> deleteUser(
-            @Parameter(description = "Numeric user ID", example = "1")
-            @PathVariable Long id) {
+            @Parameter(description = "User ID", example = "a1b2c3d4-e5f6-7890-1234-567890abcdef") // Updated example
+            @PathVariable UUID id) { // Changed type to UUID
         adminService.deleteUser(id);
         return ResponseEntity.ok(
                 Response.<Void>builder()
@@ -117,7 +118,7 @@ public class AdminController {
             summary = "Replace a user's roles",
             description = "REPLACES (does not merge with) the user's existing role set with the roles supplied " +
                     "in the request body. Omitting an existing role - e.g. ROLE_USER - revokes it. " +
-                    "Role names must match a value from RoleName (e.g. ROLE_ADMIN, ROLE_USER, ROLE_VIEWER)."
+                    "Role names must match a value from SystemRoles (e.g. ROLE_ADMIN, ROLE_USER, ROLE_VIEWER)."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Roles assigned successfully",
@@ -129,8 +130,8 @@ public class AdminController {
     })
     @PutMapping("/users/{id}/roles")
     public ResponseEntity<Response<UserResponseDTO>> assignRoles(
-            @Parameter(description = "Numeric user ID", example = "1")
-            @PathVariable Long id,
+            @Parameter(description = "User ID", example = "a1b2c3d4-e5f6-7890-1234-567890abcdef") // Updated example
+            @PathVariable UUID id, // Changed type to UUID
             @Valid @RequestBody AssignRoleRequestDTO assignRoleRequestDTO) {
         UserResponseDTO user = adminService.assignRoles(id, assignRoleRequestDTO);
         return ResponseEntity.ok(
@@ -147,7 +148,7 @@ public class AdminController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Role created successfully",
                     content = @Content(schema = @Schema(implementation = Role.class))),
-            @ApiResponse(responseCode = "400", description = "Role name is not a valid RoleName value",
+            @ApiResponse(responseCode = "400", description = "Role name is not a valid SystemRoles value",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "Role already exists",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))

@@ -1,63 +1,101 @@
 package net.jqube.server.models;
 
-// Annotations
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-// Deps
+import lombok.*;
+import net.jqube.server.models.base.Auditable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-// Utils
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.Instant;
+import java.time.LocalDateTime; // Import LocalDateTime
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
-@Table(name = "users")
-public class User implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column(unique = true , nullable = false)
-    private String username;
-    @Column(unique = true , nullable = false)
-    private String email;
-    @Column(nullable = false)
-    private String password;
-    @Column(name = "verification_code")
-    private String verificationCode;
-    @Column(name = "verification_expires_on")
-    private LocalDateTime verificationExpiresOn;
-    private boolean enabled;
+@AllArgsConstructor
+@EqualsAndHashCode(of = "id", callSuper = false)
+@Table(
+        name = "users",
+        indexes = {
+                @Index(name = "idx_users_username", columnList = "username"),
+                @Index(name = "idx_users_email", columnList = "email")
+        }
+)
+public class User extends Auditable implements UserDetails {
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
+
+    @Column(nullable = false, unique = true, length = 150)
+    private String email;
+
+    @Column(nullable = false, length = 255)
+    private String password;
+
+    @Column(name = "verification_code", length = 10)
+    private String verificationCode;
+
+    @Column(name = "verification_expires_at")
+    private LocalDateTime verificationExpiresOn;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean enabled = false;
+
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
-    public User(String username, String email, String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
+    @OneToOne(
+            mappedBy = "user",
+            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private GithubAccount githubAccount;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean accountLocked = false;
+
+    private Instant lockedUntil;
+
+    private Instant lastLoginAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Integer failedLoginAttempts = 0;
+
+    // Helper Methods
+
+    public void addRole(Role role) {
+        roles.add(role);
     }
 
+    public void removeRole(Role role) {
+        roles.remove(role);
+    }
+
+    // Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -67,8 +105,9 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !accountLocked;
     }
+
     @Override
     public boolean isCredentialsNonExpired() {
         return true;

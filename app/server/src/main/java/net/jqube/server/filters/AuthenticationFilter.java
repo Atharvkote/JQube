@@ -5,12 +5,15 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import net.jqube.server.models.User;
+import net.jqube.server.repositories.UserRepository;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
@@ -28,23 +31,23 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 
     private final HandlerExceptionResolver handlerExceptionResolver;
     private final JWTService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository;
 
     public AuthenticationFilter(
             HandlerExceptionResolver handlerExceptionResolver,
             JWTService jwtService,
-            UserDetailsService userDetailsService)
+            UserRepository userRepository)
     {
         this.handlerExceptionResolver = handlerExceptionResolver;
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.userRepository = userRepository;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+    public void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         try {
@@ -61,8 +64,10 @@ public class AuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().getAuthentication();
 
             if (username != null && authentication == null) {
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(username);
+                User user =
+                        userRepository.findByUsernameWithRoles(username)
+                                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                UserDetails userDetails = user;
                 System.out.println("Authorities: " + userDetails.getAuthorities());
 
                 if (jwtService.isTokenValid(token, userDetails)) {

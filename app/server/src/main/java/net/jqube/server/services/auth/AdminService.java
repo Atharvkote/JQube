@@ -9,16 +9,17 @@ import net.jqube.server.dtos.auth.UserResponseDTO;
 import net.jqube.server.models.Role;
 
 import java.util.List;
+import java.util.UUID; // Import UUID
 
 public interface AdminService {
 
     List<UserResponseDTO> getAllUsers();
 
-    UserResponseDTO getUserById(Long id);
+    UserResponseDTO getUserById(UUID id); // Changed type to UUID
 
-    void deleteUser(Long id);
+    void deleteUser(UUID id); // Changed type to UUID
 
-    UserResponseDTO assignRoles(Long userId, AssignRoleRequestDTO assignRoleRequestDTO);
+    UserResponseDTO assignRoles(UUID userId, AssignRoleRequestDTO assignRoleRequestDTO); // Changed type to UUID
 
     Role createRole(RoleDTO roleDTO);
 

@@ -4,7 +4,7 @@ package net.jqube.server.services.impls.auth;
 import net.jqube.server.dtos.auth.UserProfileDTO;
 
 // Exception
-import net.jqube.server.exceptions.UserNotFoundException;
+import net.jqube.server.exceptions.shared.UserNotFoundException;
 
 // Models
 import net.jqube.server.models.User;
@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
 
     public UserProfileDTO getCurrentUserProfile() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         return convertToUserProfileDTO(user);
     }
