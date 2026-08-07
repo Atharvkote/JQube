@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 // Utils
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -104,7 +105,7 @@ public class AuthServiceImpl implements AuthService {
         Role userRole = roleRepository.findByName(SystemRoles.ROLE_USER)
                 .orElseThrow(() -> new RoleNotFoundException("ROLE_USER not found"));
 
-        user.setRoles(Set.of(userRole));
+        user.setRoles(new HashSet<>(Set.of(userRole)));
         user = userRepository.save(user);
 
         // Generate verification details and send the verification email
