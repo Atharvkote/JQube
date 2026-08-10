@@ -89,8 +89,10 @@ export default function App() {
           {/* public auth routes */}
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/connect-github" element={<ConnectToGitHub />} />
-          <Route path="/loader" element={<MainLoader />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+
+          {/* Loader testing route */}
+          <Route path="/loader" element={<MainLoader />} />
 
           {/* protected main platform routes wrapped in AppLayout */}
           <Route
