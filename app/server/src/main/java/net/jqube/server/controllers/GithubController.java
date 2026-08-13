@@ -10,14 +10,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 // Models
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.User;
 
 // Response Models
 import net.jqube.server.responses.ErrorResponse;
 import net.jqube.server.responses.Response;
 
 // Services
-import net.jqube.server.services.github.GithubService;
+import net.jqube.server.services.github.GithubAuthService;
 
 // Deps
 import org.springframework.http.HttpStatus;
@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
@@ -38,7 +37,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @SecurityRequirement(name = "bearerAuth")
 public class GithubController {
 
-        private final GithubService githubService;
+        private final GithubAuthService githubAuthService;
         private final net.jqube.server.repositories.UserRepository userRepository;
 
         private User getAuthenticatedUser() {
@@ -64,7 +63,7 @@ public class GithubController {
                                 Response.<Void>builder()
                                                 .success(true)
                                                 .status(HttpStatus.OK.value())
-                                                .message(githubService.generateAuthorizationUrl(user.getId()))
+                                                .message(githubAuthService.generateAuthorizationUrl(user.getId()))
                                                 .build());
         }
 
@@ -83,7 +82,7 @@ public class GithubController {
                         @Parameter(description = "Authorization code issued by GitHub") @RequestParam String code,
                         @Parameter(description = "Opaque, single-use state token issued by /connect and resolved server-side to a user") @RequestParam String state) {
                 try {
-                        githubService.connect(state, code);
+                        githubAuthService.connect(state, code);
                         String html = """
                                 <!DOCTYPE html>
                                 <html>
@@ -144,7 +143,7 @@ public class GithubController {
                                 Response.<net.jqube.server.responses.dataDTOs.GithubProfileResponse>builder()
                                                 .success(true)
                                                 .status(HttpStatus.OK.value())
-                                                .data(githubService.getGithubProfile(user.getId()))
+                                                .data(githubAuthService.getGithubProfile(user.getId()))
                                                 .message("GitHub profile retrieved successfully!")
                                                 .build());
         }
@@ -159,7 +158,7 @@ public class GithubController {
         @PreAuthorize("hasRole('USER')")
         public ResponseEntity<Response<Void>> disconnect() {
                 User user = getAuthenticatedUser();
-                githubService.disconnect(user.getId());
+                githubAuthService.disconnect(user.getId());
                 return ResponseEntity.ok(
                                 Response.<Void>builder()
                                                 .success(true)

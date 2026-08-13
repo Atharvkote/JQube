@@ -1,7 +1,7 @@
 package net.jqube.server.repositories;
 
 // Models
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.User;
 
 // Repositories
 import org.springframework.data.jpa.repository.JpaRepository;

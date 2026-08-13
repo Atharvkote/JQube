@@ -6,7 +6,7 @@ import net.jqube.server.dtos.auth.RoleDTO;
 import net.jqube.server.dtos.auth.UserResponseDTO;
 
 // Models
-import net.jqube.server.models.Role;
+import net.jqube.server.models.auth.Role;
 
 import java.util.List;
 import java.util.UUID; // Import UUID

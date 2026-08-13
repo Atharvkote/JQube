@@ -6,7 +6,7 @@ import net.jqube.server.dtos.auth.UserResponseDTO;
 import net.jqube.server.dtos.requests.AssignRoleRequestDTO;
 
 // Models
-import net.jqube.server.models.Role;
+import net.jqube.server.models.auth.Role;
 
 // Response Models
 import net.jqube.server.responses.ErrorResponse;

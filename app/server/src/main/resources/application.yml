@@ -1,5 +1,11 @@
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000
 
 spring:
   application:
@@ -39,7 +45,7 @@ spring:
             enable: true
 
 client:
-    url: ${CLIENT_URL}
+  url: ${CLIENT_URL}
 
 github:
   oauth:
@@ -72,3 +78,27 @@ springdoc:
   packages-to-scan: net.jqube.server.controllers
   paths-to-match:
     - /api/**
+
+rate-limiter:
+  enabled: true
+  fail-mode: OPEN # Options: OPEN, CLOSED
+  general:
+    limit: 100
+    window: 60s
+    algorithm: FIXED_WINDOW
+    client-type: IP
+  auth:
+    limit: 10
+    window: 60s
+    algorithm: FIXED_WINDOW
+    client-type: IP
+  sensitive:
+    limit: 20
+    window: 60s
+    algorithm: FIXED_WINDOW
+    client-type: USER
+  upload:
+    limit: 20
+    window: 60s
+    algorithm: FIXED_WINDOW
+    client-type: USER

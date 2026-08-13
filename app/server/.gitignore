@@ -48,6 +48,11 @@ logs/
 Thumbs.db
 
 ### Environment ###
+**/.env
+**/.env.*
+
+# Keep template
+!**/.env.example
 .env
 .env.*
 !.env.example

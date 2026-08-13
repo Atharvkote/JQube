@@ -22,7 +22,12 @@ CREATE TABLE users (
 
                        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP,
+
+                       created_by UUID,
+                       updated_by UUID,
+
                        deleted_at TIMESTAMP,
+                       deleted_by UUID,
 
                        is_deleted BOOLEAN NOT NULL DEFAULT FALSE
 );

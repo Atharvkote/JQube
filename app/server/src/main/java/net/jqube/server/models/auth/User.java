@@ -1,8 +1,9 @@
-package net.jqube.server.models;
+package net.jqube.server.models.auth;
 
 import jakarta.persistence.*;
 import lombok.*;
 import net.jqube.server.models.base.Auditable;
+import net.jqube.server.models.github.GithubAccount;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

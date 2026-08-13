@@ -1,11 +1,13 @@
 package net.jqube.server.services.impls.auth;
 
 // Services
+
 import net.jqube.server.configs.properties.JWTProperties;
 import net.jqube.server.services.auth.JWTService;
 
 // Deps
 import java.security.Key;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

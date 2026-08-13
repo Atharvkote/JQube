@@ -1,13 +1,14 @@
 package net.jqube.server.services.impls.auth;
 
 // DTOs
+
 import net.jqube.server.dtos.auth.UserProfileDTO;
 
 // Exception
 import net.jqube.server.exceptions.shared.UserNotFoundException;
 
 // Models
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.User;
 
 // Repositories
 import net.jqube.server.repositories.UserRepository;

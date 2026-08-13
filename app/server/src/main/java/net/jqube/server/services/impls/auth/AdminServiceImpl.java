@@ -1,6 +1,7 @@
 package net.jqube.server.services.impls.auth;
 
 // DTOs
+
 import net.jqube.server.dtos.requests.AssignRoleRequestDTO;
 import net.jqube.server.dtos.auth.RoleDTO;
 import net.jqube.server.dtos.auth.UserResponseDTO;
@@ -13,8 +14,8 @@ import net.jqube.server.exceptions.auth.RoleNotFoundException;
 import net.jqube.server.exceptions.shared.UserNotFoundException;
 
 // Models
-import net.jqube.server.models.Role;
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.Role;
+import net.jqube.server.models.auth.User;
 
 // Repositories
 import net.jqube.server.repositories.RoleRepository;

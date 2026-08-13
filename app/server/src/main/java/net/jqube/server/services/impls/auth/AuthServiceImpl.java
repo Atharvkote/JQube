@@ -1,6 +1,7 @@
 package net.jqube.server.services.impls.auth;
 
 // DTOs
+
 import lombok.extern.slf4j.Slf4j;
 import net.jqube.server.dtos.auth.LoginDTO;
 import net.jqube.server.dtos.auth.RegisterDTO;
@@ -19,8 +20,8 @@ import net.jqube.server.exceptions.auth.UserNotVerifiedException;
 import jakarta.mail.MessagingException;
 
 // Models
-import net.jqube.server.models.Role;
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.Role;
+import net.jqube.server.models.auth.User;
 
 // Repositories
 import net.jqube.server.repositories.RoleRepository;
@@ -28,7 +29,7 @@ import net.jqube.server.repositories.UserRepository;
 
 // Services
 import net.jqube.server.services.auth.AuthService;
-import net.jqube.server.services.auth.EmailService;
+import net.jqube.server.services.shared.EmailService;
 
 // Deps
 import org.springframework.security.authentication.AuthenticationManager;
@@ -61,11 +62,11 @@ public class AuthServiceImpl implements AuthService {
     private static final SecureRandom random = new SecureRandom();
 
     public AuthServiceImpl(UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
-            EmailService emailService,
-            RoleRepository roleRepository,
-            TemplateEngine templateEngine) {
+                           PasswordEncoder passwordEncoder,
+                           AuthenticationManager authenticationManager,
+                           EmailService emailService,
+                           RoleRepository roleRepository,
+                           TemplateEngine templateEngine) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;

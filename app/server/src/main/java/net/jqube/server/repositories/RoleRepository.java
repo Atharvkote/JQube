@@ -4,7 +4,7 @@ package net.jqube.server.repositories;
 import net.jqube.server.enums.SystemRoles;
 
 // Models
-import net.jqube.server.models.Role;
+import net.jqube.server.models.auth.Role;
 
 // Repositories
 import org.springframework.data.jpa.repository.JpaRepository;

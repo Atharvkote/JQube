@@ -8,7 +8,7 @@ import net.jqube.server.dtos.auth.RegistrationSuccessDTO;
 import net.jqube.server.dtos.auth.ResendCodeDTO;
 
 // Models
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.User;
 
 // Response Models
 import net.jqube.server.responses.ErrorResponse;

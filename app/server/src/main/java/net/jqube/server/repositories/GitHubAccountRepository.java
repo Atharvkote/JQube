@@ -1,7 +1,7 @@
 package net.jqube.server.repositories;
 
-import net.jqube.server.models.GithubAccount;
-import net.jqube.server.models.User;
+import net.jqube.server.models.github.GithubAccount;
+import net.jqube.server.models.auth.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

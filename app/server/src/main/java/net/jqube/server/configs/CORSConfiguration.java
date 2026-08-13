@@ -23,7 +23,6 @@ public class CORSConfiguration {
 //                "http://localhost:5173",
 //                ""
 //        ));
-//
 //        configuration.setAllowedMethods(List.of(
 //                "GET",
 //                "POST",
@@ -32,9 +31,7 @@ public class CORSConfiguration {
 //                "PATCH",
 //                "OPTIONS"
 //        ));
-//
 //        configuration.setAllowedHeaders(List.of("*"));
-//
 //        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =

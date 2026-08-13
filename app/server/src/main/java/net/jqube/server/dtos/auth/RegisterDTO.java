@@ -1,6 +1,7 @@
 package net.jqube.server.dtos.auth;
 
 // Annotations
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -10,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RegisterDTO {
+public final class RegisterDTO {
 
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email cannot be blank")

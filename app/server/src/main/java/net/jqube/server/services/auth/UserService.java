@@ -4,7 +4,7 @@ package net.jqube.server.services.auth;
 import net.jqube.server.dtos.auth.UserProfileDTO;
 
 // Models
-import net.jqube.server.models.User;
+import net.jqube.server.models.auth.User;
 
 // Utils
 import java.util.List;

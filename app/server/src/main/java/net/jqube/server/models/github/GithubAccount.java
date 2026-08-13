@@ -1,7 +1,8 @@
-package net.jqube.server.models;
+package net.jqube.server.models.github;
 
 import jakarta.persistence.*;
 import lombok.*;
+import net.jqube.server.models.auth.User;
 import net.jqube.server.models.base.Auditable;
 
 import java.time.Instant;

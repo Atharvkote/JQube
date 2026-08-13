@@ -40,4 +40,8 @@ public final class GithubConstants {
     // OAuth Scopes
     public static final String SCOPE =
             "read:user,user:email,repo";
+
+    // Repo
+    public static final String REPOSITORIES_ENDPOINT =
+            API_BASE_URL + "/repos";
 }

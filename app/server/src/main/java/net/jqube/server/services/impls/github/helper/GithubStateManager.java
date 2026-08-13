@@ -18,7 +18,7 @@ import java.util.UUID; // Import UUID
 // user id is used as the OAuth "state" value.
 
 @Service
-public class GithubStateService {
+public class GithubStateManager {
 
     private static final String PURPOSE_CLAIM = "purpose";
     private static final String PURPOSE_VALUE = "github_oauth_state";
@@ -26,7 +26,7 @@ public class GithubStateService {
 
     private final JWTProperties jwtProperties;
 
-    public GithubStateService(JWTProperties jwtProperties) {
+    public GithubStateManager(JWTProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
     }
 

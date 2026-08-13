@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class RegistrationSuccessDTO {
+public final class RegistrationSuccessDTO {
     private String email;
     private String username;
 }
