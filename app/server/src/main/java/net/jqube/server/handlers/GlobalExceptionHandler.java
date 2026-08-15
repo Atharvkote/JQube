@@ -1,12 +1,17 @@
 package net.jqube.server.handlers;
 
 // Exceptions
-import io.jsonwebtoken.ExpiredJwtException; // Added this import
-import io.jsonwebtoken.MalformedJwtException; // Added this import
-import io.jsonwebtoken.security.SignatureException; // Added this import
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 
-// Error Response Model
 import net.jqube.server.exceptions.auth.*;
+import net.jqube.server.exceptions.qube.InvalidRepoIdentifierException;
+import net.jqube.server.exceptions.qube.QubeAlreadyLinkedException;
+import net.jqube.server.exceptions.qube.QubeNotFoundException;
+import net.jqube.server.exceptions.qube.QubeSlugConflictException;
+import net.jqube.server.exceptions.qube.WorkspacePathConflictException;
+import net.jqube.server.exceptions.qube.AccessDeniedException;
 import net.jqube.server.exceptions.shared.EncryptionException;
 import net.jqube.server.exceptions.shared.UserNotFoundException;
 import net.jqube.server.responses.ErrorResponse;
@@ -68,6 +73,48 @@ public class GlobalExceptionHandler {
         log.warn("GitHub repository not found: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of(ex.getMessage(), HttpStatus.NOT_FOUND.value()));
+    }
+
+    @ExceptionHandler(QubeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleQubeNotFound(QubeNotFoundException ex) {
+        log.warn("Qube not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.NOT_FOUND.value()));
+    }
+
+    @ExceptionHandler(QubeSlugConflictException.class)
+    public ResponseEntity<ErrorResponse> handleQubeSlugConflict(QubeSlugConflictException ex) {
+        log.warn("Qube slug conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.CONFLICT.value()));
+    }
+
+    @ExceptionHandler(QubeAlreadyLinkedException.class)
+    public ResponseEntity<ErrorResponse> handleQubeAlreadyLinked(QubeAlreadyLinkedException ex) {
+        log.warn("Qube already linked: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.CONFLICT.value()));
+    }
+
+    @ExceptionHandler(InvalidRepoIdentifierException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRepoIdentifier(InvalidRepoIdentifierException ex) {
+        log.warn("Invalid repo identifier: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(WorkspacePathConflictException.class)
+    public ResponseEntity<ErrorResponse> handleWorkspacePathConflict(WorkspacePathConflictException ex) {
+        log.warn("Workspace path conflict: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.CONFLICT.value()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(ex.getMessage(), HttpStatus.FORBIDDEN.value()));
     }
 
     @ExceptionHandler(BranchNotFoundException.class)

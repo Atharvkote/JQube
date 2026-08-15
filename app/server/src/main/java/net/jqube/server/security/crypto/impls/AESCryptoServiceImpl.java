@@ -1,10 +1,10 @@
-package net.jqube.server.services.impls.security;
+package net.jqube.server.security.crypto.impls;
 
 import lombok.RequiredArgsConstructor;
 import net.jqube.server.configs.properties.EncryptionProperties;
 import net.jqube.server.constants.AESConstants;
 import net.jqube.server.exceptions.shared.EncryptionException;
-import net.jqube.server.services.security.EncryptionService;
+import net.jqube.server.security.crypto.EncryptionService;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -22,7 +22,7 @@ import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
-public class AESEncryptionServiceImpl implements EncryptionService {
+public class AESCryptoServiceImpl implements EncryptionService {
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private final EncryptionProperties encryptionProperties;

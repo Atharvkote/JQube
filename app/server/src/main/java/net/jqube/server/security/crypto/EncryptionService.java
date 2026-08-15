@@ -1,4 +1,4 @@
-package net.jqube.server.services.security;
+package net.jqube.server.security.crypto;
 
 public interface EncryptionService {
 

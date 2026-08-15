@@ -1,7 +1,7 @@
 package net.jqube.server.limiter.policies;
 
-import net.jqube.server.enums.limiter.AlgorithmType;
-import net.jqube.server.enums.limiter.ClientType;
+import net.jqube.server.limiter.enums.AlgorithmType;
+import net.jqube.server.limiter.enums.ClientType;
 import net.jqube.server.configs.properties.RateLimiterProperties;
 
 import java.time.Duration;

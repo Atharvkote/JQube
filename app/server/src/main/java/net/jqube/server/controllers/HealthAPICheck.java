@@ -1,6 +1,7 @@
 package net.jqube.server.controllers;
 
 // Response Model
+
 import net.jqube.server.responses.Response;
 import net.jqube.server.responses.dataDTOs.HealthResponse;
 
@@ -14,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.lang.management.ManagementFactory;
 
 @RestController
-public class HealthCheck{
+public class HealthAPICheck {
 
     @GetMapping("/health")
     public ResponseEntity<Response<HealthResponse>> healthCheck() {

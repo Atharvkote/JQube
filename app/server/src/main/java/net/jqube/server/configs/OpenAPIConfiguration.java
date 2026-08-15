@@ -1,13 +1,14 @@
 package net.jqube.server.configs;
 
-// Deps
+// OpenAPI
+
+import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.ExternalDocumentation;
 
-// Annotations
+// Spring
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,27 +20,33 @@ public class OpenAPIConfiguration {
         return new OpenAPI()
                 .info(
                         new Info()
-                                .title("JQUBE Authentication & Authorization API")
+                                .title("J-QUBE API")
                                 .version("1.0.0")
                                 .description("""
-                                        JQUBE Authentication & Authorization Service provides
-                                        secure user authentication, role-based access control (RBAC),
-                                        JWT-based authorization, email verification, GitHub OAuth2
-                                        login, and administrative role management.
-
-                                        Features:
-                                        • User Registration
-                                        • Email Verification
-                                        • JWT Authentication
-                                        • GitHub OAuth2 Login
+                                        J-QUBE is a DevSecOps security platform that helps developers
+                                        discover, manage, and remediate security vulnerabilities in
+                                        their software repositories.
+                                        
+                                        The platform integrates with GitHub repositories and provides
+                                        repository management, automated security scanning, vulnerability
+                                        analysis, and AI-assisted security remediation.
+                                        
+                                        Core capabilities:
+                                        • GitHub Repository Integration
+                                        • Repository and Qube Management
+                                        • Automated Security Scanning
+                                        • Vulnerability and Security Finding Management
+                                        • Secret and Dependency Detection
+                                        • AI-Assisted Vulnerability Remediation
+                                        • Automated Remediation Workflows
+                                        • Pull Request-Based Remediation
+                                        • User Authentication and Authorization
                                         • Role-Based Access Control (RBAC)
-                                        • User Profile Management
-                                        • Admin Role Management
+                                        • Security and Audit Management
                                         """)
                                 .contact(
                                         new Contact()
                                                 .name("Atharva Kote")
-                                                .email("your-email@example.com")
                                                 .url("https://github.com/Atharvkote")
                                 )
                                 .license(
@@ -50,7 +57,7 @@ public class OpenAPIConfiguration {
                 )
                 .externalDocs(
                         new ExternalDocumentation()
-                                .description("Project Repository")
+                                .description("J-QUBE GitHub Repository")
                                 .url("https://github.com/Atharvkote/JQUBE")
                 );
     }

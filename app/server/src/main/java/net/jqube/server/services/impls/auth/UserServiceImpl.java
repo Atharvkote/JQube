@@ -13,8 +13,8 @@ import net.jqube.server.models.auth.User;
 // Repositories
 import net.jqube.server.repositories.UserRepository;
 
-// Services
 import net.jqube.server.services.auth.UserService;
+import net.jqube.server.mappers.UserMapper;
 
 // Deps
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public List<User> fetchAll() {
         return (List<User>) userRepository.findAll();
@@ -40,17 +41,6 @@ public class UserServiceImpl implements UserService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsernameWithRoles(username)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return convertToUserProfileDTO(user);
-    }
-
-    private UserProfileDTO convertToUserProfileDTO(User user) {
-        UserProfileDTO userProfileDTO = new UserProfileDTO();
-        userProfileDTO.setId(user.getId());
-        userProfileDTO.setUsername(user.getUsername());
-        userProfileDTO.setEmail(user.getEmail());
-        userProfileDTO.setRoles(user.getRoles().stream()
-                .map(role -> role.getName().name())
-                .collect(Collectors.toSet()));
-        return userProfileDTO;
+        return userMapper.toProfileDTO(user);
     }
 }

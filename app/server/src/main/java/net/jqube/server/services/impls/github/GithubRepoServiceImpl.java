@@ -17,8 +17,7 @@ import net.jqube.server.repositories.GitHubAccountRepository;
 import net.jqube.server.repositories.UserRepository;
 import net.jqube.server.responses.dataDTOs.GithubUserResponse;
 import net.jqube.server.services.github.GithubRepoService;
-import net.jqube.server.services.security.EncryptionService;
-import org.springframework.http.HttpStatus;
+import net.jqube.server.security.crypto.EncryptionService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -238,9 +237,7 @@ public class GithubRepoServiceImpl implements GithubRepoService {
             return true;
         } catch (RepositoryNotFoundException ex) {
             return false;
-        } catch (InvalidRequestException ex) {
-            throw ex;
-        } catch (GithubAuthenticationException ex) {
+        } catch (InvalidRequestException | GithubAuthenticationException ex) {
             throw ex;
         } catch (Exception ex) {
             log.error("Unexpected error checking repository existence for {}/{}", owner, repository, ex);
@@ -274,9 +271,7 @@ public class GithubRepoServiceImpl implements GithubRepoService {
 
         } catch (RepositoryNotFoundException ex) {
             return false;
-        } catch (InvalidRequestException ex) {
-            throw ex;
-        } catch (GithubAuthenticationException ex) {
+        } catch (InvalidRequestException | GithubAuthenticationException ex) {
             throw ex;
         } catch (Exception ex) {
             log.error("Unexpected error checking repo access for {}/{}", owner, repository, ex);
@@ -349,11 +344,8 @@ public class GithubRepoServiceImpl implements GithubRepoService {
             log.info("Synchronized GitHub account for user {} with repo {}/{}",
                     userId, owner, repository);
 
-        } catch (RepositoryNotFoundException | BranchNotFoundException ex) {
-            throw ex;
-        } catch (InvalidRequestException ex) {
-            throw ex;
-        } catch (GithubAuthenticationException ex) {
+        } catch (RepositoryNotFoundException | BranchNotFoundException | InvalidRequestException |
+                 GithubAuthenticationException ex) {
             throw ex;
         } catch (EncryptionException ex) {
             log.error("Encryption error during GitHub sync for user {}", userId, ex);

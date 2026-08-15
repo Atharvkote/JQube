@@ -1,14 +1,19 @@
 package net.jqube.server.configs;
 
+// Rate Limiter
 
-import net.jqube.server.enums.limiter.AlgorithmType;
 import net.jqube.server.limiter.RateLimiter;
 import net.jqube.server.limiter.algos.RateLimitAlgorithm;
 import net.jqube.server.limiter.algos.impls.FixedWindowAlgorithm;
 import net.jqube.server.limiter.algos.impls.SlidingWindowAlgorithm;
 import net.jqube.server.limiter.algos.impls.TokenBucketAlgorithm;
+import net.jqube.server.limiter.enums.AlgorithmType;
 import net.jqube.server.limiter.policies.RateLimitPolicy;
+
+// Configuration
 import net.jqube.server.configs.properties.RateLimiterProperties;
+
+// Spring
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -22,58 +27,94 @@ import java.util.Map;
 public class RateLimiterConfiguration {
 
     @Bean
-    public StringRedisTemplate redisTemplate(RedisConnectionFactory cf) {
+    public StringRedisTemplate redisTemplate(RedisConnectionFactory connectionFactory) {
         StringRedisTemplate template = new StringRedisTemplate();
-        template.setConnectionFactory(cf);
+        template.setConnectionFactory(connectionFactory);
         return template;
     }
 
     @Bean
     public RedisScript<Long> fixedWindowScript() {
-        return RedisScript.of(new ClassPathResource("scripts/fixed-window.lua"), Long.class);
-    }
-
-    @Bean
-    public RedisScript<Long> slidingWindowScript() {
-        return RedisScript.of(new ClassPathResource("scripts/sliding-window.lua"), Long.class);
-    }
-
-    @Bean
-    public RedisScript<Long> tokenBucketScript() {
-        return RedisScript.of(new ClassPathResource("scripts/token-bucket.lua"), Long.class);
-    }
-
-
-    @Bean
-    public Map<AlgorithmType, RateLimitAlgorithm> algorithmMap(
-            FixedWindowAlgorithm fixed,
-            SlidingWindowAlgorithm sliding,
-            TokenBucketAlgorithm token
-    ) {
-        return Map.of(
-                AlgorithmType.FIXED_WINDOW, fixed,
-                AlgorithmType.SLIDING_WINDOW, sliding,
-                AlgorithmType.TOKEN_BUCKET, token
+        return RedisScript.of(
+                new ClassPathResource("scripts/fixed-window.lua"),
+                Long.class
         );
     }
 
     @Bean
-    public RateLimiter generalRateLimiter(RateLimiterProperties props, Map<AlgorithmType, RateLimitAlgorithm> algos) {
-        return new RateLimiter("general", RateLimitPolicy.from(props.getGeneral()), algos);
+    public RedisScript<Long> slidingWindowScript() {
+        return RedisScript.of(
+                new ClassPathResource("scripts/sliding-window.lua"),
+                Long.class
+        );
     }
 
     @Bean
-    public RateLimiter authRateLimiter(RateLimiterProperties props, Map<AlgorithmType, RateLimitAlgorithm> algos) {
-        return new RateLimiter("auth", RateLimitPolicy.from(props.getAuth()), algos);
+    public RedisScript<Long> tokenBucketScript() {
+        return RedisScript.of(
+                new ClassPathResource("scripts/token-bucket.lua"),
+                Long.class
+        );
     }
 
     @Bean
-    public RateLimiter sensitiveRateLimiter(RateLimiterProperties props, Map<AlgorithmType, RateLimitAlgorithm> algos) {
-        return new RateLimiter("sensitive", RateLimitPolicy.from(props.getSensitive()), algos);
+    public Map<AlgorithmType, RateLimitAlgorithm> algorithmMap(
+            FixedWindowAlgorithm fixedWindow,
+            SlidingWindowAlgorithm slidingWindow,
+            TokenBucketAlgorithm tokenBucket
+    ) {
+        return Map.of(
+                AlgorithmType.FIXED_WINDOW, fixedWindow,
+                AlgorithmType.SLIDING_WINDOW, slidingWindow,
+                AlgorithmType.TOKEN_BUCKET, tokenBucket
+        );
     }
 
     @Bean
-    public RateLimiter uploadRateLimiter(RateLimiterProperties props, Map<AlgorithmType, RateLimitAlgorithm> algos) {
-        return new RateLimiter("upload", RateLimitPolicy.from(props.getUpload()), algos);
+    public RateLimiter generalRateLimiter(
+            RateLimiterProperties properties,
+            Map<AlgorithmType, RateLimitAlgorithm> algorithms
+    ) {
+        return new RateLimiter(
+                "general",
+                RateLimitPolicy.from(properties.getGeneral()),
+                algorithms
+        );
+    }
+
+    @Bean
+    public RateLimiter authRateLimiter(
+            RateLimiterProperties properties,
+            Map<AlgorithmType, RateLimitAlgorithm> algorithms
+    ) {
+        return new RateLimiter(
+                "auth",
+                RateLimitPolicy.from(properties.getAuth()),
+                algorithms
+        );
+    }
+
+    @Bean
+    public RateLimiter sensitiveRateLimiter(
+            RateLimiterProperties properties,
+            Map<AlgorithmType, RateLimitAlgorithm> algorithms
+    ) {
+        return new RateLimiter(
+                "sensitive",
+                RateLimitPolicy.from(properties.getSensitive()),
+                algorithms
+        );
+    }
+
+    @Bean
+    public RateLimiter uploadRateLimiter(
+            RateLimiterProperties properties,
+            Map<AlgorithmType, RateLimitAlgorithm> algorithms
+    ) {
+        return new RateLimiter(
+                "upload",
+                RateLimitPolicy.from(properties.getUpload()),
+                algorithms
+        );
     }
 }

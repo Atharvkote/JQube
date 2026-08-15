@@ -14,7 +14,7 @@ import net.jqube.server.responses.dataDTOs.GithubTokenResponse;
 import net.jqube.server.responses.dataDTOs.GithubUserResponse;
 import net.jqube.server.services.impls.github.helper.GithubStateManager;
 import net.jqube.server.services.github.GithubAuthService;
-import net.jqube.server.services.security.EncryptionService;
+import net.jqube.server.security.crypto.EncryptionService;
 import net.jqube.server.services.shared.EmailService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;

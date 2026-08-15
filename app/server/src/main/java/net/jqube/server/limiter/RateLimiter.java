@@ -1,6 +1,6 @@
 package net.jqube.server.limiter;
 
-import net.jqube.server.enums.limiter.AlgorithmType;
+import net.jqube.server.limiter.enums.AlgorithmType;
 import net.jqube.server.limiter.algos.RateLimitAlgorithm;
 import net.jqube.server.limiter.policies.RateLimitPolicy;
 import net.jqube.server.limiter.records.ClientContext;

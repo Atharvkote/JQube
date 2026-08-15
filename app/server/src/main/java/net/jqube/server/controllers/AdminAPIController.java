@@ -1,6 +1,7 @@
 package net.jqube.server.controllers;
 
 // DTOS
+
 import net.jqube.server.dtos.auth.RoleDTO;
 import net.jqube.server.dtos.auth.UserResponseDTO;
 import net.jqube.server.dtos.requests.AssignRoleRequestDTO;
@@ -47,7 +48,7 @@ import java.util.UUID; // Import UUID
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin", description = "User management and role-based access control (admin only)")
 @SecurityRequirement(name = "bearerAuth")
-public class AdminController {
+public class AdminAPIController {
 
     private final AdminService adminService;
 

@@ -1,8 +1,8 @@
 package net.jqube.server.configs.properties;
 
-import net.jqube.server.enums.limiter.AlgorithmType;
-import net.jqube.server.enums.limiter.ClientType;
-import net.jqube.server.enums.limiter.FailMode;
+import net.jqube.server.limiter.enums.AlgorithmType;
+import net.jqube.server.limiter.enums.ClientType;
+import net.jqube.server.limiter.enums.FailMode;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

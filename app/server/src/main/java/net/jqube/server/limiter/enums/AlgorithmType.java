@@ -1,4 +1,4 @@
-package net.jqube.server.enums.limiter;
+package net.jqube.server.limiter.enums;
 
 public enum AlgorithmType {
     FIXED_WINDOW,

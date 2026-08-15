@@ -1,6 +1,7 @@
 package net.jqube.server.controllers;
 
 // DTOs
+
 import net.jqube.server.dtos.auth.UserProfileDTO;
 
 // Response Model
@@ -34,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "User", description = "Operations on the currently authenticated user")
 @SecurityRequirement(name = "bearerAuth")
-public class UserController {
+public class UserAPIController {
 
     private final UserService userService;
 

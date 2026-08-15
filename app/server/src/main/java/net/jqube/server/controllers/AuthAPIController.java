@@ -1,6 +1,7 @@
 package net.jqube.server.controllers;
 
 // DTOs
+
 import net.jqube.server.dtos.auth.LoginDTO;
 import net.jqube.server.dtos.auth.RegisterDTO;
 import net.jqube.server.dtos.auth.VerifyUserDTO;
@@ -43,12 +44,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Auth", description = "Registration, email verification and login")
-public class AuthController {
+public class AuthAPIController {
 
     private final JWTService jwtService;
     private final AuthService authService;
 
-    public AuthController(JWTService jwtService, AuthService authService) {
+    public AuthAPIController(JWTService jwtService, AuthService authService) {
         this.jwtService = jwtService;
         this.authService = authService;
     }

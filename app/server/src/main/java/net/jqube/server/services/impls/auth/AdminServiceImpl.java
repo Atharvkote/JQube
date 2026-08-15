@@ -24,6 +24,7 @@ import net.jqube.server.repositories.UserRepository;
 // Annotations
 import lombok.RequiredArgsConstructor;
 import net.jqube.server.services.auth.AdminService;
+import net.jqube.server.mappers.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,17 +40,18 @@ public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserMapper userMapper;
 
     public List<UserResponseDTO> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(this::convertToUserResponseDTO)
+                .map(userMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
     public UserResponseDTO getUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-        return convertToUserResponseDTO(user);
+        return userMapper.toResponseDTO(user);
     }
 
     @Transactional
@@ -78,7 +80,7 @@ public class AdminServiceImpl implements AdminService {
 
         user.setRoles(roles);
         userRepository.save(user);
-        return convertToUserResponseDTO(user);
+        return userMapper.toResponseDTO(user);
     }
 
     @Transactional
@@ -102,14 +104,4 @@ public class AdminServiceImpl implements AdminService {
         return roleRepository.findAll();
     }
 
-    private UserResponseDTO convertToUserResponseDTO(User user) {
-        UserResponseDTO userResponseDTO = new UserResponseDTO();
-        userResponseDTO.setId(user.getId());
-        userResponseDTO.setUsername(user.getUsername());
-        userResponseDTO.setEmail(user.getEmail());
-        userResponseDTO.setRoles(user.getRoles().stream()
-                .map(role -> role.getName().name())
-                .collect(Collectors.toSet()));
-        return userResponseDTO;
-    }
 }

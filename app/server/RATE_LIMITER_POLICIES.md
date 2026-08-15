@@ -1,4 +1,4 @@
-# JQUBE Server — Rate Limiter Policies & Implementation
+# JQube Server — Rate Limiter Policies & Implementation
 
 ## Table of Contents
 
@@ -18,7 +18,9 @@
 
 ## Overview
 
-The rate limiter protects JQUBE Server endpoints from abuse, brute-force attacks, and resource exhaustion. It uses **Redis** as a distributed store with **Lua scripts** for atomic operations, supporting three algorithms: Fixed Window, Sliding Window, and Token Bucket.
+The rate limiter protects JQUBE Server endpoints from abuse, brute-force attacks, and resource exhaustion. It uses *
+*Redis** as a distributed store with **Lua scripts** for atomic operations, supporting three algorithms: Fixed Window,
+Sliding Window, and Token Bucket.
 
 ### Key Features
 
@@ -126,12 +128,12 @@ Four category-based policies are defined, each with its own limit, window, algor
 
 ### Policy Comparison
 
-| Category | Purpose | Limit | Window | Algorithm | Client Type |
-|---|---|---|---|---|---|
-| `general` | Default for unclassified endpoints | 100 requests | 60 seconds | FIXED_WINDOW | IP |
-| `auth` | Login, register, verify endpoints | 10 requests | 60 seconds | FIXED_WINDOW | IP |
-| `sensitive` | Admin operations, role changes | 20 requests | 60 seconds | FIXED_WINDOW | USER |
-| `upload` | File uploads, large payloads | 20 requests | 60 seconds | FIXED_WINDOW | USER |
+| Category    | Purpose                            | Limit        | Window     | Algorithm    | Client Type |
+|-------------|------------------------------------|--------------|------------|--------------|-------------|
+| `general`   | Default for unclassified endpoints | 100 requests | 60 seconds | FIXED_WINDOW | IP          |
+| `auth`      | Login, register, verify endpoints  | 10 requests  | 60 seconds | FIXED_WINDOW | IP          |
+| `sensitive` | Admin operations, role changes     | 20 requests  | 60 seconds | FIXED_WINDOW | USER        |
+| `upload`    | File uploads, large payloads       | 20 requests  | 60 seconds | FIXED_WINDOW | USER        |
 
 ### Policy Configuration
 
@@ -174,6 +176,7 @@ rl:{category}:{clientType}:{clientId}
 ```
 
 Examples:
+
 ```
 rl:general:ip:192.168.1.1
 rl:auth:ip:10.0.0.5
@@ -202,6 +205,7 @@ flowchart TD
 ```
 
 **Characteristics:**
+
 - Simple counter per time window
 - Burst at window boundary possible
 - Lowest Redis memory usage
@@ -230,6 +234,7 @@ flowchart TD
 ```
 
 **Characteristics:**
+
 - Uses sorted set (ZSET) with timestamps
 - Smooth rate limiting across window boundaries
 - Higher Redis memory usage (stores timestamps)
@@ -262,6 +267,7 @@ flowchart TD
 ```
 
 **Characteristics:**
+
 - Allows controlled bursts up to capacity
 - Smooth refill over time
 - Highest Redis memory usage (hash with 2 fields)
@@ -273,7 +279,8 @@ flowchart TD
 
 ## Lua Scripts
 
-All rate limiting logic runs inside Redis Lua scripts for atomicity. This prevents race conditions when multiple requests arrive simultaneously.
+All rate limiting logic runs inside Redis Lua scripts for atomicity. This prevents race conditions when multiple
+requests arrive simultaneously.
 
 ### fixed-window.lua
 
@@ -289,6 +296,7 @@ return current
 ```
 
 **Behavior:**
+
 - `INCR` the counter key
 - If first increment, set TTL to window duration
 - Returns the new count
@@ -324,6 +332,7 @@ end
 ```
 
 **Behavior:**
+
 - Remove entries older than window from sorted set
 - Count remaining entries
 - If under limit, add current timestamp and allow
@@ -375,6 +384,7 @@ end
 ```
 
 **Behavior:**
+
 - Retrieve `tokens` and `last_refill` from hash
 - Calculate tokens to add based on elapsed time
 - Cap at capacity
@@ -389,11 +399,11 @@ end
 
 ## Redis Data Structures
 
-| Algorithm | Redis Key Type | Fields / Members | TTL |
-|---|---|---|---|
-| Fixed Window | String | Counter value | Window duration |
-| Sliding Window | Sorted Set | Timestamp + random suffix | Window duration |
-| Token Bucket | Hash | `tokens`, `last_refill` | Window duration |
+| Algorithm      | Redis Key Type | Fields / Members          | TTL             |
+|----------------|----------------|---------------------------|-----------------|
+| Fixed Window   | String         | Counter value             | Window duration |
+| Sliding Window | Sorted Set     | Timestamp + random suffix | Window duration |
+| Token Bucket   | Hash           | `tokens`, `last_refill`   | Window duration |
 
 ### Key Naming Convention
 
@@ -402,6 +412,7 @@ rl:{category}:{clientType}:{clientId}
 ```
 
 Where:
+
 - `category` — `general`, `auth`, `sensitive`, `upload`
 - `clientType` — `ip`, `user`
 - `clientId` — IP address (e.g., `192.168.1.1`) or user UUID (e.g., `550e8400-e29b...`)
@@ -412,37 +423,37 @@ Where:
 
 ### Properties
 
-| Property | Type | Default | Description |
-|---|---|---|---|
-| `rate-limiter.enabled` | Boolean | `true` | Enable/disable rate limiting globally |
-| `rate-limiter.fail-mode` | Enum | `OPEN` | Behavior when Redis is unavailable |
-| `rate-limiter.{category}.limit` | Integer | — | Max requests per window |
-| `rate-limiter.{category}.window` | Duration | `60s` | Time window for limit |
-| `rate-limiter.{category}.algorithm` | Enum | `FIXED_WINDOW` | Algorithm to use |
-| `rate-limiter.{category}.client-type` | Enum | `IP` | Whether to key by IP or user |
+| Property                              | Type     | Default        | Description                           |
+|---------------------------------------|----------|----------------|---------------------------------------|
+| `rate-limiter.enabled`                | Boolean  | `true`         | Enable/disable rate limiting globally |
+| `rate-limiter.fail-mode`              | Enum     | `OPEN`         | Behavior when Redis is unavailable    |
+| `rate-limiter.{category}.limit`       | Integer  | —              | Max requests per window               |
+| `rate-limiter.{category}.window`      | Duration | `60s`          | Time window for limit                 |
+| `rate-limiter.{category}.algorithm`   | Enum     | `FIXED_WINDOW` | Algorithm to use                      |
+| `rate-limiter.{category}.client-type` | Enum     | `IP`           | Whether to key by IP or user          |
 
 ### Enums
 
 #### AlgorithmType
 
-| Value | Description |
-|---|---|
-| `FIXED_WINDOW` | Simple counter, best performance |
+| Value            | Description                            |
+|------------------|----------------------------------------|
+| `FIXED_WINDOW`   | Simple counter, best performance       |
 | `SLIDING_WINDOW` | Smooth windowing, no burst at boundary |
-| `TOKEN_BUCKET` | Burst-friendly, gradual refill |
+| `TOKEN_BUCKET`   | Burst-friendly, gradual refill         |
 
 #### ClientType
 
-| Value | Description |
-|---|---|
-| `IP` | Rate limit by client IP address |
+| Value  | Description                         |
+|--------|-------------------------------------|
+| `IP`   | Rate limit by client IP address     |
 | `USER` | Rate limit by authenticated user ID |
 
 #### FailMode
 
-| Value | Description |
-|---|---|
-| `OPEN` | Allow requests when Redis is down (fail open) |
+| Value    | Description                                    |
+|----------|------------------------------------------------|
+| `OPEN`   | Allow requests when Redis is down (fail open)  |
 | `CLOSED` | Deny requests when Redis is down (fail closed) |
 
 ---
@@ -525,7 +536,9 @@ flowchart TD
 ### Step 1: Add Redis Dependency
 
 Already included in `pom.xml`:
+
 ```xml
+
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-data-redis</artifactId>
@@ -535,6 +548,7 @@ Already included in `pom.xml`:
 ### Step 2: Configure Redis
 
 Add to `.env`:
+
 ```env
 REDIS_HOST=localhost
 REDIS_PORT=6379
@@ -543,6 +557,7 @@ REDIS_PORT=6379
 ### Step 3: Configure Rate Limiter
 
 Edit `application.yml`:
+
 ```yaml
 rate-limiter:
   enabled: true
@@ -557,18 +572,21 @@ rate-limiter:
 ### Step 4: Add RateLimitFilter to Security Chain
 
 Add to `SecurityConfiguration`:
+
 ```java
+
 @Bean
 public SecurityFilterChain securityFilterChain(HttpSecurity http, RateLimitFilter rateLimitFilter) throws Exception {
     http
-        .addFilterBefore(rateLimitFilter, RequestLoggingFilter.class)
-        // ... rest of config
+            .addFilterBefore(rateLimitFilter, RequestLoggingFilter.class)
+    // ... rest of config
 }
 ```
 
 ### Step 5: Map Endpoints to Categories
 
 In `RateLimitFilter`:
+
 ```java
 private String resolveCategory(HttpServletRequest request) {
     String path = request.getRequestURI();
@@ -586,6 +604,7 @@ private String resolveCategory(HttpServletRequest request) {
 ### Redis Connection Pool
 
 `StringRedisTemplate` uses Lettuce (default) or Jedis. For high-throughput:
+
 ```yaml
 spring:
   data:
@@ -603,11 +622,11 @@ Redis caches Lua scripts by SHA1 hash after first execution. Subsequent calls us
 
 ### Memory Usage Estimates
 
-| Algorithm | Keys per Minute (100 req limit) | Approx Memory |
-|---|---|---|
-| Fixed Window | 1 key per window | ~1 KB per key |
-| Sliding Window | 1 key per window | ~10 KB per key (ZSET) |
-| Token Bucket | 1 key per window | ~200 bytes per key (Hash) |
+| Algorithm      | Keys per Minute (100 req limit) | Approx Memory             |
+|----------------|---------------------------------|---------------------------|
+| Fixed Window   | 1 key per window                | ~1 KB per key             |
+| Sliding Window | 1 key per window                | ~10 KB per key (ZSET)     |
+| Token Bucket   | 1 key per window                | ~200 bytes per key (Hash) |
 
 ### Scaling
 

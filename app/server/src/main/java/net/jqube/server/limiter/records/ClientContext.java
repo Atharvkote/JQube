@@ -1,6 +1,6 @@
 package net.jqube.server.limiter.records;
 
-import net.jqube.server.enums.limiter.ClientType;
+import net.jqube.server.limiter.enums.ClientType;
 
 public record ClientContext(
         String clientId,
