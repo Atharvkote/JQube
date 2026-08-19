@@ -15,15 +15,9 @@ public interface QubeRepository extends JpaRepository<Qube, UUID> {
 
     boolean existsByGithubRepositoryIdAndIsDeletedFalse(Long githubRepositoryId);
 
-    Optional<Qube> findByWorkspacePathAndIsDeletedFalse(String workspacePath);
-
-    boolean existsByWorkspacePathAndIsDeletedFalse(String workspacePath);
-
     Optional<Qube> findBySlug(String slug);
 
     boolean existsBySlug(String slug);
 
     boolean existsByGithubRepositoryId(Long githubRepositoryId);
-
-    boolean existsByWorkspacePath(String workspacePath);
 }

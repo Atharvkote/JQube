@@ -9,13 +9,16 @@ server:
 
 spring:
   application:
-    name: JQube API Server
+    name: JQUBE_API_SERVER
   config:
     import: optional:file:.env[.properties]
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
     cache: false
+
+  cache:
+    type: redis
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}
@@ -25,6 +28,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        show_sql: true
 
   flyway:
     enabled: true
@@ -43,6 +51,22 @@ spring:
           auth: true
           ssl:
             enable: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:jqube}
+    password: ${RABBITMQ_PASSWORD:jqube_dev_password}
+    virtual-host: ${RABBITMQ_VHOST:/}
+
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+        concurrency: 2
+        max-concurrency: 10
 
 client:
   url: ${CLIENT_URL}

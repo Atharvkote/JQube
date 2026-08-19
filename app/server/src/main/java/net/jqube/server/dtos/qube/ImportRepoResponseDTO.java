@@ -37,8 +37,6 @@ public record ImportRepoResponseDTO(
 
         Boolean privateRepository,
 
-        String workspacePath,
-
         Boolean webhookEnabled,
 
         Boolean autoScanEnabled,

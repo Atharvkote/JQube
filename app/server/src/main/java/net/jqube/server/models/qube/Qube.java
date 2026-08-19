@@ -67,10 +67,6 @@ public class Qube extends Auditable {
     @Column(nullable = false)
     private Boolean privateRepository;
 
-    // Scanner Configuration
-    @Column(nullable = false, length = 1000)
-    private String workspacePath;
-
     @Builder.Default
     @Column(nullable = false)
     private Boolean webhookEnabled = true;

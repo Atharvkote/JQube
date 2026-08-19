@@ -13,4 +13,6 @@ import java.util.List;
 public interface UserService {
 
     UserProfileDTO getCurrentUserProfile();
+
+    List<User> fetchAll();
 }

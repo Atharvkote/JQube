@@ -39,7 +39,6 @@ public interface QubeMapper {
     @Mapping(target = "cloneUrl", source = "repo.cloneUrl")
     @Mapping(target = "htmlUrl", source = "repo.htmlUrl")
     @Mapping(target = "privateRepository", source = "repo.privateRepository")
-    @Mapping(target = "workspacePath", source = "workspacePath")
     @Mapping(target = "webhookEnabled", defaultValue = QubeConstants.DEFAULT_WEBHOOK_ENABLED)
     @Mapping(target = "autoScanEnabled", defaultValue = QubeConstants.DEFAULT_AUTO_SCAN_ENABLED)
     @Mapping(target = "aiRemediationEnabled", defaultValue = QubeConstants.DEFAULT_AI_REMEDIATION_ENABLED)
@@ -49,7 +48,6 @@ public interface QubeMapper {
             RepoResponseDTO repo,
             String defaultBranch,
             String targetBranch,
-            String workspacePath,
             String slug
     );
 

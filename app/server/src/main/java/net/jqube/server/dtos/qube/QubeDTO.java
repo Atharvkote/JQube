@@ -34,8 +34,6 @@ public record QubeDTO(
 
         Boolean privateRepository,
 
-        String workspacePath,
-
         Boolean webhookEnabled,
 
         Boolean autoScanEnabled,

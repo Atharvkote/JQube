@@ -79,7 +79,6 @@ class QubeAPIControllerTest {
                 "https://github.com/owner/repo.git",
                 "https://github.com/owner/repo",
                 false,
-                "/workspaces/owner/repo",
                 true,
                 false,
                 false,
@@ -156,7 +155,6 @@ class QubeAPIControllerTest {
                 .cloneUrl("https://github.com/octocat/Hello-World.git")
                 .htmlUrl("https://github.com/octocat/Hello-World")
                 .privateRepository(false)
-                .workspacePath("/workspaces/octocat/hello-world")
                 .webhookEnabled(true)
                 .autoScanEnabled(true)
                 .aiRemediationEnabled(false)
@@ -171,7 +169,6 @@ class QubeAPIControllerTest {
                 "octocat/Hello-World",
                 "My Security Project",
                 "develop",
-                "/workspaces/octocat/hello-world",
                 true,
                 true,
                 false
@@ -203,7 +200,6 @@ class QubeAPIControllerTest {
                 "Updated description",
                 "main",
                 "develop",
-                "/workspaces/owner/repo",
                 true,
                 true,
                 false

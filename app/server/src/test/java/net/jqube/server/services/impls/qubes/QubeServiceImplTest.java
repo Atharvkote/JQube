@@ -7,16 +7,10 @@ import net.jqube.server.dtos.github.RepoPermissionsDTO;
 import net.jqube.server.dtos.github.RepoResponseDTO;
 import net.jqube.server.dtos.qube.ImportRepoRequestDTO;
 import net.jqube.server.dtos.qube.ImportRepoResponseDTO;
-import net.jqube.server.dtos.qube.NewQubeDTO;
-import net.jqube.server.dtos.qube.QubeDTO;
 import net.jqube.server.enums.QubeRoles;
 import net.jqube.server.exceptions.qube.InvalidRepoIdentifierException;
-import net.jqube.server.exceptions.qube.QubeAlreadyLinkedException;
 import net.jqube.server.exceptions.qube.QubeNotFoundException;
-import net.jqube.server.exceptions.qube.QubeSlugConflictException;
-import net.jqube.server.exceptions.qube.WorkspacePathConflictException;
 import net.jqube.server.exceptions.qube.AccessDeniedException;
-import net.jqube.server.exceptions.shared.UserNotFoundException;
 import net.jqube.server.models.auth.User;
 import net.jqube.server.models.qube.Qube;
 import net.jqube.server.models.qube.QubeMember;
@@ -28,6 +22,7 @@ import net.jqube.server.repositories.UserRepository;
 import net.jqube.server.services.github.GithubRepoService;
 import net.jqube.server.mappers.QubeMapper;
 import net.jqube.server.security.qube.QubeAuthorizationService;
+import net.jqube.server.services.qubes.impls.QubeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +34,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -50,7 +44,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -120,7 +113,6 @@ class QubeServiceImplTest {
                 .cloneUrl("https://github.com/owner/repo.git")
                 .htmlUrl("https://github.com/owner/repo")
                 .privateRepository(false)
-                .workspacePath("/workspaces/owner/repo")
                 .webhookEnabled(true)
                 .autoScanEnabled(false)
                 .aiRemediationEnabled(false)
@@ -137,7 +129,6 @@ class QubeServiceImplTest {
                 "octocat/Hello-World",
                 "My Security Qube",
                 "develop",
-                "/workspaces/octocat/hello-world",
                 true,
                 true,
                 false
@@ -199,13 +190,12 @@ class QubeServiceImplTest {
                 .cloneUrl("https://github.com/octocat/Hello-World.git")
                 .htmlUrl("https://github.com/octocat/Hello-World")
                 .privateRepository(false)
-                .workspacePath("/workspaces/octocat/hello-world")
                 .webhookEnabled(true)
                 .autoScanEnabled(true)
                 .aiRemediationEnabled(false)
                 .archived(false)
                 .build();
-        when(qubeMapper.toEntity(any(ImportRepoRequestDTO.class), any(RepoResponseDTO.class), anyString(), anyString(), anyString(), anyString()))
+        when(qubeMapper.toEntity(any(ImportRepoRequestDTO.class), any(RepoResponseDTO.class), anyString(), anyString(), anyString()))
                 .thenReturn(mappedQube);
 
         ImportRepoResponseDTO expectedResponse = ImportRepoResponseDTO.builder()
@@ -221,7 +211,6 @@ class QubeServiceImplTest {
                 .cloneUrl("https://github.com/octocat/Hello-World.git")
                 .htmlUrl("https://github.com/octocat/Hello-World")
                 .privateRepository(false)
-                .workspacePath("/workspaces/octocat/hello-world")
                 .webhookEnabled(true)
                 .autoScanEnabled(true)
                 .aiRemediationEnabled(false)
@@ -251,13 +240,13 @@ class QubeServiceImplTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(currentUser));
 
         assertThrows(InvalidRepoIdentifierException.class,
-                () -> qubeService.importRepoFromGithubAndCreateQube(new ImportRepoRequestDTO("invalid", null, null, null, null, null, null)));
+                () -> qubeService.importRepoFromGithubAndCreateQube(new ImportRepoRequestDTO("invalid", null, null, null, null, null)));
 
         assertThrows(InvalidRepoIdentifierException.class,
-                () -> qubeService.importRepoFromGithubAndCreateQube(new ImportRepoRequestDTO("owner/", null, null, null, null, null, null)));
+                () -> qubeService.importRepoFromGithubAndCreateQube(new ImportRepoRequestDTO("owner/", null, null, null, null, null)));
 
         assertThrows(InvalidRepoIdentifierException.class,
-                () -> qubeService.importRepoFromGithubAndCreateQube(new ImportRepoRequestDTO("/repo", null, null, null, null, null, null)));
+                () -> qubeService.importRepoFromGithubAndCreateQube(new ImportRepoRequestDTO("/repo", null, null, null, null, null)));
     }
 
     @Test

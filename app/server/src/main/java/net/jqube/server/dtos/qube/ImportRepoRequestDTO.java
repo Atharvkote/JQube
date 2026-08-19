@@ -19,8 +19,6 @@ public record ImportRepoRequestDTO(
 
         String targetBranch,
 
-        String workspacePath,
-
         Boolean webhookEnabled,
 
         Boolean autoScanEnabled,

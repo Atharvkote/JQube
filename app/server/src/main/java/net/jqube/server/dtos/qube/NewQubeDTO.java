@@ -9,8 +9,6 @@ public record NewQubeDTO(
 
         String targetBranch,
 
-        String workspacePath,
-
         Boolean webhookEnabled,
 
         Boolean autoScanEnabled,
