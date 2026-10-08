@@ -151,8 +151,9 @@ export default function AuthPage() {
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/auth')}>
           <img
             src={logo}
+            loading='lazy'
             alt="JQube Logo"
-            className="h-10 md:h-12 w-auto object-contain drop-shadow-[0_0_12px_rgba(255,59,59,0.3)] transition-transform hover:scale-105"
+            className="h-10 md:h-20 w-auto object-contain transition-transform hover:scale-105"
           />
         </div>
 

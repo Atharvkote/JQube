@@ -6,6 +6,7 @@ import {
   MOCK_PULL_REQUESTS,
   MOCK_WEBHOOK_LOGS,
 } from '@/constants/mock-data';
+import { startScanAPI } from '@/services/api';
 
 // repository context value interface
 export interface RepositoryContextValue {
@@ -29,19 +30,29 @@ export function RepositoryProvider({ children }: { children: React.ReactNode }) 
   const [webhookLogs] = useState<WebhookLog[]>(MOCK_WEBHOOK_LOGS);
 
   // trigger security scan on repository
-  const triggerScan = useCallback((repoId: string) => {
+  const triggerScan = useCallback(async (repoId: string) => {
     setRepositories((prev) =>
       prev.map((repo) =>
         repo.id === repoId ? { ...repo, status: 'Scanning' as const } : repo
       )
     );
-    setTimeout(() => {
+    try {
+      await startScanAPI(repoId);
+      setTimeout(() => {
+        setRepositories((prev) =>
+          prev.map((repo) =>
+            repo.id === repoId ? { ...repo, status: 'Active' as const } : repo
+          )
+        );
+      }, 5000);
+    } catch (e) {
+      console.error(e);
       setRepositories((prev) =>
         prev.map((repo) =>
           repo.id === repoId ? { ...repo, status: 'Active' as const } : repo
         )
       );
-    }, 5000);
+    }
   }, []);
 
   // connect new git provider integration

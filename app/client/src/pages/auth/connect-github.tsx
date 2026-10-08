@@ -61,7 +61,7 @@ export default function ConnectToGitHub() {
         <img
           src={logo}
           alt="JQube Logo"
-          className="h-10 md:h-12 w-auto object-contain cursor-pointer select-none drop-shadow-[0_0_12px_rgba(255,59,59,0.3)] transition-transform hover:scale-105"
+          className="h-10 md:h-12 w-auto object-contain cursor-pointer select-none transition-transform hover:scale-105"
           onClick={() => navigate('/auth')}
         />
         <button

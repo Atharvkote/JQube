@@ -73,7 +73,7 @@ export default function ScanTerminal({
 
     try {
       const eventSource = new EventSource(
-        `http://localhost:8080/api/scans/stream/${repoName}`
+        `http://localhost:8081/api/scans/stream/${repoName}`
       );
 
       eventSource.onmessage = (event: MessageEvent) => {

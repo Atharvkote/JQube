@@ -22,6 +22,8 @@ import type {
   ApiResponse,
 } from '@/types';
 
+import { api } from '@/api/axios';
+
 import {
   MOCK_DASHBOARD_SUMMARY,
   MOCK_SEVERITY_DATA,
@@ -115,15 +117,30 @@ export const createPullRequestAPI = createPullRequest;
 export async function connectGitHubRepo(
   payload: GitConnectPayload
 ): Promise<GitRepository> {
-  await delay(1200);
+  const response = await api.post('/qube/import', {
+    repositoryIdentifier: `${payload.owner}/${payload.repo}`,
+    name: payload.repo,
+    targetBranch: payload.branch || 'main',
+    webhookEnabled: true,
+    autoScanEnabled: false,
+    aiRemediationEnabled: false,
+  });
+  
   return {
-    id: `git-${Date.now()}`,
+    id: response.data.data.id || `git-${Date.now()}`,
     provider: payload.provider,
     owner: payload.owner,
     repo: payload.repo,
-    branch: payload.branch,
+    branch: payload.branch || 'main',
     webhookStatus: 'Active',
   };
+}
+
+export async function startScanAPI(qubeId: string, commitSha: string = 'HEAD'): Promise<any> {
+  const response = await api.post(`/qubes/${qubeId}/scans`, {
+    commitSha,
+  });
+  return response.data;
 }
 
 export async function disconnectRepo(_id: string): Promise<void> {
