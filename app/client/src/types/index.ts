@@ -387,3 +387,47 @@ export interface WeeklyScanChartProps extends ChartBaseProps {
   data?: WeeklyScanItem[];
   weeklyScanData?: WeeklyScanItem[];
 }
+
+// ─── Qube / GitHub Repo types ───────────────────────────────────────────────
+
+export type QubeStatus = 'Active' | 'Importing' | 'Error' | 'Inactive';
+export type QubeVisibility = 'public' | 'private';
+
+/** Shape of a GitHub repository returned from the user's account */
+export interface GithubRepo {
+  id: number;
+  name: string;
+  full_name: string;
+  owner: string;
+  description: string | null;
+  private: boolean;
+  visibility: QubeVisibility;
+  html_url: string;
+  language: string | null;
+  updated_at: string;
+  stargazers_count: number;
+  forks_count: number;
+  default_branch: string;
+}
+
+/** A Qube — an imported GitHub repository linked to this JQube workspace */
+export interface Qube {
+  id: string;
+  qubeName: string;
+  repoName: string;
+  repoOwner: string;
+  fullName: string;
+  description: string;
+  githubUrl: string;
+  visibility: QubeVisibility;
+  language: string | null;
+  defaultBranch: string;
+  status: QubeStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UpdateQubeDTO {
+  qubeName: string;
+  description: string;
+}
