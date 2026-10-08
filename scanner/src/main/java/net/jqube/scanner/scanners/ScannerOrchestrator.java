@@ -35,16 +35,16 @@ public class ScannerOrchestrator {
 
             long startTime = System.currentTimeMillis();
 
-            List<ScanFinding> findings;
+            ScannerOutput output;
             try {
-                findings = scanner.scan(workspace);
+                output = scanner.scan(workspace);
             } catch (ScannerExecutionException | ScannerTimeoutException e) {
                 log.error("Scanner {} failed: {}", scannerName, e.getMessage(), e);
                 throw e;
             }
 
             long durationMs = System.currentTimeMillis() - startTime;
-            int findingCount = findings != null ? findings.size() : 0;
+            int findingCount = output.findings() != null ? output.findings().size() : 0;
 
             log.info(
                     "{} completed job={} findings={} duration={}ms",
@@ -56,8 +56,10 @@ public class ScannerOrchestrator {
 
             results.add(new ScannerRunResult(
                     scannerName,
-                    findings != null ? findings : List.of(),
-                    durationMs
+                    output.findings() != null ? output.findings() : List.of(),
+                    durationMs,
+                    output.rawResultPath(),
+                    output.exitCode()
             ));
         }
 

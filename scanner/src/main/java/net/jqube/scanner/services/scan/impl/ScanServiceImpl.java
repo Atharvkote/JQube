@@ -59,6 +59,7 @@ public class ScanServiceImpl implements ScanService {
                 jobId,
                 qubeId,
                 repositoryId,
+                message.repositoryUrl(),
                 message.branch(),
                 commitSha,
                 message.scanType(),
@@ -99,7 +100,8 @@ public class ScanServiceImpl implements ScanService {
                         toolRun,
                         runResult.findings().size(),
                         runResult.durationMs(),
-                        null,
+                        runResult.exitCode(),
+                        runResult.rawResultPath(),
                         userId
                 );
             }

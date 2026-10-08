@@ -49,10 +49,12 @@ class GitLeaksScannerTest {
                 .thenReturn(new ProcessResult(0, json, ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(1, findings.size());
-        ScanFinding finding = findings.get(0);
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        ScanFinding finding = output.findings().get(0);
         assertEquals("Gitleaks", finding.scanner());
         assertEquals("aws-access-key-id", finding.ruleId());
         assertEquals("HIGH", finding.severity());
@@ -74,9 +76,10 @@ class GitLeaksScannerTest {
                 .thenReturn(new ProcessResult(0, "", ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertTrue(findings.isEmpty());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test

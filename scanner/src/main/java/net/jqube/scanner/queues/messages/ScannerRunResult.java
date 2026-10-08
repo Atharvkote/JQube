@@ -5,6 +5,8 @@ import java.util.List;
 public record ScannerRunResult(
         String scanner,
         List<ScanFinding> findings,
-        long durationMs
+        long durationMs,
+        String rawResultPath,
+        Integer exitCode
 ) {
 }

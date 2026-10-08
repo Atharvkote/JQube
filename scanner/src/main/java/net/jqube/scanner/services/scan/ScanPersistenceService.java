@@ -11,6 +11,7 @@ public interface ScanPersistenceService {
             UUID jobId,
             UUID qubeId,
             Long repositoryId,
+            String repositoryUrl,
             String branch,
             String commitSha,
             ScanType scanType,
@@ -47,6 +48,7 @@ public interface ScanPersistenceService {
             int findingCount,
             long durationMs,
             Integer exitCode,
+            String rawResultPath,
             UUID userId
     );
 

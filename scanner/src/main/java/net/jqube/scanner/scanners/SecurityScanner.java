@@ -9,5 +9,5 @@ public interface SecurityScanner {
 
     String getName();
 
-    List<ScanFinding> scan(Path workspace);
+    ScannerOutput scan(Path workspace);
 }

@@ -10,8 +10,10 @@ import net.jqube.scanner.queues.messages.ScanFinding;
 import net.jqube.scanner.process.ProcessExecutor;
 import net.jqube.scanner.process.ProcessResult;
 import net.jqube.scanner.scanners.SecurityScanner;
+import net.jqube.scanner.scanners.ScannerOutput;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,13 +39,23 @@ public class SemgrepScanner implements SecurityScanner {
     }
 
     @Override
-    public List<ScanFinding> scan(Path workspace) {
+    public ScannerOutput scan(Path workspace) {
+        Path rawDir = workspace.getParent().resolve("raw-results");
+        try {
+            Files.createDirectories(rawDir);
+        } catch (Exception e) {
+            log.error("Failed to create raw results directory", e);
+        }
+        Path rawPath = rawDir.resolve("semgrep.json");
+
         List<String> command = List.of(
                 scannerProperties.getTools().getSemgrep(),
                 "scan",
                 "--json",
                 "--config",
                 "auto",
+                "-o",
+                rawPath.toString(),
                 workspace.toString()
         );
 
@@ -58,16 +70,16 @@ public class SemgrepScanner implements SecurityScanner {
             );
         }
 
-        if (result.stdout() == null || result.stdout().isBlank()) {
-            return List.of();
+        if (!Files.exists(rawPath)) {
+            return new ScannerOutput(List.of(), null, result.exitCode());
         }
 
         try {
-            JsonNode root = objectMapper.readTree(result.stdout());
+            JsonNode root = objectMapper.readTree(rawPath.toFile());
             JsonNode results = root.path("results");
 
             if (!results.isArray()) {
-                return List.of();
+                return new ScannerOutput(List.of(), rawPath.toString(), result.exitCode());
             }
 
             List<ScanFinding> findings = new ArrayList<>();
@@ -79,7 +91,7 @@ public class SemgrepScanner implements SecurityScanner {
                 }
             }
 
-            return findings;
+            return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
 
         } catch (Exception e) {
             throw new ScannerOutputParseException(

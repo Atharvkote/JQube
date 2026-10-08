@@ -57,10 +57,12 @@ class SemgrepScannerTest {
                 .thenReturn(new ProcessResult(0, json, ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(1, findings.size());
-        ScanFinding finding = findings.get(0);
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        ScanFinding finding = output.findings().get(0);
         assertEquals("Semgrep", finding.scanner());
         assertEquals("sql-injection", finding.ruleId());
         assertEquals("HIGH", finding.severity());
@@ -82,9 +84,10 @@ class SemgrepScannerTest {
                 .thenReturn(new ProcessResult(0, "{}", ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertTrue(findings.isEmpty());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test
@@ -113,12 +116,14 @@ class SemgrepScannerTest {
                 .thenReturn(new ProcessResult(0, json, ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(1, findings.size());
-        assertEquals("MEDIUM", findings.get(0).severity());
-        assertNull(findings.get(0).lineStart());
-        assertNull(findings.get(0).lineEnd());
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        assertEquals("MEDIUM", output.findings().get(0).severity());
+        assertNull(output.findings().get(0).lineStart());
+        assertNull(output.findings().get(0).lineEnd());
     }
 
     @Test

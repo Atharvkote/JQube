@@ -28,15 +28,15 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Semgrep", "rule1", "HIGH", "Title1", "Msg1", "file1.java", 1, 1, null, "fp1")
-        ));
-        when(trivy.scan(any(Path.class))).thenReturn(List.of(
+        ), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Trivy", "CVE-1", "CRITICAL", "Title2", "Msg2", "file2.java", 2, 2, null, "fp2")
-        ));
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of(
+        ), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Gitleaks", "rule3", "HIGH", "Title3", "Msg3", "file3.yml", 3, 3, null, "fp3")
-        ));
+        ), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
@@ -68,11 +68,11 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Semgrep", "rule1", "MEDIUM", "Title1", "Msg1", "file1.java", 1, 1, null, "fp1")
-        ));
-        when(trivy.scan(any(Path.class))).thenReturn(List.of());
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of());
+        ), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
@@ -104,11 +104,11 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of());
-        when(trivy.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Trivy", "CVE-1", "HIGH", "Title", "Msg", "file.java", 1, 1, null, "fp")
-        ));
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of());
+        ), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
@@ -140,11 +140,11 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of());
-        when(trivy.scan(any(Path.class))).thenReturn(List.of());
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Gitleaks", "rule1", "HIGH", "Title", "Msg", "file.yml", 1, 1, null, "fp")
-        ));
+        ), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);

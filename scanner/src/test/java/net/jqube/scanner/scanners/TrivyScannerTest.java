@@ -75,21 +75,23 @@ class TrivyScannerTest {
                 .thenReturn(new ProcessResult(0, json, ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(3, findings.size());
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(3, output.findings().size());
 
-        ScanFinding vuln = findings.get(0);
+        ScanFinding vuln = output.findings().get(0);
         assertEquals("Trivy", vuln.scanner());
         assertEquals("CVE-2021-44228", vuln.ruleId());
         assertEquals("CRITICAL", vuln.severity());
         assertEquals("Apache Log4j2 RCE", vuln.title());
 
-        ScanFinding misconfig = findings.get(1);
+        ScanFinding misconfig = output.findings().get(1);
         assertEquals("AVD-AWS-0001", misconfig.ruleId());
         assertEquals("HIGH", misconfig.severity());
 
-        ScanFinding secret = findings.get(2);
+        ScanFinding secret = output.findings().get(2);
         assertEquals("aws-access-key-id", secret.ruleId());
         assertTrue(secret.message().contains("[REDACTED]"));
         assertFalse(secret.message().contains("AKIAIOSFODNN7EXAMPLE"));
@@ -107,9 +109,10 @@ class TrivyScannerTest {
                 .thenReturn(new ProcessResult(0, "{}", ""));
 
         Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertTrue(findings.isEmpty());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test

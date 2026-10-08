@@ -10,8 +10,10 @@ import net.jqube.scanner.queues.messages.ScanFinding;
 import net.jqube.scanner.process.ProcessExecutor;
 import net.jqube.scanner.process.ProcessResult;
 import net.jqube.scanner.scanners.SecurityScanner;
+import net.jqube.scanner.scanners.ScannerOutput;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,12 +39,22 @@ public class TrivyScanner implements SecurityScanner {
     }
 
     @Override
-    public List<ScanFinding> scan(Path workspace) {
+    public ScannerOutput scan(Path workspace) {
+        Path rawDir = workspace.getParent().resolve("raw-results");
+        try {
+            Files.createDirectories(rawDir);
+        } catch (Exception e) {
+            log.error("Failed to create raw results directory", e);
+        }
+        Path rawPath = rawDir.resolve("trivy.json");
+
         List<String> command = List.of(
                 scannerProperties.getTools().getTrivy(),
                 "fs",
                 "--format",
                 "json",
+                "--output",
+                rawPath.toString(),
                 "--security-checks",
                 "vuln,misconfig,secret",
                 workspace.toString()
@@ -59,12 +71,12 @@ public class TrivyScanner implements SecurityScanner {
             );
         }
 
-        if (result.stdout() == null || result.stdout().isBlank()) {
-            return List.of();
+        if (!Files.exists(rawPath)) {
+            return new ScannerOutput(List.of(), null, result.exitCode());
         }
 
         try {
-            JsonNode root = objectMapper.readTree(result.stdout());
+            JsonNode root = objectMapper.readTree(rawPath.toFile());
             List<ScanFinding> findings = new ArrayList<>();
 
             if (root.isArray()) {
@@ -75,7 +87,7 @@ public class TrivyScanner implements SecurityScanner {
                 findings.addAll(mapResult(root, workspace));
             }
 
-            return findings;
+            return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
 
         } catch (Exception e) {
             throw new ScannerOutputParseException(

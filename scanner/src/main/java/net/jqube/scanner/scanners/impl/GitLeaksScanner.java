@@ -10,8 +10,10 @@ import net.jqube.scanner.queues.messages.ScanFinding;
 import net.jqube.scanner.process.ProcessExecutor;
 import net.jqube.scanner.process.ProcessResult;
 import net.jqube.scanner.scanners.SecurityScanner;
+import net.jqube.scanner.scanners.ScannerOutput;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,7 +39,15 @@ public class GitLeaksScanner implements SecurityScanner {
     }
 
     @Override
-    public List<ScanFinding> scan(Path workspace) {
+    public ScannerOutput scan(Path workspace) {
+        Path rawDir = workspace.getParent().resolve("raw-results");
+        try {
+            Files.createDirectories(rawDir);
+        } catch (Exception e) {
+            log.error("Failed to create raw results directory", e);
+        }
+        Path rawPath = rawDir.resolve("gitleaks.json");
+
         List<String> command = List.of(
                 scannerProperties.getTools().getGitleaks(),
                 "detect",
@@ -45,6 +55,8 @@ public class GitLeaksScanner implements SecurityScanner {
                 workspace.toString(),
                 "--report-format",
                 "json",
+                "--report-path",
+                rawPath.toString(),
                 "--no-git"
         );
 
@@ -59,16 +71,16 @@ public class GitLeaksScanner implements SecurityScanner {
             );
         }
 
-        if (result.stdout() == null || result.stdout().isBlank()) {
-            log.info("Gitleaks completed with no findings");
-            return List.of();
+        if (!Files.exists(rawPath)) {
+            log.info("Gitleaks completed with no output file");
+            return new ScannerOutput(List.of(), null, result.exitCode());
         }
 
         try {
-            JsonNode root = objectMapper.readTree(result.stdout());
+            JsonNode root = objectMapper.readTree(rawPath.toFile());
 
             if (!root.isArray()) {
-                return List.of();
+                return new ScannerOutput(List.of(), rawPath.toString(), result.exitCode());
             }
 
             List<ScanFinding> findings = new ArrayList<>();
@@ -80,7 +92,7 @@ public class GitLeaksScanner implements SecurityScanner {
                 }
             }
 
-            return findings;
+            return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
 
         } catch (Exception e) {
             throw new ScannerOutputParseException(
