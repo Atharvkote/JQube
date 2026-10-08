@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Search, ArrowLeft, Sparkles, FileText, Hash, AlignLeft, X, ChevronDown, ArrowRight } from 'lucide-react';
+import { Search, Sparkles, FileText, Hash, AlignLeft, X, ChevronDown, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface SearchResult {
@@ -28,7 +28,6 @@ export default function CustomSearchDialog({ open, onOpenChange }: CustomSearchD
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'all' | 'docs' | 'api'>('all');
 
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);

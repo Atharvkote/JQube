@@ -8,7 +8,6 @@ import { useSearchContext } from 'fumadocs-ui/provider';
 import {
   BookOpen,
   Code2,
-  Newspaper,
   Github,
   ChevronDown,
   Search,
@@ -19,8 +18,7 @@ import {
   Box,
   Cpu,
   Layers,
-  ArrowRight,
-  Shield
+  ArrowRight
 } from 'lucide-react';
 
 export default function CustomNavBar() {

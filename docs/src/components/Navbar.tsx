@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchContext } from 'fumadocs-ui/provider';
-import { Search, Sparkles, Monitor, ArrowUpRight } from 'lucide-react';
+import { Search, Monitor, ArrowUpRight } from 'lucide-react';
 
 export function Navbar() {
   const { setOpenSearch } = useSearchContext();

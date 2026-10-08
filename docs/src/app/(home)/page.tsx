@@ -49,10 +49,10 @@ export default function HomePage() {
           <div className="flex flex-col font-mono justify-center  items-center text-center">
 
             <h1 className="max-w-3xl text-[2.5rem] font-black leading-[1.05] tracking-tight sm:text-6xl md:text-[4.25rem]">
-              Less "Oops"
+              Less &quot;Oops&quot;
               <br />
               <span className="bg-gradient-to-r from-[#ff5470] to-[#dc143c] bg-clip-text text-transparent">
-                more "Fixed & Merged".
+                more &quot;Fixed &amp; Merged&quot;.
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-balance text-base leading-relaxed text-[var(--color-fd-muted-foreground)] md:text-lg">
@@ -247,7 +247,7 @@ export default function HomePage() {
                   <span className="text-[#d29922]">MEDIUM</span>
                 </div>
                 <div className="space-y-0.5 px-3 py-2.5">
-                  <div className="bg-[#dc143c]/[0.10] text-[#ff8a9a]">- api_key: "sk_live_4f8a..."</div>
+                  <div className="bg-[#dc143c]/[0.10] text-[#ff8a9a]">- api_key: &quot;sk_live_4f8a...&quot;</div>
                   <div className="bg-[#238636]/[0.14] text-[#7ee2a8]">+ api_key: {'${env.API_KEY}'}</div>
                 </div>
               </div>
@@ -272,9 +272,9 @@ export default function HomePage() {
                 </p>
                 <p className="mb-2 font-mono text-[11px] text-[#a78bfa]">jqube</p>
                 <p className="text-sm text-[#d7d7dc]">
-                  Escaping still trusts the driver's parser. Parameterized
+                  Escaping still trusts the driver&apos;s parser. Parameterized
                   queries send the value outside the SQL text entirely, so
-                  there's nothing left for an attacker to inject.
+                  there&apos;s nothing left for an attacker to inject.
                 </p>
               </div>
             </div>

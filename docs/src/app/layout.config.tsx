@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
-import { BookOpen, Code2, Newspaper, Github, Shield } from 'lucide-react';
+import { BookOpen, Code2, Newspaper, Github } from 'lucide-react';
 import Image from 'next/image';
 
 export const baseOptions: BaseLayoutProps = {
