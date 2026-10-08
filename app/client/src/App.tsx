@@ -22,7 +22,7 @@ import UserProfile from './pages/github/user-profile';
 const AuthPage = lazy(() => import('@/pages/auth/auth-page'));
 const VerifyEmail = lazy(() => import('@/pages/auth/verify-email'));
 const Dashboard = lazy(() => import('@/pages/dashboard/dashboard'));
-const GitIntegration = lazy(() => import('@/pages/git/git-integration'));
+
 const Repositories = lazy(() => import('@/pages/repositories/repositories'));
 const ConnectToGitHub = lazy(() => import('@/pages/auth/connect-github'));
 const Vulnerabilities = lazy(() => import('@/pages/vulnerabilities/vulnerabilities'));
@@ -35,6 +35,8 @@ const ScanHistory = lazy(() => import('@/pages/scan-history/scan-history'));
 const Reports = lazy(() => import('@/pages/reports/reports'));
 const Notifications = lazy(() => import('@/pages/notification/notifications'));
 const Settings = lazy(() => import('@/pages/settings/settings'));
+const CreateQube = lazy(() => import('@/pages/qube/CreateQube'));
+const ManageQube = lazy(() => import('@/pages/qube/ManageQube'));
 const ErrorPage = lazy(() => import('@/pages/error'));
 
 // protected route guard
@@ -89,8 +91,10 @@ export default function App() {
           {/* public auth routes */}
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/connect-github" element={<ConnectToGitHub />} />
-          <Route path="/loader" element={<MainLoader />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+
+          {/* Loader testing route */}
+          <Route path="/loader" element={<MainLoader />} />
 
           {/* protected main platform routes wrapped in AppLayout */}
           <Route
@@ -102,7 +106,6 @@ export default function App() {
           >
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/git-integration" element={<GitIntegration />} />
             <Route path="/repositories" element={<Repositories />} />
             <Route path="/vulnerabilities" element={<Vulnerabilities />} />
             <Route path="/vulnerabilities/:id" element={<VulnerabilityDetails />} />
@@ -115,6 +118,8 @@ export default function App() {
             <Route path="/reports" element={<Reports />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/create-qube" element={<CreateQube />} />
+            <Route path="/manage-qube" element={<ManageQube />} />
           </Route>
 
           <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

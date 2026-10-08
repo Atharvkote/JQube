@@ -28,8 +28,10 @@ import {
   PanelLeft,
   Search,
   Command,
+  Package,
+  PackagePlus,
 } from 'lucide-react';
-import { GitBranch } from 'lucide-react';
+
 import { Input } from '../ui/input';
 
 interface SidebarProps {
@@ -103,7 +105,6 @@ export default function Sidebar({
       title: 'Navigation',
       items: [
         { id: 'dashboard', name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-        { id: 'git-integration', name: 'Git Integration', path: '/git-integration', icon: GitBranch },
         { id: 'repositories', name: 'Repositories', path: '/repositories', icon: FolderGit2 },
       ],
     },
@@ -140,6 +141,13 @@ export default function Sidebar({
         { id: 'scan-history', name: 'Scan History', path: '/scan-history', icon: History },
         { id: 'reports', name: 'Reports', path: '/reports', icon: FileText },
         { id: 'notifications', name: 'Notifications', path: '/notifications', icon: Bell, badge: unreadCount },
+      ],
+    },
+    {
+      title: 'Qubes',
+      items: [
+        { id: 'create-qube', name: 'Create Qube', path: '/create-qube', icon: PackagePlus },
+        { id: 'manage-qube', name: 'Manage Qube', path: '/manage-qube', icon: Package },
       ],
     },
     {
