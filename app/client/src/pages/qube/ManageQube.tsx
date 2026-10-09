@@ -2,7 +2,10 @@
 // Displays all imported Qubes with Edit Info and Remove actions.
 
 import { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useApp } from '@/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SiVultr } from "react-icons/si";
 import {
   Package,
   Search,
@@ -23,10 +26,13 @@ import {
   Clock,
   ShieldCheck,
   Activity,
+  LayoutGrid,
+  LayoutList
 } from 'lucide-react';
 import { toast } from '@/components/ui/sonner';
-import { FaGithub } from 'react-icons/fa';
+import { FaEdit, FaGithub, FaTrash } from 'react-icons/fa';
 import { qubeService } from '@/services/qube-service';
+import Folder from '@/components/ui/folder';
 import type { Qube, UpdateQubeDTO, QubeVisibility } from '@/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -394,132 +400,182 @@ interface QubeCardProps {
   qube: Qube;
   onEdit: (qube: Qube) => void;
   onRemove: (qube: Qube) => void;
+  onScan: (qube: Qube) => void;
   index: number;
+  githubProfile?: any;
+  viewMode?: 'list' | 'grid';
 }
 
-function QubeCard({ qube, onEdit, onRemove, index }: QubeCardProps) {
+function QubeCard({ qube, onEdit, onRemove, onScan, index, githubProfile, viewMode = 'list' }: QubeCardProps) {
   const status = STATUS_CONFIG[qube.status] ?? STATUS_CONFIG.Inactive;
   const langColor = LANG_COLORS[qube.language ?? ''] ?? '#71717A';
 
+  if (viewMode === 'grid') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ delay: index * 0.05, duration: 0.35 }}
+        className="flex flex-col items-center justify-center p-6 pt-10 border border-white/[0.05] bg-[#121620]/40 hover:bg-[#181C24]/80 transition-all rounded-3xl group"
+      >
+        <Folder
+          color={langColor === '#71717A' ? '#FF3B3B' : langColor}
+          size={1.6}
+          className="mb-8 z-10"
+          items={[
+            <div key="item-1" className="w-full h-full p-1.5 flex flex-col items-center justify-center gap-1.5 bg-[#07090D]/50 text-[#FF3B3B] hover:text-white hover:bg-[#FF3B3B]/20 cursor-pointer transition-all" onClick={(e) => { e.stopPropagation(); onEdit(qube); }}>
+              <FaEdit className="w-4 h-4" />
+              <span className="text-[7px] font-black tracking-widest uppercase">Edit</span>
+            </div>,
+            <div key="item-3" className="w-full h-full p-1.5 flex flex-col items-center justify-center gap-1.5 bg-[#07090D] shadow-inner text-red-500 hover:text-white hover:bg-red-500/20 cursor-pointer transition-all" onClick={(e) => { e.stopPropagation(); onRemove(qube); }}>
+              <FaTrash className="w-4 h-4" />
+              <span className="text-[7px] font-black tracking-widest uppercase">Delete</span>
+            </div>,
+            <div key="item-2" className="w-full h-full p-1.5 flex flex-col items-center justify-center gap-1.5 bg-[#07090D]/50 text-[#3B82F6] hover:text-white hover:bg-[#3B82F6]/20 cursor-pointer transition-all" onClick={(e) => { e.stopPropagation(); onScan(qube); }}>
+              <SiVultr className="w-4 h-4" />
+              <span className="text-[7px] font-black tracking-widest uppercase">Scan</span>
+            </div>,
+
+          ]}
+        />
+        {/* Repo Details Below Folder */}
+        <div className="w-full z-0 mt-4 relative flex flex-col items-center">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="text-[15px] font-black text-white truncate max-w-[140px] text-center tracking-tight">{qube.qubeName}</h3>
+            {qube.visibility === 'private' ? (
+              <span className="p-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 shadow-sm shadow-amber-500/10">
+                <Lock className="w-3 h-3 text-amber-500 shrink-0" />
+              </span>
+            ) : (
+              <span className="p-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 shadow-sm shadow-blue-500/10">
+                <Globe className="w-3 h-3 text-blue-500 shrink-0" />
+              </span>
+            )}
+          </div>
+
+          <p className="text-[10px] text-[#71717A] font-mono mb-3">{qube.repoOwner}</p>
+
+          <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] text-white font-bold w-full">
+            <span className="flex items-center gap-1.5 bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 text-[#FF3B3B] px-2 py-1 rounded-md">
+              <GitBranch className="w-3 h-3" /> <span className="truncate max-w-[80px]">{qube.defaultBranch}</span>
+            </span>
+            <span className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-md text-[#A1A1AA]">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: langColor }}></span>
+              {qube.language || 'Code'}
+            </span>
+          </div>
+
+          <a href={qube.githubUrl} target="_blank" rel="noopener noreferrer" className="mt-4 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-r from-[#FF3B3B]/20 to-red-900/10 border border-[#FF3B3B]/30 hover:bg-[#FF3B3B]/10 hover:border-[#FF3B3B]/60 transition-all duration-300 text-[11px] font-black tracking-widest uppercase text-white group w-full">
+            <span className="text-[#FF3B3B] font-mono text-sm tracking-tighter group-hover:animate-pulse">{'>_'}</span>
+            <span className="[text-shadow:1px_0px_0px_rgba(255,59,59,0.5)]">View Code</span>
+          </a>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ delay: index * 0.05, duration: 0.35 }}
-      className="group relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#181C24]/80 backdrop-blur-md p-5
-                 hover:border-[#FF3B3B]/25 hover:shadow-[0_0_28px_rgba(255,59,59,0.08)] transition-all duration-300"
+      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-white/[0.05] bg-[#121620]/60 hover:bg-[#181C24]/80 transition-all rounded-xl mb-2 group hover:border-[#FF3B3B]/30 gap-4 sm:gap-0"
     >
-      {/* Corner glow */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-[#FF3B3B]/5 rounded-full blur-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-
-      {/* Top row: icon + name + badges + actions */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <div className="p-2 rounded-xl bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 shrink-0 mt-0.5">
-            <FaGithub className="w-4 h-4 text-[#FF3B3B]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <h3 className="text-sm font-black text-white truncate">{qube.qubeName}</h3>
-              {qube.qubeName !== qube.repoName && (
-                <span className="text-[10px] text-[#71717A] font-mono truncate">
-                  ({qube.repoName})
-                </span>
-              )}
-              {/* Status badge */}
-              <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${status.badgeClass}`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${status.dotClass}`} />
-                {status.label}
-              </span>
-              {/* Visibility badge */}
-              <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${qube.visibility === 'private'
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
-                  : 'bg-blue-500/10 text-blue-400 border-blue-500/25'
-                  }`}
-              >
-                {qube.visibility === 'private' ? (
-                  <Lock className="w-2.5 h-2.5" />
-                ) : (
-                  <Globe className="w-2.5 h-2.5" />
-                )}
-                {qube.visibility === 'private' ? 'Private' : 'Public'}
-              </span>
+      <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+        <div className="p-1 rounded-lg bg-[#FF3B3B]/10 border border-[#FF3B3B]/20 shrink-0">
+          {githubProfile?.avatarUrl ? (
+            <img src={githubProfile.avatarUrl} alt="Avatar" className="w-8 h-8 rounded-md" />
+          ) : (
+            <div className="w-8 h-8 flex items-center justify-center">
+              <FaGithub className="w-5 h-5 text-[#FF3B3B]" />
             </div>
-            <p className="text-[11px] text-[#71717A] font-mono">{qube.repoOwner}</p>
-          </div>
+          )}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => onEdit(qube)}
-            title="Edit Qube Info"
-            className="p-2 rounded-xl bg-[#121620] border border-[#FF3B3B]/20 text-[#A1A1AA]
-                       hover:text-white hover:border-[#FF3B3B]/50 hover:bg-[#FF3B3B]/5 transition-all"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => onRemove(qube)}
-            title="Remove Qube"
-            className="p-2 rounded-xl bg-[#121620] border border-red-600/20 text-[#A1A1AA]
-                       hover:text-red-400 hover:border-red-500/50 hover:bg-red-500/5 transition-all"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <h3 className="text-sm font-semibold text-white truncate">{qube.qubeName}</h3>
+            {qube.qubeName !== qube.repoName && (
+              <span className="text-[10px] text-[#71717A] shrink-0 font-mono">({qube.repoName})</span>
+            )}
+            <span className="text-[10px] text-[#71717A] shrink-0">•</span>
+            {/* Status badge */}
+            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold border ${status.badgeClass}`}>
+              <span className={`w-1 h-1 rounded-full ${status.dotClass}`} />
+              {status.label}
+            </span>
+            {/* Visibility badge */}
+            {qube.visibility === 'private' && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold border bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/20">
+                <Lock className="w-2.5 h-2.5" />
+                PRIVATE
+              </span>
+            )}
+            {/* Last updated */}
+            <span className="text-[10px] text-[#71717A] shrink-0 ml-1">
+              Updated {formatRelativeDate(qube.updatedAt)}
+            </span>
+          </div>
+
+          {qube.description && (
+            <p className="text-[11px] text-[#8E939E] truncate max-w-xl">
+              {qube.description}
+            </p>
+          )}
+
+          <div className="flex items-center gap-4 mt-2">
+            {qube.language && (
+              <span className="flex items-center gap-1.5 text-[10px] text-[#71717A] font-medium">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: langColor }} />
+                {qube.language}
+              </span>
+            )}
+            <span className="flex items-center gap-1.5 text-[10px] text-[#71717A]">
+              <GitBranch className="w-3 h-3" />
+              {qube.defaultBranch}
+            </span>
+            <span className="flex items-center gap-1.5 text-[10px] text-[#71717A] font-mono">
+              {qube.repoOwner}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Description */}
-      {qube.description && (
-        <p className="text-[11px] text-[#8E939E] leading-relaxed mb-3 line-clamp-2">
-          {qube.description}
-        </p>
-      )}
-
-      {/* Divider */}
-      <div className="h-px bg-white/[0.05] mb-3" />
-
-      {/* Meta row */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-3 flex-wrap">
-          {qube.language && (
-            <span className="flex items-center gap-1.5 text-[10px] text-[#8E939E]">
-              <span
-                className="w-2 h-2 rounded-full shrink-0"
-                style={{ backgroundColor: langColor }}
-              />
-              {qube.language}
-            </span>
-          )}
-          <span className="flex items-center gap-1 text-[10px] text-[#8E939E]">
-            <GitBranch className="w-3 h-3" />
-            {qube.defaultBranch}
-          </span>
-          <span className="flex items-center gap-1 text-[10px] text-[#8E939E]">
-            <Calendar className="w-3 h-3" />
-            Created {formatDate(qube.createdAt)}
-          </span>
-          <span className="flex items-center gap-1 text-[10px] text-[#8E939E]">
-            <Clock className="w-3 h-3" />
-            Updated {formatRelativeDate(qube.updatedAt)}
-          </span>
-        </div>
-
-        {/* GitHub link */}
-        <a
-          href={qube.githubUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-[10px] text-[#FF3B3B] hover:underline font-medium"
+      <div className="flex items-center gap-2 shrink-0 sm:ml-4 border-t sm:border-t-0 border-white/10 pt-3 sm:pt-0 w-full sm:w-auto justify-end">
+        {qube.githubUrl && (
+          <a
+            href={qube.githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View on GitHub"
+            className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A0D13] border border-white/10 text-[#A1A1AA] hover:text-white hover:border-[#FF3B3B]/50 hover:bg-[#FF3B3B]/10 transition-all"
+          >
+            <FaGithub className="w-4 h-4" />
+          </a>
+        )}
+        <button
+          onClick={() => onScan(qube)}
+          title="Scan Qube"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A0D13] border border-white/10 text-[#3B82F6] hover:text-white hover:border-[#3B82F6]/50 hover:bg-[#3B82F6]/10 transition-all"
         >
-          <ExternalLink className="w-3 h-3" />
-          View on GitHub
-        </a>
+          <SiVultr className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => onEdit(qube)}
+          title="Edit Qube Info"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A0D13] border border-white/10 text-[#A1A1AA] hover:text-white hover:border-[#FF3B3B]/50 hover:bg-[#FF3B3B]/10 transition-all"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => onRemove(qube)}
+          title="Remove Qube"
+          className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0A0D13] border border-white/10 text-[#A1A1AA] hover:text-red-400 hover:border-red-500/50 hover:bg-red-500/10 transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </motion.div>
   );
@@ -527,13 +583,17 @@ function QubeCard({ qube, onEdit, onRemove, index }: QubeCardProps) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ManageQube() {
+  const navigate = useNavigate();
 
+  const { githubProfile } = useApp();
   const [qubes, setQubes] = useState<Qube[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [repoStats, setRepoStats] = useState({ public: 0, private: 0 });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<QubeVisibility | 'all'>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
 
   const [editingQube, setEditingQube] = useState<Qube | null>(null);
   const [removingQube, setRemovingQube] = useState<Qube | null>(null);
@@ -549,6 +609,9 @@ export default function ManageQube() {
     try {
       const data = await qubeService.getAllQubes();
       setQubes(data);
+      qubeService.getGithubRepositories().then(({ stats }) => {
+        setRepoStats(stats);
+      }).catch(console.error);
     } catch {
       setFetchError('Failed to load Qubes. Please try again.');
     } finally {
@@ -644,15 +707,27 @@ export default function ManageQube() {
             </p>
           </div>
         </div>
+
+        {/* CREATE QUBE Button */}
+        <div className="shrink-0">
+          <Link to="/qube/create">
+            <button className="flex items-center gap-2 px-5 py-2 rounded-full border border-[#FF3B3B]/30 bg-black/40 hover:bg-[#FF3B3B]/10 hover:border-[#FF3B3B]/60 transition-all duration-300 group">
+              <span className="text-[#FF3B3B] font-mono font-bold text-sm tracking-tighter group-hover:animate-pulse">{'>_'}</span>
+              <span className="text-white font-black text-[11px] tracking-widest uppercase [text-shadow:1px_0px_0px_rgba(255,59,59,0.5),-1px_0px_0px_rgba(0,255,255,0.5)]">
+                Create Qube
+              </span>
+            </button>
+          </Link>
+        </div>
       </motion.div>
 
       {/* ─── Stats Row ───────────────────────────────────────────────────────── */}
       {!loading && !fetchError && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard icon={Package} label="Total Qubes" value={stats.total} delay={0} />
-          <StatCard icon={Globe} label="Public" value={stats.public} delay={0.05} />
-          <StatCard icon={Lock} label="Private" value={stats.private} delay={0.1} />
-          <StatCard icon={Activity} label="Active" value={stats.active} delay={0.15} />
+          <StatCard icon={FaGithub} label="Total Repos" value={repoStats.public + repoStats.private} delay={0} />
+          <StatCard icon={Globe} label="Public Repos" value={repoStats.public} delay={0.05} />
+          <StatCard icon={Lock} label="Private Repos" value={repoStats.private} delay={0.1} />
+          <StatCard icon={Activity} label="Active Qubes" value={stats.active} delay={0.15} />
         </div>
       )}
 
@@ -690,6 +765,30 @@ export default function ManageQube() {
               {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
             </button>
           ))}
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex items-center gap-1 p-1 bg-[#0A0D13] rounded-xl border border-[#FF3B3B]/15 ml-auto">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-1.5 rounded-lg transition-all ${viewMode === 'list'
+              ? 'bg-gradient-to-r from-[#FF3B3B] to-[#C40000] text-white shadow-sm shadow-[#FF3B3B]/25'
+              : 'text-[#8E939E] hover:text-white'
+              }`}
+            title="List View"
+          >
+            <LayoutList className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid'
+              ? 'bg-gradient-to-r from-[#FF3B3B] to-[#C40000] text-white shadow-sm shadow-[#FF3B3B]/25'
+              : 'text-[#8E939E] hover:text-white'
+              }`}
+            title="Grid View"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Refresh */}
@@ -795,7 +894,7 @@ export default function ManageQube() {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className={viewMode === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'flex flex-col gap-2'}>
             <AnimatePresence>
               {filteredQubes.map((qube, i) => (
                 <QubeCard
@@ -804,6 +903,9 @@ export default function ManageQube() {
                   index={i}
                   onEdit={setEditingQube}
                   onRemove={setRemovingQube}
+                  onScan={(q) => navigate(`/manage-qube/${q.id}/scan`, { state: { qube: q } })}
+                  githubProfile={githubProfile}
+                  viewMode={viewMode}
                 />
               ))}
             </AnimatePresence>

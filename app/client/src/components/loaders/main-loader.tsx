@@ -108,7 +108,7 @@ export default function MainLoader() {
 
                         {/* Loader Branding & Progress Info */}
                         <div className="flex-1 text-center lg:text-left max-w-lg">
-                            <img src="/logo.png" alt="logo" className="w-64 h-24 mx-auto lg:mx-0" />
+                            <img src="/logo.png" alt="logo" className="w-64 h-32 mx-auto lg:mx-0" />
                             <div className="flex justify-between items-center">
 
 

@@ -37,6 +37,7 @@ const Notifications = lazy(() => import('@/pages/notification/notifications'));
 const Settings = lazy(() => import('@/pages/settings/settings'));
 const CreateQube = lazy(() => import('@/pages/qube/CreateQube'));
 const ManageQube = lazy(() => import('@/pages/qube/ManageQube'));
+const ScanQube = lazy(() => import('@/pages/qube/ScanQube'));
 const ErrorPage = lazy(() => import('@/pages/error'));
 
 // protected route guard
@@ -120,6 +121,7 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/create-qube" element={<CreateQube />} />
             <Route path="/manage-qube" element={<ManageQube />} />
+            <Route path="/manage-qube/:qubeId/scan" element={<ScanQube />} />
           </Route>
 
           <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

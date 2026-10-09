@@ -107,7 +107,7 @@ export default function Navbar({
           <img
             src={logo}
             alt="JQube Logo"
-            className="h-7 sm:h-7.5 w-auto object-contain select-none drop-shadow-[0_0_8px_rgba(255,59,59,0.2)] hover:scale-[1.02] transition-transform duration-200"
+            className="h-7 sm:h-12 w-auto object-contain select-none drop-shadow-[0_0_8px_rgba(255,59,59,0.2)] hover:scale-[1.02] transition-transform duration-200"
           />
         </Link>
       </div>
