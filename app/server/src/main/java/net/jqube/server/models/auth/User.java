@@ -13,6 +13,9 @@ import java.time.LocalDateTime; // Import LocalDateTime
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 @Entity
 @Getter
 @Setter
@@ -59,8 +62,10 @@ public class User extends Auditable implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     @Builder.Default
+    @JsonDeserialize(as = HashSet.class)
     private Set<Role> roles = new HashSet<>();
 
+    @JsonIgnore
     @OneToOne(
             mappedBy = "user",
             fetch = FetchType.LAZY,
@@ -82,7 +87,6 @@ public class User extends Auditable implements UserDetails {
     private Integer failedLoginAttempts = 0;
 
     // Helper Methods
-
     public void addRole(Role role) {
         roles.add(role);
     }
@@ -93,6 +97,7 @@ public class User extends Auditable implements UserDetails {
 
     // Spring Security
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))

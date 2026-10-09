@@ -18,7 +18,6 @@ public interface UserRepository extends JpaRepository<User, UUID> { // Changed L
 
     Optional<User> findByUsername(String username);
 
-    @Cacheable(value = "user-profiles", key = "#username")
     @Query("SELECT USER FROM User USER LEFT JOIN FETCH USER.roles WHERE USER.username = :username")
     Optional<User> findByUsernameWithRoles(@Param("username") String username);
 }

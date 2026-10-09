@@ -1,6 +1,7 @@
 package net.jqube.server.filters;
 
 // Deps
+
 import lombok.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +26,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     @Override
     public void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
             FilterChain filterChain)
             throws ServletException, IOException {
 

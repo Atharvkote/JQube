@@ -16,13 +16,13 @@ public class RateLimiterProperties {
 
     private boolean enabled = true;
     private FailMode failMode = FailMode.OPEN;
-    private PolicyConfig general = new PolicyConfig();
-    private PolicyConfig auth = new PolicyConfig();
-    private PolicyConfig sensitive = new PolicyConfig();
-    private PolicyConfig upload = new PolicyConfig();
+    private RateLimiterPolicy general = new RateLimiterPolicy();
+    private RateLimiterPolicy auth = new RateLimiterPolicy();
+    private RateLimiterPolicy sensitive = new RateLimiterPolicy();
+    private RateLimiterPolicy upload = new RateLimiterPolicy();
 
     @Data
-    public static class PolicyConfig {
+    public static class RateLimiterPolicy {
         private int limit;
         private Duration window = Duration.ofMinutes(1);
         private AlgorithmType algorithm = AlgorithmType.FIXED_WINDOW;

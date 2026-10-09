@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.UUID; // Import UUID
 
 @Data
-public final class UserProfileDTO {
+public class UserProfileDTO {
     private UUID id; // Changed from Long to UUID
     private String username;
     private String email;

@@ -16,7 +16,6 @@
 5. [Indexes](#indexes)
 6. [Relationships](#relationships)
 
----
 
 ## Overview
 
@@ -35,7 +34,6 @@ The JQUBE Server database uses **PostgreSQL** with **Flyway** for schema migrati
 | Soft Delete | Yes (`is_deleted` + `deleted_at` on all tables) |
 | Audit Fields | Yes (`created_at`, `updated_at`, `created_by`, `updated_by`) |
 
----
 
 ## ER Diagram
 
@@ -204,7 +202,6 @@ erDiagram
     users ||--o{ qube_members : "invited by"
 ```
 
----
 
 ## Table Reference
 
@@ -239,7 +236,6 @@ The central authentication table. Stores user credentials, verification state, a
 
 **JPA Entity:** `net.jqube.server.models.auth.User`
 
----
 
 ### roles
 
@@ -270,7 +266,6 @@ Defines RBAC roles. Seeded with three default roles on application startup via `
 
 **JPA Entity:** `net.jqube.server.models.auth.Role`
 
----
 
 ### user_roles
 
@@ -287,7 +282,6 @@ Join table for the many-to-many relationship between `users` and `roles`.
 
 **JPA Mapping:** `@ManyToMany` in `User.roles` via `@JoinTable(name = "user_roles")`
 
----
 
 ### github_accounts
 
@@ -337,7 +331,6 @@ Stores linked GitHub account information for users. OAuth tokens are stored encr
 
 **JPA Entity:** `net.jqube.server.models.github.GithubAccount`
 
----
 
 ### qubes
 
@@ -379,7 +372,6 @@ Represents a security-scan workspace bound to a GitHub repository. This is the c
 
 **JPA Entity:** `net.jqube.server.models.qube.Qube`
 
----
 
 ### qube_members
 
@@ -414,7 +406,6 @@ Join table representing membership in a qube with role-based permissions within 
 
 **JPA Entity:** `net.jqube.server.models.qube.QubeMember`
 
----
 
 ### qube_metrics
 
@@ -460,7 +451,6 @@ Tracks aggregated security metrics for each qube. Updated by scan processes.
 
 **JPA Entity:** `net.jqube.server.models.qube.QubeMetrics`
 
----
 
 ## Migration History
 
@@ -475,7 +465,6 @@ Tracks aggregated security metrics for each qube. Updated by scan processes.
 | V7 | `V7__Create_Qube_Members_Table.sql` | Creates `qube_members` for workspace membership |
 | V8 | `V8__Create_Qube_Metrics_Table.sql` | Creates `qube_metrics` for scan statistics |
 
----
 
 ## Indexes
 
@@ -498,7 +487,6 @@ All indexes are created within their respective migration files:
 | `qube_members` | `idx_qube_member_role` | `role` | B-tree |
 | `qube_metrics` | `idx_qube_metrics_qube` | `qube_id` | B-tree (UNIQUE) |
 
----
 
 ## Relationships
 

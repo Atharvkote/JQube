@@ -28,6 +28,7 @@ public class CacheConfiguration {
     public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.registerModule(new com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
         objectMapper.activateDefaultTyping(

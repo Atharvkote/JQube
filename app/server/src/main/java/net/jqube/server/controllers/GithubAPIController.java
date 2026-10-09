@@ -19,6 +19,9 @@ import net.jqube.server.responses.Response;
 
 // Services
 import net.jqube.server.services.github.GithubAuthService;
+import net.jqube.server.services.github.GithubRepoService;
+import net.jqube.server.dtos.github.RepoResponseDTO;
+import java.util.List;
 
 // Deps
 import org.springframework.http.HttpStatus;
@@ -39,6 +42,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class GithubAPIController {
 
     private final GithubAuthService githubAuthService;
+    private final GithubRepoService githubRepoService;
     private final net.jqube.server.repositories.UserRepository userRepository;
 
     private User getAuthenticatedUser() {
@@ -146,6 +150,25 @@ public class GithubAPIController {
                         .status(HttpStatus.OK.value())
                         .data(githubAuthService.getGithubProfile(user.getId()))
                         .message("GitHub profile retrieved successfully!")
+                        .build());
+    }
+
+    @Operation(summary = "Get all GitHub repositories", description = "Retrieves all GitHub repositories available for the authenticated user.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Repositories retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Missing, invalid or expired JWT"),
+            @ApiResponse(responseCode = "404", description = "No GitHub account connected for this user")
+    })
+    @GetMapping("/repos")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Response<List<RepoResponseDTO>>> getRepos() {
+        User user = getAuthenticatedUser();
+        return ResponseEntity.ok(
+                Response.<List<RepoResponseDTO>>builder()
+                        .success(true)
+                        .status(HttpStatus.OK.value())
+                        .data(githubRepoService.getAllRepos(user.getId()))
+                        .message("GitHub repositories retrieved successfully!")
                         .build());
     }
 

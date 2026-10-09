@@ -27,24 +27,24 @@
 23. [Possible Improvements](#possible-improvements)
 24. [Development Guidelines](#development-guidelines)
 
----
-
 ## Project Overview
 
-JQUBE API Server is a Spring Boot 3.2 / Java 17 backend providing JWT-based authentication, email-verified user registration, role-based access control (RBAC), and GitHub account linking via a hand-rolled OAuth2 authorization-code flow. This document describes **how the system is built**, with every claim derived directly from the source code in `src/main/java/net/jqube/server`.
-
----
+JQUBE API Server is a Spring Boot 3.2 / Java 17 backend providing JWT-based authentication, email-verified user
+registration, role-based access control (RBAC), and GitHub account linking via a hand-rolled OAuth2 authorization-code
+flow. This document describes **how the system is built**, with every claim derived directly from the source code in
+`src/main/java/net/jqube/server`.
 
 ## Architectural Goals
 
 Inferred from the code structure and choices actually made:
 
 - **Statelessness** — no server-side session; every request carries its own JWT.
-- **Separation of contract from implementation** — every business capability is exposed as a service *interface*, implemented separately, so controllers never depend on a concrete class.
-- **Centralized, typed error handling** — a single `@RestControllerAdvice` maps ~15 distinct exception types to a consistent `ErrorResponse` envelope.
-- **Defense against a specific, named threat** — the GitHub OAuth "state" parameter is a signed JWT rather than a raw user ID, explicitly to prevent account-hijack via state tampering (documented in the source code).
-
----
+- **Separation of contract from implementation** — every business capability is exposed as a service *interface*,
+  implemented separately, so controllers never depend on a concrete class.
+- **Centralized, typed error handling** — a single `@RestControllerAdvice` maps ~15 distinct exception types to a
+  consistent `ErrorResponse` envelope.
+- **Defense against a specific, named threat** — the GitHub OAuth "state" parameter is a signed JWT rather than a raw
+  user ID, explicitly to prevent account-hijack via state tampering (documented in the source code).
 
 ## Architecture Style
 
@@ -54,9 +54,10 @@ Inferred from the code structure and choices actually made:
 Controller → Service Interface → Service Implementation → Repository → Database
 ```
 
-This is **not** Hexagonal/Clean Architecture: the `User` JPA entity directly implements Spring Security's `UserDetails`, coupling the persistence model to the security framework. For a single-bounded-context authentication/authorization service, this is an appropriate and low-friction choice. It would need to be unwound only if the domain model must ever become framework-independent.
-
----
+This is **not** Hexagonal/Clean Architecture: the `User` JPA entity directly implements Spring Security's `UserDetails`,
+coupling the persistence model to the security framework. For a single-bounded-context authentication/authorization
+service, this is an appropriate and low-friction choice. It would need to be unwound only if the domain model must ever
+become framework-independent.
 
 ## High-Level System Diagram
 
@@ -102,8 +103,6 @@ flowchart LR
     IM --> RP
     RP --> DB
 ```
-
----
 
 ## Package Structure
 
@@ -165,8 +164,6 @@ flowchart TD
     G --> K
 ```
 
----
-
 ## Request Lifecycle
 
 Every HTTP request flows through the following pipeline:
@@ -219,8 +216,6 @@ sequenceDiagram
     F3->>EH: resolveException()
     EH-->>C: ErrorResponse JSON
 ```
-
----
 
 ## Authentication Flow
 
@@ -314,8 +309,6 @@ flowchart TD
     O --> P
 ```
 
----
-
 ## Registration & Email Verification Flow
 
 ```mermaid
@@ -403,8 +396,6 @@ sequenceDiagram
     end
 ```
 
----
-
 ## GitHub OAuth2 Flow
 
 ### Complete Flow Diagram
@@ -476,8 +467,6 @@ flowchart TD
     I --> N[Return error to client]
 ```
 
----
-
 ## Authorization Model
 
 ```mermaid
@@ -520,20 +509,18 @@ flowchart TD
 
 ### Authorization Rules Matrix
 
-| Endpoint Pattern | Method | Required Roles | Notes |
-|---|---|---|---|
-| `/api/v1/auth/**` | ALL | None | Public (registration, login, verify) |
-| `/health` | ALL | None | Health check |
-| `/v3/api-docs/**` | ALL | None | OpenAPI docs |
-| `/swagger-ui/**` | ALL | None | Swagger UI |
-| `/api/v1/github/callback` | GET | None | Public OAuth callback |
-| `/api/v1/github/disconnect` | DELETE | ADMIN, USER | Verb-based rule |
-| `/api/v1/github/**` | GET | ADMIN, USER, VIEWER | Verb-based rule |
-| `/api/v1/admin/**` | ALL | ADMIN only | @PreAuthorize on class |
-| `/api/v1/user/me` | GET | ADMIN, USER, VIEWER | @PreAuthorize on method |
-| Default fallback | ALL | Authenticated | anyRequest().authenticated() |
-
----
+| Endpoint Pattern            | Method | Required Roles      | Notes                                |
+|-----------------------------|--------|---------------------|--------------------------------------|
+| `/api/v1/auth/**`           | ALL    | None                | Public (registration, login, verify) |
+| `/health`                   | ALL    | None                | Health check                         |
+| `/v3/api-docs/**`           | ALL    | None                | OpenAPI docs                         |
+| `/swagger-ui/**`            | ALL    | None                | Swagger UI                           |
+| `/api/v1/github/callback`   | GET    | None                | Public OAuth callback                |
+| `/api/v1/github/disconnect` | DELETE | ADMIN, USER         | Verb-based rule                      |
+| `/api/v1/github/**`         | GET    | ADMIN, USER, VIEWER | Verb-based rule                      |
+| `/api/v1/admin/**`          | ALL    | ADMIN only          | @PreAuthorize on class               |
+| `/api/v1/user/me`           | GET    | ADMIN, USER, VIEWER | @PreAuthorize on method              |
+| Default fallback            | ALL    | Authenticated       | anyRequest().authenticated()         |
 
 ## Dependency Flow
 
@@ -611,8 +598,6 @@ flowchart LR
     GHR --> DB
 ```
 
----
-
 ## Data Flow
 
 ### Entity to DTO Mapping
@@ -656,16 +641,14 @@ flowchart TD
 
 ### Relationship Mapping Details
 
-| Relationship | Type | Join Table / Column | Notes |
-|---|---|---|---|
-| User ↔ Role | Many-to-Many | `user_roles` (user_id, role_id) | Lazy loaded |
-| User → GithubAccount | One-to-One | `github_accounts.user_id` | Unique on both sides, CascadeType.ALL |
-| Qube → QubeMember | One-to-Many | `qube_members.qube_id` | ON DELETE CASCADE |
-| Qube → QubeMetrics | One-to-One | `qube_metrics.qube_id` | Unique constraint |
-| User → QubeMember | One-to-Many | `qube_members.user_id` | As member |
-| User → QubeMember | One-to-Many | `qube_members.invited_by` | As inviter |
-
----
+| Relationship         | Type         | Join Table / Column             | Notes                                 |
+|----------------------|--------------|---------------------------------|---------------------------------------|
+| User ↔ Role          | Many-to-Many | `user_roles` (user_id, role_id) | Lazy loaded                           |
+| User → GithubAccount | One-to-One   | `github_accounts.user_id`       | Unique on both sides, CascadeType.ALL |
+| Qube → QubeMember    | One-to-Many  | `qube_members.qube_id`          | ON DELETE CASCADE                     |
+| Qube → QubeMetrics   | One-to-One   | `qube_metrics.qube_id`          | Unique constraint                     |
+| User → QubeMember    | One-to-Many  | `qube_members.user_id`          | As member                             |
+| User → QubeMember    | One-to-Many  | `qube_members.invited_by`       | As inviter                            |
 
 ## Security Flow
 
@@ -751,17 +734,15 @@ flowchart TD
     style K fill:#ffd43b
 ```
 
----
-
 ## Configuration Architecture
 
-| Mechanism | Where Used | Example |
-|---|---|---|
-| `@Configuration` + `@Bean` | `AppConfiguration`, `CORSConfiguration`, `OpenAPIConfiguration`, `RestClientConfiguration`, `SecurityConfiguration` | `RestClient` bean, `SecurityFilterChain` bean |
-| `@ConfigurationProperties` | `configs/properties/` classes | `GithubProperties` (`github.oauth.*`), `JWTProperties` (`security.jwt.*`) |
-| `@Value` | Direct injection in services | `EmailServiceImpl` reads `spring.mail.username` |
-| Environment variables | `.env` file via `spring-dotenv` | `SPRING_DATASOURCE_URL`, `JWT_SECRET_KEY` |
-| `application.yml` | Primary config file | Server port, datasource, flyway, mail, security |
+| Mechanism                  | Where Used                                                                                                          | Example                                                                   |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `@Configuration` + `@Bean` | `AppConfiguration`, `CORSConfiguration`, `OpenAPIConfiguration`, `RestClientConfiguration`, `SecurityConfiguration` | `RestClient` bean, `SecurityFilterChain` bean                             |
+| `@ConfigurationProperties` | `configs/properties/` classes                                                                                       | `GithubProperties` (`github.oauth.*`), `JWTProperties` (`security.jwt.*`) |
+| `@Value`                   | Direct injection in services                                                                                        | `EmailServiceImpl` reads `spring.mail.username`                           |
+| Environment variables      | `.env` file via `spring-dotenv`                                                                                     | `SPRING_DATASOURCE_URL`, `JWT_SECRET_KEY`                                 |
+| `application.yml`          | Primary config file                                                                                                 | Server port, datasource, flyway, mail, security                           |
 
 **Configuration loading flow:**
 
@@ -777,57 +758,50 @@ flowchart LR
     G --> H[Runtime Configuration]
 ```
 
----
-
 ## Design Patterns
 
-| Pattern | Where Used | Implementation |
-|---|---|---|
-| **Dependency Injection** | Throughout | Constructor injection (explicit or Lombok `@RequiredArgsConstructor`) |
-| **Repository Pattern** | Data access | `UserRepository`, `RoleRepository`, `GitHubAccountRepository` |
-| **Service Layer Pattern** | Business logic | Interface + implementation for every capability |
-| **DTO Pattern** | API contracts | Request/response DTOs separate from entities |
-| **Builder Pattern** | Response construction | Lombok `@Builder` on `Response`, `ErrorResponse`, all data DTOs |
-| **Chain of Responsibility** | Filter chain | `RequestLoggingFilter` → Spring Security → `AuthenticationFilter` |
-| **Singleton** | Bean scope | Default for all `@Service`/`@Component`/`@Configuration` |
-
----
+| Pattern                     | Where Used            | Implementation                                                        |
+|-----------------------------|-----------------------|-----------------------------------------------------------------------|
+| **Dependency Injection**    | Throughout            | Constructor injection (explicit or Lombok `@RequiredArgsConstructor`) |
+| **Repository Pattern**      | Data access           | `UserRepository`, `RoleRepository`, `GitHubAccountRepository`         |
+| **Service Layer Pattern**   | Business logic        | Interface + implementation for every capability                       |
+| **DTO Pattern**             | API contracts         | Request/response DTOs separate from entities                          |
+| **Builder Pattern**         | Response construction | Lombok `@Builder` on `Response`, `ErrorResponse`, all data DTOs       |
+| **Chain of Responsibility** | Filter chain          | `RequestLoggingFilter` → Spring Security → `AuthenticationFilter`     |
+| **Singleton**               | Bean scope            | Default for all `@Service`/`@Component`/`@Configuration`              |
 
 ## SOLID Principles
 
-| Principle | Status | Evidence |
-|---|---|---|
-| **Single Responsibility** | Mostly respected | `AdminController` returning `Role` entity directly is the one exception |
-| **Open/Closed** | Respected | New exceptions plug into `GlobalExceptionHandler` without touching existing handlers |
-| **Liskov Substitution** | No violations | Each service interface has exactly one implementation |
-| **Interface Segregation** | Respected | Service interfaces are narrow (`EmailService` has a single method) |
-| **Dependency Inversion** | Mostly respected | One gap: `GithubAuthServiceImpl` depends on concrete `GithubStateManager` |
-
----
+| Principle                 | Status           | Evidence                                                                             |
+|---------------------------|------------------|--------------------------------------------------------------------------------------|
+| **Single Responsibility** | Mostly respected | `AdminController` returning `Role` entity directly is the one exception              |
+| **Open/Closed**           | Respected        | New exceptions plug into `GlobalExceptionHandler` without touching existing handlers |
+| **Liskov Substitution**   | No violations    | Each service interface has exactly one implementation                                |
+| **Interface Segregation** | Respected        | Service interfaces are narrow (`EmailService` has a single method)                   |
+| **Dependency Inversion**  | Mostly respected | One gap: `GithubAuthServiceImpl` depends on concrete `GithubStateManager`            |
 
 ## Technology Stack
 
-| Layer | Technology | Version |
-|---|---|---|
-| Language | Java | 17 |
-| Framework | Spring Boot | 3.2.0 |
-| Security | Spring Security | (via parent) |
-| Data | Spring Data JPA / Hibernate | (via parent) |
-| Database | PostgreSQL | 15+ |
-| Migrations | Flyway Core + Flyway PostgreSQL | 10.1.0 |
-| Auth | JJWT (io.jsonwebtoken) | 0.11.5 |
-| API Docs | springdoc-openapi | 2.2.0 |
-| Mail | Spring Mail + Thymeleaf | (via parent) |
-| HTTP Client | Spring RestClient | (via parent) |
-| Env Mgmt | spring-dotenv | 4.0.0 |
-| Build | Maven | 3.9+ |
-| Boilerplate | Lombok | 1.18.30 |
+| Layer       | Technology                      | Version      |
+|-------------|---------------------------------|--------------|
+| Language    | Java                            | 17           |
+| Framework   | Spring Boot                     | 3.2.0        |
+| Security    | Spring Security                 | (via parent) |
+| Data        | Spring Data JPA / Hibernate     | (via parent) |
+| Database    | PostgreSQL                      | 15+          |
+| Migrations  | Flyway Core + Flyway PostgreSQL | 10.1.0       |
+| Auth        | JJWT (io.jsonwebtoken)          | 0.11.5       |
+| API Docs    | springdoc-openapi               | 2.2.0        |
+| Mail        | Spring Mail + Thymeleaf         | (via parent) |
+| HTTP Client | Spring RestClient               | (via parent) |
+| Env Mgmt    | spring-dotenv                   | 4.0.0        |
+| Build       | Maven                           | 3.9+         |
+| Boilerplate | Lombok                          | 1.18.30      |
 
 **Present in `pom.xml` but unused in source:**
+
 - `spring-kafka` — no producer/consumer/listener anywhere
 - `spring-boot-starter-oauth2-client` — GitHub integration is a hand-rolled REST flow
-
----
 
 ## Database Schema Overview
 
@@ -997,47 +971,46 @@ erDiagram
     }
 ```
 
----
-
 ## Future Scalability
 
-| Concern | Current State | Planned / Notes |
-|---|---|---|
-| Containerization | No Dockerfile (placeholder only) | Stateless JAR is straightforward to containerize |
-| Kubernetes | Not configured | Feasible once containerized |
-| Microservices | Single Maven module | Interface/impl split is a reasonable seam for extraction |
-| Kafka | Dependency declared, zero implementation | Aspirational |
-| Redis | No dependency | Referenced in banner.txt only |
-| Rate Limiting | `limiter/` package is empty | Aspirational architecture in `RATE_LIMITER_POLICIES.md` |
-| AI-powered analysis | Not present | Banner text only, no code |
-
----
+| Concern             | Current State                            | Planned / Notes                                          |
+|---------------------|------------------------------------------|----------------------------------------------------------|
+| Containerization    | No Dockerfile (placeholder only)         | Stateless JAR is straightforward to containerize         |
+| Kubernetes          | Not configured                           | Feasible once containerized                              |
+| Microservices       | Single Maven module                      | Interface/impl split is a reasonable seam for extraction |
+| Kafka               | Dependency declared, zero implementation | Aspirational                                             |
+| Redis               | No dependency                            | Referenced in banner.txt only                            |
+| Rate Limiting       | `limiter/` package is empty              | Aspirational architecture in `RATE_LIMITER_POLICIES.md`  |
+| AI-powered analysis | Not present                              | Banner text only, no code                                |
 
 ## Architecture Decisions
 
 1. **JWT over server-side sessions** — keeps the API stateless and horizontally scalable.
-2. **Signed, purpose-tagged JWT as GitHub OAuth `state`** — closes a specific CSRF/account-hijack gap (documented in source).
-3. **HTTP-verb-based authorization** — reduces the number of path rules as new endpoints are added, layered with explicit path exceptions and method-level `@PreAuthorize` for finer control.
+2. **Signed, purpose-tagged JWT as GitHub OAuth `state`** — closes a specific CSRF/account-hijack gap (documented in
+   source).
+3. **HTTP-verb-based authorization** — reduces the number of path rules as new endpoints are added, layered with
+   explicit path exceptions and method-level `@PreAuthorize` for finer control.
 4. **Interface/impl separation everywhere** — enables testing via mocks and future extraction of bounded contexts.
-5. **Flyway for migrations** — ensures schema consistency across environments; Hibernate validates only (`ddl-auto: validate`).
+5. **Flyway for migrations** — ensures schema consistency across environments; Hibernate validates only (
+   `ddl-auto: validate`).
 6. **AES-256-GCM for GitHub tokens** — tokens are never stored in plaintext; encryption is handled at the service layer.
-
----
 
 ## Code Organization
 
-Package naming is consistent and descriptive; sub-packaging by feature within technical layers (`services/auth`, `services/github`) is a reasonable hybrid. Class sizes are small and single-purpose.
+Package naming is consistent and descriptive; sub-packaging by feature within technical layers (`services/auth`,
+`services/github`) is a reasonable hybrid. Class sizes are small and single-purpose.
 
 **Verified dead-code items:**
 
-1. `EmailProperties` — declared with `@ConfigurationProperties(prefix = "mail")` but never injected; `EmailServiceImpl` reads via `@Value("${spring.mail.username}")` instead.
-2. `net.jqube.server.exceptions.MethodArgumentNotValidException` — a custom exception class that is never thrown; `GlobalExceptionHandler` actually imports Spring's `org.springframework.web.bind.MethodArgumentNotValidException`.
+1. `EmailProperties` — declared with `@ConfigurationProperties(prefix = "mail")` but never injected; `EmailServiceImpl`
+   reads via `@Value("${spring.mail.username}")` instead.
+2. `net.jqube.server.exceptions.MethodArgumentNotValidException` — a custom exception class that is never thrown;
+   `GlobalExceptionHandler` actually imports Spring's `org.springframework.web.bind.MethodArgumentNotValidException`.
 
 **Verified inconsistency:**
 
-1. `GithubStateManager` — has no interface, while `GithubAuthServiceImpl` depends on it directly. Every other service follows the interface/impl pattern.
-
----
+1. `GithubStateManager` — has no interface, while `GithubAuthServiceImpl` depends on it directly. Every other service
+   follows the interface/impl pattern.
 
 ## Strengths
 
@@ -1048,29 +1021,30 @@ Package naming is consistent and descriptive; sub-packaging by feature within te
 - Idiomatic, minimal use of Lombok without obscuring business logic.
 - Comprehensive audit fields (`created_at`, `updated_at`, `deleted_at`, `created_by`, etc.) on all entities.
 
----
-
 ## Possible Improvements
 
-| Area | Current State | Suggested Improvement |
-|---|---|---|
-| Entity→DTO mapping | Hand-written per service | Introduce MapStruct or dedicated mapper classes |
-| State service | No interface | Add `GithubStateService` interface |
-| Filter registration | Auto-registered by Spring Boot | Explicitly register in `SecurityConfiguration` |
-| Dead code | `EmailProperties`, `MethodArgumentNotValidException` | Remove or rename |
-| JWT refresh | No refresh token support | Add refresh token mechanism |
-| Rate limiting | None | Add on `/auth/login`, `/auth/register`, `/auth/resend-code` |
-| CORS | Wide-open (`*`) | Activate stricter config with specific origins |
-| Caching | None | Add for infrequently-changing reads like `getAllRoles()` |
-| `@Transactional` | On `login()` (read-only) | Confirm intent or remove |
-| Qube domain | Schema only (V6-V8) | Add controllers, repositories, services |
-
----
+| Area                | Current State                                        | Suggested Improvement                                       |
+|---------------------|------------------------------------------------------|-------------------------------------------------------------|
+| Entity→DTO mapping  | Hand-written per service                             | Introduce MapStruct or dedicated mapper classes             |
+| State service       | No interface                                         | Add `GithubStateService` interface                          |
+| Filter registration | Auto-registered by Spring Boot                       | Explicitly register in `SecurityConfiguration`              |
+| Dead code           | `EmailProperties`, `MethodArgumentNotValidException` | Remove or rename                                            |
+| JWT refresh         | No refresh token support                             | Add refresh token mechanism                                 |
+| Rate limiting       | None                                                 | Add on `/auth/login`, `/auth/register`, `/auth/resend-code` |
+| CORS                | Wide-open (`*`)                                      | Activate stricter config with specific origins              |
+| Caching             | None                                                 | Add for infrequently-changing reads like `getAllRoles()`    |
+| `@Transactional`    | On `login()` (read-only)                             | Confirm intent or remove                                    |
+| Qube domain         | Schema only (V6-V8)                                  | Add controllers, repositories, services                     |
 
 ## Development Guidelines
 
-- New business capabilities should be added as a service interface (`services/...`) plus an implementation (`services/impls/...`).
-- New response payloads should go in `responses/dataDTOs` (or `dtos/auth` for user-facing DTOs) and never expose JPA entities directly through a controller.
-- New exceptions should extend `RuntimeException`, live in `exceptions/`, and get a corresponding `@ExceptionHandler` in `GlobalExceptionHandler`.
-- New configuration values should be added to `application.yml` with an environment-variable placeholder and, where more than one or two values are involved, a corresponding `@ConfigurationProperties` class under `configs/properties`.
-- Role checks should continue to use `RoleName` + `@PreAuthorize`/`authorizeHttpRequests`, not hardcoded string literals scattered through business logic.
+- New business capabilities should be added as a service interface (`services/...`) plus an implementation (
+  `services/impls/...`).
+- New response payloads should go in `responses/dataDTOs` (or `dtos/auth` for user-facing DTOs) and never expose JPA
+  entities directly through a controller.
+- New exceptions should extend `RuntimeException`, live in `exceptions/`, and get a corresponding `@ExceptionHandler` in
+  `GlobalExceptionHandler`.
+- New configuration values should be added to `application.yml` with an environment-variable placeholder and, where more
+  than one or two values are involved, a corresponding `@ConfigurationProperties` class under `configs/properties`.
+- Role checks should continue to use `RoleName` + `@PreAuthorize`/`authorizeHttpRequests`, not hardcoded string literals
+  scattered through business logic.

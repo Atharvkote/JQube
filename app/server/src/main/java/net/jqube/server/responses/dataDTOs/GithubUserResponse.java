@@ -31,6 +31,9 @@ public class GithubUserResponse {
     @JsonProperty("public_repos")
     private Integer publicRepos;
 
+    @JsonProperty("total_private_repos")
+    private Integer totalPrivateRepos;
+
     private Integer followers;
     private Integer following;
 }

@@ -9,7 +9,6 @@ import java.util.UUID; // Import UUID
 public interface GithubAuthService {
     String generateAuthorizationUrl(UUID userId);
 
-    @CacheEvict(value = "github-profiles", key = "#userId")
     void connect(String state, String code);
 
     @Cacheable(value = "github-profiles", key = "#userId")

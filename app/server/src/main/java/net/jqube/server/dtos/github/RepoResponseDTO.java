@@ -3,7 +3,10 @@ package net.jqube.server.dtos.github;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record RepoResponseDTO(
 
         Long id,
@@ -40,7 +43,16 @@ public record RepoResponseDTO(
         Boolean archived,
 
         @JsonProperty("private")
-        Boolean privateRepository
+        Boolean privateRepository,
+
+        @JsonProperty("updated_at")
+        String updatedAt,
+
+        @JsonProperty("stargazers_count")
+        Integer stargazersCount,
+
+        @JsonProperty("forks_count")
+        Integer forksCount
 
 ) {
 }

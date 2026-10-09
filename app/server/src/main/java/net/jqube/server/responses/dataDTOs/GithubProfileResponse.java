@@ -5,8 +5,13 @@ import lombok.Getter;
 
 import java.time.Instant;
 
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GithubProfileResponse {
     private String username;
     private String name;
@@ -18,6 +23,7 @@ public class GithubProfileResponse {
     private String blog;
     private String location;
     private Integer publicRepos;
+    private Integer privateRepos;
     private Integer followers;
     private Integer following;
     private Instant connectedAt;

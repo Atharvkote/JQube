@@ -12,7 +12,7 @@ public record RateLimitPolicy(
         AlgorithmType algorithm,
         ClientType clientType
 ) {
-    public static RateLimitPolicy from(RateLimiterProperties.PolicyConfig config) {
+    public static RateLimitPolicy from(RateLimiterProperties.RateLimiterPolicy config) {
         return new RateLimitPolicy(
                 config.getLimit(),
                 config.getWindow(),
