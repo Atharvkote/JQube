@@ -11,8 +11,10 @@ import net.jqube.scanner.process.ScannerContainerExecutor;
 import net.jqube.scanner.process.ContainerExecutionResult;
 import net.jqube.scanner.scanners.SecurityScanner;
 import net.jqube.scanner.scanners.ScannerOutput;
+import net.jqube.scanner.scanners.ScannerOutput;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -39,6 +41,15 @@ public class SemgrepScanner implements SecurityScanner {
     }
 
     @Override
+    public ScannerOutput scan(Path workspace) {
+        Path rawDir = workspace.getParent().resolve("raw-results");
+        try {
+            Files.createDirectories(rawDir);
+        } catch (Exception e) {
+            log.error("Failed to create raw results directory", e);
+        }
+        Path rawPath = rawDir.resolve("semgrep.json");
+
     public ScannerOutput scan(Path workspace) {
         Path rawDir = workspace.getParent().resolve("raw-results");
         try {
@@ -77,13 +88,17 @@ public class SemgrepScanner implements SecurityScanner {
 
         if (!Files.exists(rawPath)) {
             return new ScannerOutput(List.of(), null, result.exitCode());
+        if (!Files.exists(rawPath)) {
+            return new ScannerOutput(List.of(), null, result.exitCode());
         }
 
         try {
             JsonNode root = objectMapper.readTree(rawPath.toFile());
+            JsonNode root = objectMapper.readTree(rawPath.toFile());
             JsonNode results = root.path("results");
 
             if (!results.isArray()) {
+                return new ScannerOutput(List.of(), rawPath.toString(), result.exitCode());
                 return new ScannerOutput(List.of(), rawPath.toString(), result.exitCode());
             }
 
@@ -96,6 +111,7 @@ public class SemgrepScanner implements SecurityScanner {
                 }
             }
 
+            return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
             return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
 
         } catch (Exception e) {

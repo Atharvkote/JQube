@@ -96,6 +96,8 @@ class TrivyScannerTest {
 
         assertNotNull(output);
         assertTrue(output.findings().isEmpty());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test

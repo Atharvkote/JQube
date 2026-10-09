@@ -70,6 +70,10 @@ class SemgrepScannerTest {
         assertNotNull(output.findings());
         assertEquals(1, output.findings().size());
         ScanFinding finding = output.findings().get(0);
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        ScanFinding finding = output.findings().get(0);
         assertEquals("Semgrep", finding.scanner());
         assertEquals("sql-injection", finding.ruleId());
         assertEquals("HIGH", finding.severity());
