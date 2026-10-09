@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.jqube.scanner.configs.properties.ScannerProperties;
 import net.jqube.scanner.exceptions.ScannerExecutionException;
 import net.jqube.scanner.queues.messages.ScanFinding;
-import net.jqube.scanner.process.ProcessExecutor;
-import net.jqube.scanner.process.ProcessResult;
+import net.jqube.scanner.process.ScannerContainerExecutor;
+import net.jqube.scanner.process.ContainerExecutionResult;
 import net.jqube.scanner.scanners.impl.GitLeaksScanner;
 import org.junit.jupiter.api.Test;
 
@@ -18,79 +18,93 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class GitLeaksScannerTest {
 
     @Test
     void validResult() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        GitLeaksScanner scanner = new GitLeaksScanner(properties, processExecutor, objectMapper);
+        GitLeaksScanner scanner = new GitLeaksScanner(properties, containerExecutor, objectMapper);
 
         String json = """
                 [
                   {
-                    "RuleID": "aws-access-key-id",
                     "Description": "AWS Access Key",
-                    "File": "src/config/aws.yml",
-                    "StartLine": 5,
-                    "EndLine": 5,
+                    "StartLine": 10,
+                    "EndLine": 10,
+                    "File": "config.yaml",
+                    "RuleID": "aws-access-token",
                     "Secret": "AKIAIOSFODNN7EXAMPLE",
-                    "Severity": "HIGH",
-                    "Fingerprint": "fingerprint123"
+                    "Fingerprint": "abc12345"
                   }
                 ]
                 """;
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, json, ""));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenAnswer(invocation -> {
+                    Path workspace = invocation.getArgument(2);
+                    Path rawPath = workspace.getParent().resolve("raw-results").resolve("gitleaks.json");
+                    Files.createDirectories(rawPath.getParent());
+                    Files.writeString(rawPath, json);
+                    return new ContainerExecutionResult(1, "", "", 100, false, 0, 100);
+                });
 
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(1, findings.size());
-        ScanFinding finding = findings.get(0);
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        ScanFinding finding = output.findings().get(0);
         assertEquals("Gitleaks", finding.scanner());
-        assertEquals("aws-access-key-id", finding.ruleId());
+        assertEquals("aws-access-token", finding.ruleId());
         assertEquals("HIGH", finding.severity());
-        assertEquals("src/config/aws.yml", finding.filePath());
-        assertEquals(5, finding.lineStart());
-        assertTrue(finding.message().contains("[REDACTED]"));
-        assertFalse(finding.message().contains("AKIAIOSFODNN7EXAMPLE"));
+        assertEquals("config.yaml", finding.filePath());
+        assertTrue(finding.message().contains("REDACTED"));
+        assertFalse(finding.message().contains("AKIA"));
     }
 
     @Test
     void emptyResult() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        GitLeaksScanner scanner = new GitLeaksScanner(properties, processExecutor, objectMapper);
+        GitLeaksScanner scanner = new GitLeaksScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, "", ""));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenAnswer(invocation -> {
+                    Path workspace = invocation.getArgument(2);
+                    Path rawPath = workspace.getParent().resolve("raw-results").resolve("gitleaks.json");
+                    Files.createDirectories(rawPath.getParent());
+                    Files.writeString(rawPath, "[]");
+                    return new ContainerExecutionResult(0, "", "", 100, false, 0, 100);
+                });
 
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertTrue(findings.isEmpty());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test
     void nonZeroExitCodeThrows() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        GitLeaksScanner scanner = new GitLeaksScanner(properties, processExecutor, objectMapper);
+        GitLeaksScanner scanner = new GitLeaksScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(2, "", "error"));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenReturn(new ContainerExecutionResult(2, "", "error", 100, false, 0, 100));
 
-        Path workspace = Files.createTempDirectory("workspace");
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
 
         assertThrows(
                 ScannerExecutionException.class,
@@ -109,7 +123,7 @@ class GitLeaksScannerTest {
         Field toolsField = ScannerProperties.class.getDeclaredField("tools");
         toolsField.setAccessible(true);
         ScannerProperties.Tools tools = new ScannerProperties.Tools();
-        tools.setGitleaks("gitleaks");
+        tools.setGitleaksImage("zricethezav/gitleaks:v8.18.1");
         toolsField.set(properties, tools);
 
         return properties;

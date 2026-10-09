@@ -103,6 +103,12 @@ public class ScanToolRun extends Auditable {
     )
     private String errorMessage;
 
+    @Column(
+            name = "raw_result_path",
+            length = 1000
+    )
+    private String rawResultPath;
+
     @OneToMany(
             mappedBy = "toolRun",
             cascade = CascadeType.ALL,

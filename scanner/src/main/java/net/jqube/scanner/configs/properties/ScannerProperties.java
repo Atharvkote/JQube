@@ -103,6 +103,9 @@ public class ScannerProperties {
         private String semgrep = "semgrep";
         private String trivy = "trivy";
         private String gitleaks = "gitleaks";
+        private String semgrepImage = "semgrep/semgrep:1.80.0";
+        private String trivyImage = "aquasec/trivy:0.48.3";
+        private String gitleaksImage = "zricethezav/gitleaks:v8.18.1";
 
         public String getGit() {
             return git;
@@ -134,6 +137,30 @@ public class ScannerProperties {
 
         public void setGitleaks(String gitleaks) {
             this.gitleaks = gitleaks;
+        }
+
+        public String getSemgrepImage() {
+            return semgrepImage;
+        }
+
+        public void setSemgrepImage(String semgrepImage) {
+            this.semgrepImage = semgrepImage;
+        }
+
+        public String getTrivyImage() {
+            return trivyImage;
+        }
+
+        public void setTrivyImage(String trivyImage) {
+            this.trivyImage = trivyImage;
+        }
+
+        public String getGitleaksImage() {
+            return gitleaksImage;
+        }
+
+        public void setGitleaksImage(String gitleaksImage) {
+            this.gitleaksImage = gitleaksImage;
         }
     }
 }

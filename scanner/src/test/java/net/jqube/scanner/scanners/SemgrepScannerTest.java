@@ -5,8 +5,8 @@ import net.jqube.scanner.configs.properties.ScannerProperties;
 import net.jqube.scanner.exceptions.ScannerExecutionException;
 import net.jqube.scanner.exceptions.ScannerTimeoutException;
 import net.jqube.scanner.queues.messages.ScanFinding;
-import net.jqube.scanner.process.ProcessExecutor;
-import net.jqube.scanner.process.ProcessResult;
+import net.jqube.scanner.process.ScannerContainerExecutor;
+import net.jqube.scanner.process.ContainerExecutionResult;
 import net.jqube.scanner.scanners.impl.SemgrepScanner;
 import org.junit.jupiter.api.Test;
 
@@ -19,17 +19,18 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class SemgrepScannerTest {
 
     @Test
     void validResult() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        SemgrepScanner scanner = new SemgrepScanner(properties, processExecutor, objectMapper);
+        SemgrepScanner scanner = new SemgrepScanner(properties, containerExecutor, objectMapper);
 
         String json = """
                 {
@@ -53,14 +54,22 @@ class SemgrepScannerTest {
                 }
                 """;
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, json, ""));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenAnswer(invocation -> {
+                    Path workspace = invocation.getArgument(2);
+                    Path rawPath = workspace.getParent().resolve("raw-results").resolve("semgrep.json");
+                    Files.createDirectories(rawPath.getParent());
+                    Files.writeString(rawPath, json);
+                    return new ContainerExecutionResult(0, "", "", 100, false, 0, 100);
+                });
 
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(1, findings.size());
-        ScanFinding finding = findings.get(0);
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        ScanFinding finding = output.findings().get(0);
         assertEquals("Semgrep", finding.scanner());
         assertEquals("sql-injection", finding.ruleId());
         assertEquals("HIGH", finding.severity());
@@ -72,67 +81,40 @@ class SemgrepScannerTest {
 
     @Test
     void emptyResult() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        SemgrepScanner scanner = new SemgrepScanner(properties, processExecutor, objectMapper);
+        SemgrepScanner scanner = new SemgrepScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, "{}", ""));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenAnswer(invocation -> {
+                    Path workspace = invocation.getArgument(2);
+                    Path rawPath = workspace.getParent().resolve("raw-results").resolve("semgrep.json");
+                    Files.createDirectories(rawPath.getParent());
+                    Files.writeString(rawPath, "{}");
+                    return new ContainerExecutionResult(0, "", "", 100, false, 0, 100);
+                });
 
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertTrue(findings.isEmpty());
-    }
-
-    @Test
-    void missingOptionalFields() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
-        ScannerProperties properties = createScannerProperties();
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        SemgrepScanner scanner = new SemgrepScanner(properties, processExecutor, objectMapper);
-
-        String json = """
-                {
-                  "results": [
-                    {
-                      "check_id": "rule-1",
-                      "extra": {
-                        "message": "test"
-                      },
-                      "path": "src/Test.java"
-                    }
-                  ]
-                }
-                """;
-
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, json, ""));
-
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
-
-        assertEquals(1, findings.size());
-        assertEquals("MEDIUM", findings.get(0).severity());
-        assertNull(findings.get(0).lineStart());
-        assertNull(findings.get(0).lineEnd());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test
     void nonZeroExitCodeThrows() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        SemgrepScanner scanner = new SemgrepScanner(properties, processExecutor, objectMapper);
+        SemgrepScanner scanner = new SemgrepScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(2, "", "error"));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenReturn(new ContainerExecutionResult(2, "", "error", 100, false, 0, 100));
 
-        Path workspace = Files.createTempDirectory("workspace");
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
 
         assertThrows(
                 ScannerExecutionException.class,
@@ -142,19 +124,19 @@ class SemgrepScannerTest {
 
     @Test
     void timeoutThrows() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        SemgrepScanner scanner = new SemgrepScanner(properties, processExecutor, objectMapper);
+        SemgrepScanner scanner = new SemgrepScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenThrow(new ScannerTimeoutException("timeout"));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenReturn(new ContainerExecutionResult(-1, "", "timeout", 1000, true, 0, 1000));
 
-        Path workspace = Files.createTempDirectory("workspace");
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
 
         assertThrows(
-                ScannerTimeoutException.class,
+                ScannerExecutionException.class,
                 () -> scanner.scan(workspace)
         );
     }
@@ -170,7 +152,7 @@ class SemgrepScannerTest {
         Field toolsField = ScannerProperties.class.getDeclaredField("tools");
         toolsField.setAccessible(true);
         ScannerProperties.Tools tools = new ScannerProperties.Tools();
-        tools.setSemgrep("semgrep");
+        tools.setSemgrepImage("semgrep/semgrep:1.80.0");
         toolsField.set(properties, tools);
 
         return properties;

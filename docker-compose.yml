@@ -1,0 +1,27 @@
+services:
+  jqube-scanner:
+    build:
+      context: ./scanner
+      dockerfile: Dockerfile
+    image: jqube-scanner:latest
+    container_name: jqube-scanner
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_HOST=host.docker.internal
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=jqube
+      - RABBITMQ_PASSWORD=jqube_dev_password
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5433/caching_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      # Optional: Explicitly tell Docker Desktop to route host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8082:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - scanner-workspace:/tmp/jqube/scans
+
+volumes:
+  scanner-workspace:

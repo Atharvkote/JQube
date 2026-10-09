@@ -29,6 +29,7 @@ public class ScanPersistenceServiceImpl implements ScanPersistenceService {
             UUID jobId,
             UUID qubeId,
             Long repositoryId,
+            String repositoryUrl,
             String branch,
             String commitSha,
             ScanType scanType,
@@ -39,6 +40,7 @@ public class ScanPersistenceServiceImpl implements ScanPersistenceService {
                 .jobId(jobId)
                 .qubeId(qubeId)
                 .repositoryId(repositoryId)
+                .repositoryUrl(repositoryUrl)
                 .branch(branch)
                 .commitSha(commitSha)
                 .scanType(scanType)
@@ -140,6 +142,7 @@ public class ScanPersistenceServiceImpl implements ScanPersistenceService {
             int findingCount,
             long durationMs,
             Integer exitCode,
+            String rawResultPath,
             UUID userId
     ) {
         toolRun.setStatus(ScanToolStatus.COMPLETED);
@@ -147,6 +150,7 @@ public class ScanPersistenceServiceImpl implements ScanPersistenceService {
         toolRun.setFindingCount(findingCount);
         toolRun.setDurationMs(durationMs);
         toolRun.setExitCode(exitCode);
+        toolRun.setRawResultPath(rawResultPath);
         toolRun.setUpdatedBy(userId);
 
         scanToolRunRepository.save(toolRun);

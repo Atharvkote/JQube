@@ -77,6 +77,13 @@ public class Scan extends Auditable {
     private Long repositoryId;
 
     @Column(
+            name = "repository_url",
+            length = 1000,
+            updatable = false
+    )
+    private String repositoryUrl;
+
+    @Column(
             nullable = false,
             length = 255
     )

@@ -40,6 +40,7 @@ class ScanPersistenceServiceIT {
                 jobId,
                 qubeId,
                 42L,
+                "https://github.com/test/repo.git",
                 "main",
                 "abc123def456",
                 ScanType.ALL,
@@ -114,9 +115,9 @@ class ScanPersistenceServiceIT {
                 .lineEnd(1)
                 .build(), userId);
 
-        scanPersistenceService.completeToolRun(semgrepRun, 2, 1500L, 0, userId);
-        scanPersistenceService.completeToolRun(trivyRun, 2, 3000L, 0, userId);
-        scanPersistenceService.completeToolRun(gitleaksRun, 1, 800L, 0, userId);
+        scanPersistenceService.completeToolRun(semgrepRun, 2, 1500L, 0, "path/semgrep.json", userId);
+        scanPersistenceService.completeToolRun(trivyRun, 2, 3000L, 0, "path/trivy.json", userId);
+        scanPersistenceService.completeToolRun(gitleaksRun, 1, 800L, 0, "path/gitleaks.json", userId);
 
         scanPersistenceService.completeScan(scan, userId);
 
@@ -154,6 +155,7 @@ class ScanPersistenceServiceIT {
                 jobId,
                 UUID.randomUUID(),
                 1L,
+                "https://github.com/test/repo.git",
                 "main",
                 "def456abc123",
                 ScanType.ALL,
@@ -177,7 +179,7 @@ class ScanPersistenceServiceIT {
                 .fingerprint("fp1")
                 .build(), userId);
 
-        scanPersistenceService.completeToolRun(semgrepRun, 1, 1000L, 0, userId);
+        scanPersistenceService.completeToolRun(semgrepRun, 1, 1000L, 0, "path", userId);
         scanPersistenceService.failToolRun(trivyRun, "Trivy execution failed", userId);
 
         scanPersistenceService.completeScan(scan, ScanStatus.COMPLETED_WITH_ERRORS, userId);
@@ -195,6 +197,7 @@ class ScanPersistenceServiceIT {
                 jobId,
                 UUID.randomUUID(),
                 1L,
+                "https://github.com/test/repo.git",
                 "main",
                 "badcommit",
                 ScanType.SEMGREP,
@@ -219,6 +222,7 @@ class ScanPersistenceServiceIT {
                 jobId,
                 UUID.randomUUID(),
                 1L,
+                "https://github.com/test/repo.git",
                 "main",
                 "sha1",
                 ScanType.ALL,
@@ -231,6 +235,7 @@ class ScanPersistenceServiceIT {
                     jobId,
                     UUID.randomUUID(),
                     2L,
+                    "https://github.com/test/repo.git",
                     "develop",
                     "sha2",
                     ScanType.SEMGREP,
@@ -251,6 +256,7 @@ class ScanPersistenceServiceIT {
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 1L,
+                "https://github.com/test/repo.git",
                 "main",
                 "sha1",
                 ScanType.ALL,
@@ -284,6 +290,7 @@ class ScanPersistenceServiceIT {
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 1L,
+                "https://github.com/test/repo.git",
                 "main",
                 "sha1",
                 ScanType.ALL,

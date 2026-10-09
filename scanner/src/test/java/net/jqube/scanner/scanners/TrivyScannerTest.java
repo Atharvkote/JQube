@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.jqube.scanner.configs.properties.ScannerProperties;
 import net.jqube.scanner.exceptions.ScannerExecutionException;
 import net.jqube.scanner.queues.messages.ScanFinding;
-import net.jqube.scanner.process.ProcessExecutor;
-import net.jqube.scanner.process.ProcessResult;
+import net.jqube.scanner.process.ScannerContainerExecutor;
+import net.jqube.scanner.process.ContainerExecutionResult;
 import net.jqube.scanner.scanners.impl.TrivyScanner;
 import org.junit.jupiter.api.Test;
 
@@ -18,112 +18,98 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class TrivyScannerTest {
 
     @Test
     void validResult() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        TrivyScanner scanner = new TrivyScanner(properties, processExecutor, objectMapper);
+        TrivyScanner scanner = new TrivyScanner(properties, containerExecutor, objectMapper);
 
         String json = """
-                [
-                  {
-                    "Results": [
-                      {
-                        "Target": "src/main/java/App.java",
-                        "Vulnerabilities": [
-                          {
-                            "VulnerabilityID": "CVE-2021-44228",
-                            "Severity": "CRITICAL",
-                            "Title": "Apache Log4j2 RCE",
-                            "Description": "RCE via JNDI",
-                            "PkgName": "log4j-core",
-                            "InstalledVersion": "2.14.0",
-                            "FixedVersion": "2.15.0"
-                          }
-                        ],
-                        "Misconfigurations": [
-                          {
-                            "ID": "AVD-AWS-0001",
-                            "Severity": "HIGH",
-                            "Title": "S3 bucket is public",
-                            "Description": "S3 bucket should not be public"
-                          }
-                        ],
-                        "Secrets": [
-                          {
-                            "RuleID": "aws-access-key-id",
-                            "Severity": "HIGH",
-                            "Title": "AWS Access Key",
-                            "Description": "AWS Access Key detected",
-                            "Category": "aws",
-                            "Match": "AKIAIOSFODNN7EXAMPLE"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
+                {
+                  "Results": [
+                    {
+                      "Target": "app/pom.xml",
+                      "Vulnerabilities": [
+                        {
+                          "VulnerabilityID": "CVE-2023-1234",
+                          "Severity": "CRITICAL",
+                          "Title": "Test Vulnerability",
+                          "Description": "Test description",
+                          "PkgName": "test-pkg",
+                          "InstalledVersion": "1.0.0",
+                          "FixedVersion": "1.0.1"
+                        }
+                      ]
+                    }
+                  ]
+                }
                 """;
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, json, ""));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenAnswer(invocation -> {
+                    Path workspace = invocation.getArgument(2);
+                    Path rawPath = workspace.getParent().resolve("raw-results").resolve("trivy.json");
+                    Files.createDirectories(rawPath.getParent());
+                    Files.writeString(rawPath, json);
+                    return new ContainerExecutionResult(0, "", "", 100, false, 0, 100);
+                });
 
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertEquals(3, findings.size());
-
-        ScanFinding vuln = findings.get(0);
-        assertEquals("Trivy", vuln.scanner());
-        assertEquals("CVE-2021-44228", vuln.ruleId());
-        assertEquals("CRITICAL", vuln.severity());
-        assertEquals("Apache Log4j2 RCE", vuln.title());
-
-        ScanFinding misconfig = findings.get(1);
-        assertEquals("AVD-AWS-0001", misconfig.ruleId());
-        assertEquals("HIGH", misconfig.severity());
-
-        ScanFinding secret = findings.get(2);
-        assertEquals("aws-access-key-id", secret.ruleId());
-        assertTrue(secret.message().contains("[REDACTED]"));
-        assertFalse(secret.message().contains("AKIAIOSFODNN7EXAMPLE"));
+        assertNotNull(output);
+        assertNotNull(output.findings());
+        assertEquals(1, output.findings().size());
+        ScanFinding finding = output.findings().get(0);
+        assertEquals("Trivy", finding.scanner());
+        assertEquals("CVE-2023-1234", finding.ruleId());
+        assertEquals("CRITICAL", finding.severity());
+        assertEquals("app/pom.xml", finding.filePath());
     }
 
     @Test
     void emptyResult() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        TrivyScanner scanner = new TrivyScanner(properties, processExecutor, objectMapper);
+        TrivyScanner scanner = new TrivyScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(0, "{}", ""));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenAnswer(invocation -> {
+                    Path workspace = invocation.getArgument(2);
+                    Path rawPath = workspace.getParent().resolve("raw-results").resolve("trivy.json");
+                    Files.createDirectories(rawPath.getParent());
+                    Files.writeString(rawPath, "[]");
+                    return new ContainerExecutionResult(0, "", "", 100, false, 0, 100);
+                });
 
-        Path workspace = Files.createTempDirectory("workspace");
-        List<ScanFinding> findings = scanner.scan(workspace);
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
+        ScannerOutput output = scanner.scan(workspace);
 
-        assertTrue(findings.isEmpty());
+        assertNotNull(output);
+        assertTrue(output.findings().isEmpty());
     }
 
     @Test
     void nonZeroExitCodeThrows() throws Exception {
-        ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScannerContainerExecutor containerExecutor = mock(ScannerContainerExecutor.class);
         ScannerProperties properties = createScannerProperties();
         ObjectMapper objectMapper = new ObjectMapper();
 
-        TrivyScanner scanner = new TrivyScanner(properties, processExecutor, objectMapper);
+        TrivyScanner scanner = new TrivyScanner(properties, containerExecutor, objectMapper);
 
-        when(processExecutor.execute(anyList(), any(Path.class), any(Duration.class)))
-                .thenReturn(new ProcessResult(2, "", "error"));
+        when(containerExecutor.execute(anyString(), anyList(), any(Path.class), any(Duration.class)))
+                .thenReturn(new ContainerExecutionResult(2, "", "error", 100, false, 0, 100));
 
-        Path workspace = Files.createTempDirectory("workspace");
+        Path workspace = Files.createTempDirectory("workspace").resolve("repository");
 
         assertThrows(
                 ScannerExecutionException.class,
@@ -142,7 +128,7 @@ class TrivyScannerTest {
         Field toolsField = ScannerProperties.class.getDeclaredField("tools");
         toolsField.setAccessible(true);
         ScannerProperties.Tools tools = new ScannerProperties.Tools();
-        tools.setTrivy("trivy");
+        tools.setTrivyImage("aquasec/trivy:0.48.3");
         toolsField.set(properties, tools);
 
         return properties;

@@ -74,31 +74,35 @@ public class GitServiceImpl implements GitService {
                 );
             }
 
-            log.info(
-                    "Checking out commit jobId={}, commitSha={}",
-                    jobId,
-                    commitSha
-            );
-
-            ProcessResult checkoutResult = processExecutor.execute(
-                    List.of(
-                            scannerProperties.getTools().getGit(),
-                            "-C",
-                            repositoryDir.toString(),
-                            "checkout",
-                            commitSha
-                    ),
-                    workspace,
-                    gitTimeout
-            );
-
-            if (checkoutResult.exitCode() != 0) {
-                throw new GitCheckoutException(
-                        "Git checkout failed for jobId=" + jobId +
-                                ", commitSha=" + commitSha +
-                                ", exitCode=" + checkoutResult.exitCode() +
-                                ", stderr=" + checkoutResult.stderr()
+            if (commitSha != null && !commitSha.trim().isEmpty() && !commitSha.equals("0000000000000000000000000000000000000000")) {
+                log.info(
+                        "Checking out commit jobId={}, commitSha={}",
+                        jobId,
+                        commitSha
                 );
+
+                ProcessResult checkoutResult = processExecutor.execute(
+                        List.of(
+                                scannerProperties.getTools().getGit(),
+                                "-C",
+                                repositoryDir.toString(),
+                                "checkout",
+                                commitSha
+                        ),
+                        workspace,
+                        gitTimeout
+                );
+
+                if (checkoutResult.exitCode() != 0) {
+                    throw new GitCheckoutException(
+                            "Git checkout failed for jobId=" + jobId +
+                                    ", commitSha=" + commitSha +
+                                    ", exitCode=" + checkoutResult.exitCode() +
+                                    ", stderr=" + checkoutResult.stderr()
+                    );
+                }
+            } else {
+                log.info("Skipping checkout for jobId={}, commitSha is empty or zero", jobId);
             }
 
             log.info(

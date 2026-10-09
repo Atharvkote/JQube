@@ -1,10 +1,13 @@
+server:
+  port: 8083
+
 spring:
   application:
     name: scanner
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/jqube_scanner}
-    username: ${SPRING_DATASOURCE_USERNAME:jqube}
-    password: ${SPRING_DATASOURCE_PASSWORD:jqube_dev_password}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:atharva}
 
   jpa:
     hibernate:
@@ -53,3 +56,6 @@ jqube:
       semgrep: ${SEMGREP_BINARY:semgrep}
       trivy: ${TRIVY_BINARY:trivy}
       gitleaks: ${GITLEAKS_BINARY:gitleaks}
+      semgrep-image: ${SCANNER_SEMGREP_IMAGE:semgrep/semgrep:1.80.0}
+      trivy-image: ${SCANNER_TRIVY_IMAGE:aquasec/trivy:0.48.3}
+      gitleaks-image: ${SCANNER_GITLEAKS_IMAGE:zricethezav/gitleaks:v8.18.1}

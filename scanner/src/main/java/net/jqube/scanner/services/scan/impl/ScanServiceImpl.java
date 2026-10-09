@@ -16,6 +16,7 @@ import net.jqube.scanner.queues.messages.ScanRequestedMessage;
 import net.jqube.scanner.queues.messages.ScanResult;
 import net.jqube.scanner.queues.messages.ScannerRunResult;
 import net.jqube.scanner.queues.publishers.ScanResultPublisher;
+import net.jqube.scanner.queues.publishers.ScanLogPublisher;
 import net.jqube.scanner.scanners.ScannerOrchestrator;
 import net.jqube.scanner.services.scan.ScanService;
 import net.jqube.scanner.services.scan.ScanPersistenceService;
@@ -34,6 +35,7 @@ public class ScanServiceImpl implements ScanService {
     private final GitService gitService;
     private final ScannerOrchestrator scannerOrchestrator;
     private final ScanResultPublisher scanResultPublisher;
+    private final ScanLogPublisher scanLogPublisher;
     private final ScannerProperties scannerProperties;
     private final ScanPersistenceService scanPersistenceService;
 
@@ -59,6 +61,7 @@ public class ScanServiceImpl implements ScanService {
                 jobId,
                 qubeId,
                 repositoryId,
+                message.repositoryUrl(),
                 message.branch(),
                 commitSha,
                 message.scanType(),
@@ -69,19 +72,23 @@ public class ScanServiceImpl implements ScanService {
         Path workspace = null;
 
         try {
+            scanLogPublisher.publishLog(qubeId, "[INFO] Initializing JQube Security Engine for target repository...");
             scanPersistenceService.updateScanStatus(scan.getId(), ScanStatus.CLONING, userId);
 
+            scanLogPublisher.publishLog(qubeId, "[INFO] Cloning repository branch: " + message.branch() + " (" + commitSha.substring(0, Math.min(7, commitSha.length())) + ")");
             workspace = gitService.cloneRepository(
                     message.repositoryUrl(),
                     commitSha,
                     jobId
             );
 
+            scanLogPublisher.publishLog(qubeId, "[INFO] Preparing static code analysis environment...");
             scanPersistenceService.updateScanStatus(scan.getId(), ScanStatus.SCANNING, userId);
 
             List<ScannerRunResult> runResults = scannerOrchestrator.scan(
                     workspace,
-                    message.scanType()
+                    message.scanType(),
+                    qubeId
             );
 
             for (ScannerRunResult runResult : runResults) {
@@ -99,7 +106,8 @@ public class ScanServiceImpl implements ScanService {
                         toolRun,
                         runResult.findings().size(),
                         runResult.durationMs(),
-                        null,
+                        runResult.exitCode(),
+                        runResult.rawResultPath(),
                         userId
                 );
             }
@@ -130,6 +138,7 @@ public class ScanServiceImpl implements ScanService {
             );
 
             scanResultPublisher.publish(completedMessage);
+            scanLogPublisher.publishLog(qubeId, "[SUCCESS] Security Scan completed successfully. Found " + allFindings.size() + " total issues.");
 
             log.info(
                     "Scan completed jobId={}, critical={}, high={}, medium={}, low={}",
@@ -157,6 +166,8 @@ public class ScanServiceImpl implements ScanService {
             } catch (Exception persistenceError) {
                 log.error("Failed to mark scan as failed jobId={}", jobId, persistenceError);
             }
+
+            scanLogPublisher.publishLog(qubeId, "[ERROR] Scan failed due to: " + e.getMessage());
 
             ScanCompletedMessage failedMessage = new ScanCompletedMessage(
                     message.eventId(),

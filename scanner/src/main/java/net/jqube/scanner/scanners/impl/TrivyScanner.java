@@ -7,11 +7,13 @@ import net.jqube.scanner.configs.properties.ScannerProperties;
 import net.jqube.scanner.exceptions.ScannerExecutionException;
 import net.jqube.scanner.exceptions.ScannerOutputParseException;
 import net.jqube.scanner.queues.messages.ScanFinding;
-import net.jqube.scanner.process.ProcessExecutor;
-import net.jqube.scanner.process.ProcessResult;
+import net.jqube.scanner.process.ScannerContainerExecutor;
+import net.jqube.scanner.process.ContainerExecutionResult;
 import net.jqube.scanner.scanners.SecurityScanner;
+import net.jqube.scanner.scanners.ScannerOutput;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -22,12 +24,12 @@ import java.util.List;
 public class TrivyScanner implements SecurityScanner {
 
     private final ScannerProperties scannerProperties;
-    private final ProcessExecutor processExecutor;
+    private final ScannerContainerExecutor containerExecutor;
     private final ObjectMapper objectMapper;
 
-    public TrivyScanner(ScannerProperties scannerProperties, ProcessExecutor processExecutor, ObjectMapper objectMapper) {
+    public TrivyScanner(ScannerProperties scannerProperties, ScannerContainerExecutor containerExecutor, ObjectMapper objectMapper) {
         this.scannerProperties = scannerProperties;
-        this.processExecutor = processExecutor;
+        this.containerExecutor = containerExecutor;
         this.objectMapper = objectMapper;
     }
 
@@ -37,34 +39,48 @@ public class TrivyScanner implements SecurityScanner {
     }
 
     @Override
-    public List<ScanFinding> scan(Path workspace) {
+    public ScannerOutput scan(Path workspace) {
+        Path rawDir = workspace.getParent().resolve("raw-results");
+        try {
+            Files.createDirectories(rawDir);
+        } catch (Exception e) {
+            log.error("Failed to create raw results directory", e);
+        }
+        Path rawPath = rawDir.resolve("trivy.json");
+
         List<String> command = List.of(
-                scannerProperties.getTools().getTrivy(),
                 "fs",
                 "--format",
                 "json",
+                "--output",
+                "/results/trivy.json",
                 "--security-checks",
                 "vuln,misconfig,secret",
-                workspace.toString()
+                "/src"
         );
 
         Duration timeout = scannerProperties.getTimeout().getTrivyDuration();
+        String image = scannerProperties.getTools().getTrivyImage();
 
-        ProcessResult result = processExecutor.execute(command, workspace, timeout);
+        ContainerExecutionResult result = containerExecutor.execute(image, command, workspace, timeout);
+
+        if (result.timedOut()) {
+            throw new ScannerExecutionException("Trivy execution timed out after " + timeout);
+        }
 
         if (result.exitCode() != 0 && result.exitCode() != 1) {
             throw new ScannerExecutionException(
-                    "Trivy execution failed with exit code " + result.exitCode() +
+                    "Trivy container failed with exit code " + result.exitCode() +
                             ": " + result.stderr()
             );
         }
 
-        if (result.stdout() == null || result.stdout().isBlank()) {
-            return List.of();
+        if (!Files.exists(rawPath)) {
+            return new ScannerOutput(List.of(), null, result.exitCode());
         }
 
         try {
-            JsonNode root = objectMapper.readTree(result.stdout());
+            JsonNode root = objectMapper.readTree(rawPath.toFile());
             List<ScanFinding> findings = new ArrayList<>();
 
             if (root.isArray()) {
@@ -75,7 +91,7 @@ public class TrivyScanner implements SecurityScanner {
                 findings.addAll(mapResult(root, workspace));
             }
 
-            return findings;
+            return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
 
         } catch (Exception e) {
             throw new ScannerOutputParseException(

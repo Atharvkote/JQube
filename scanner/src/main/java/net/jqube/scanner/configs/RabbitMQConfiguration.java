@@ -9,6 +9,9 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 @EnableRabbit
 @Configuration
 public class RabbitMQConfiguration {
@@ -21,12 +24,19 @@ public class RabbitMQConfiguration {
                 "jqube.rabbitmq.scan-job-queue",
                 "jqube.scan.jobs"
         );
-        return new Queue(queueName, true);
+        return org.springframework.amqp.core.QueueBuilder
+                .durable(queueName)
+                .quorum()
+                .deadLetterExchange("jqube.scan.dlx")
+                .deadLetterRoutingKey("scan.dead")
+                .build();
     }
 
     @Bean
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return new Jackson2JsonMessageConverter(objectMapper);
     }
 
     @Bean

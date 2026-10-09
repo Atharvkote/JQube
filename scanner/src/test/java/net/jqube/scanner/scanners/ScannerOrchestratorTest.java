@@ -5,12 +5,14 @@ import net.jqube.scanner.enums.ScanType;
 import net.jqube.scanner.queues.messages.ScanFinding;
 import net.jqube.scanner.queues.messages.ScannerRunResult;
 import net.jqube.scanner.process.ProcessExecutor;
+import net.jqube.scanner.queues.publishers.ScanLogPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,26 +30,30 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Semgrep", "rule1", "HIGH", "Title1", "Msg1", "file1.java", 1, 1, null, "fp1")
-        ));
-        when(trivy.scan(any(Path.class))).thenReturn(List.of(
+        ), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Trivy", "CVE-1", "CRITICAL", "Title2", "Msg2", "file2.java", 2, 2, null, "fp2")
-        ));
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of(
+        ), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Gitleaks", "rule3", "HIGH", "Title3", "Msg3", "file3.yml", 3, 3, null, "fp3")
-        ));
+        ), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScanLogPublisher scanLogPublisher = mock(ScanLogPublisher.class);
 
         ScannerOrchestrator orchestrator = new ScannerOrchestrator(
                 List.of(semgrep, trivy, gitleaks),
                 properties,
-                processExecutor
+                processExecutor,
+                scanLogPublisher
         );
+        
+        UUID qubeId = UUID.randomUUID();
 
-        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.ALL);
+        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.ALL, qubeId);
 
         List<ScanFinding> allFindings = results.stream()
                 .flatMap(r -> r.findings().stream())
@@ -68,22 +74,25 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Semgrep", "rule1", "MEDIUM", "Title1", "Msg1", "file1.java", 1, 1, null, "fp1")
-        ));
-        when(trivy.scan(any(Path.class))).thenReturn(List.of());
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of());
+        ), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScanLogPublisher scanLogPublisher = mock(ScanLogPublisher.class);
 
         ScannerOrchestrator orchestrator = new ScannerOrchestrator(
                 List.of(semgrep, trivy, gitleaks),
                 properties,
-                processExecutor
+                processExecutor,
+                scanLogPublisher
         );
 
-        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.SEMGREP);
+        UUID qubeId = UUID.randomUUID();
+        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.SEMGREP, qubeId);
 
         assertEquals(1, results.size());
         assertEquals("Semgrep", results.get(0).scanner());
@@ -104,22 +113,25 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of());
-        when(trivy.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Trivy", "CVE-1", "HIGH", "Title", "Msg", "file.java", 1, 1, null, "fp")
-        ));
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of());
+        ), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScanLogPublisher scanLogPublisher = mock(ScanLogPublisher.class);
 
         ScannerOrchestrator orchestrator = new ScannerOrchestrator(
                 List.of(semgrep, trivy, gitleaks),
                 properties,
-                processExecutor
+                processExecutor,
+                scanLogPublisher
         );
 
-        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.TRIVY);
+        UUID qubeId = UUID.randomUUID();
+        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.TRIVY, qubeId);
 
         assertEquals(1, results.size());
         assertEquals("Trivy", results.get(0).scanner());
@@ -140,22 +152,25 @@ class ScannerOrchestratorTest {
         when(trivy.getName()).thenReturn("Trivy");
         when(gitleaks.getName()).thenReturn("Gitleaks");
 
-        when(semgrep.scan(any(Path.class))).thenReturn(List.of());
-        when(trivy.scan(any(Path.class))).thenReturn(List.of());
-        when(gitleaks.scan(any(Path.class))).thenReturn(List.of(
+        when(semgrep.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(trivy.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(), "raw/path", 0));
+        when(gitleaks.scan(any(Path.class))).thenReturn(new ScannerOutput(List.of(
                 new ScanFinding("Gitleaks", "rule1", "HIGH", "Title", "Msg", "file.yml", 1, 1, null, "fp")
-        ));
+        ), "raw/path", 0));
 
         ScannerProperties properties = createScannerProperties();
         ProcessExecutor processExecutor = mock(ProcessExecutor.class);
+        ScanLogPublisher scanLogPublisher = mock(ScanLogPublisher.class);
 
         ScannerOrchestrator orchestrator = new ScannerOrchestrator(
                 List.of(semgrep, trivy, gitleaks),
                 properties,
-                processExecutor
+                processExecutor,
+                scanLogPublisher
         );
 
-        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.GIT_LEAKS);
+        UUID qubeId = UUID.randomUUID();
+        List<ScannerRunResult> results = orchestrator.scan(tempDir, ScanType.GIT_LEAKS, qubeId);
 
         assertEquals(1, results.size());
         assertEquals("Gitleaks", results.get(0).scanner());

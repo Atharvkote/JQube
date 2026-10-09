@@ -7,11 +7,13 @@ import net.jqube.scanner.configs.properties.ScannerProperties;
 import net.jqube.scanner.exceptions.ScannerExecutionException;
 import net.jqube.scanner.exceptions.ScannerOutputParseException;
 import net.jqube.scanner.queues.messages.ScanFinding;
-import net.jqube.scanner.process.ProcessExecutor;
-import net.jqube.scanner.process.ProcessResult;
+import net.jqube.scanner.process.ScannerContainerExecutor;
+import net.jqube.scanner.process.ContainerExecutionResult;
 import net.jqube.scanner.scanners.SecurityScanner;
+import net.jqube.scanner.scanners.ScannerOutput;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -22,12 +24,12 @@ import java.util.List;
 public class SemgrepScanner implements SecurityScanner {
 
     private final ScannerProperties scannerProperties;
-    private final ProcessExecutor processExecutor;
+    private final ScannerContainerExecutor containerExecutor;
     private final ObjectMapper objectMapper;
 
-    public SemgrepScanner(ScannerProperties scannerProperties, ProcessExecutor processExecutor, ObjectMapper objectMapper) {
+    public SemgrepScanner(ScannerProperties scannerProperties, ScannerContainerExecutor containerExecutor, ObjectMapper objectMapper) {
         this.scannerProperties = scannerProperties;
-        this.processExecutor = processExecutor;
+        this.containerExecutor = containerExecutor;
         this.objectMapper = objectMapper;
     }
 
@@ -37,37 +39,52 @@ public class SemgrepScanner implements SecurityScanner {
     }
 
     @Override
-    public List<ScanFinding> scan(Path workspace) {
+    public ScannerOutput scan(Path workspace) {
+        Path rawDir = workspace.getParent().resolve("raw-results");
+        try {
+            Files.createDirectories(rawDir);
+        } catch (Exception e) {
+            log.error("Failed to create raw results directory", e);
+        }
+        Path rawPath = rawDir.resolve("semgrep.json");
+
         List<String> command = List.of(
-                scannerProperties.getTools().getSemgrep(),
+                "semgrep",
                 "scan",
                 "--json",
                 "--config",
                 "auto",
-                workspace.toString()
+                "-o",
+                "/results/semgrep.json",
+                "/src"
         );
 
         Duration timeout = scannerProperties.getTimeout().getSemgrepDuration();
+        String image = scannerProperties.getTools().getSemgrepImage();
 
-        ProcessResult result = processExecutor.execute(command, workspace, timeout);
+        ContainerExecutionResult result = containerExecutor.execute(image, command, workspace, timeout);
+
+        if (result.timedOut()) {
+            throw new ScannerExecutionException("Semgrep execution timed out after " + timeout);
+        }
 
         if (result.exitCode() != 0 && result.exitCode() != 1) {
             throw new ScannerExecutionException(
-                    "Semgrep execution failed with exit code " + result.exitCode() +
+                    "Semgrep container failed with exit code " + result.exitCode() +
                             ": " + result.stderr()
             );
         }
 
-        if (result.stdout() == null || result.stdout().isBlank()) {
-            return List.of();
+        if (!Files.exists(rawPath)) {
+            return new ScannerOutput(List.of(), null, result.exitCode());
         }
 
         try {
-            JsonNode root = objectMapper.readTree(result.stdout());
+            JsonNode root = objectMapper.readTree(rawPath.toFile());
             JsonNode results = root.path("results");
 
             if (!results.isArray()) {
-                return List.of();
+                return new ScannerOutput(List.of(), rawPath.toString(), result.exitCode());
             }
 
             List<ScanFinding> findings = new ArrayList<>();
@@ -79,7 +96,7 @@ public class SemgrepScanner implements SecurityScanner {
                 }
             }
 
-            return findings;
+            return new ScannerOutput(findings, rawPath.toString(), result.exitCode());
 
         } catch (Exception e) {
             throw new ScannerOutputParseException(
